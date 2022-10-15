@@ -5,8 +5,9 @@ def test_char "X"
 
 loop:
 jmp loop
+end
 
-// Main routine
+// Main routine 
 
 lda $test_char
 
