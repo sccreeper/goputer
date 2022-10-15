@@ -1,5 +1,7 @@
 package main
 
+// VM & Compiler CMD front end
+
 import (
 	"fmt"
 	"sccreeper/govm/pkg/constants"

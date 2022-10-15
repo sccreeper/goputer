@@ -73,6 +73,10 @@ var InstructionInts = map[string]uint32{
 
 	"incr": 22, //Increment register and keep value in register
 	"decr": 23,
+
+	"hlt": 24, // Halt the CPU for X miliseconds
+
+	"sqrt": 25,
 }
 
 var RegisterInts = map[string]uint32{
@@ -135,6 +139,8 @@ var RegisterInts = map[string]uint32{
 	"io13": 47,
 	"io14": 48,
 	"io15": 49,
+
+	"prc": 50, //Program counter /
 }
 
 //Constants for use in runtime
@@ -206,6 +212,10 @@ const (
 
 	IIncrement Instruction = 22
 	IDecrement Instruction = 23
+
+	IHalt Instruction = 24
+
+	ISquareRoot Instruction = 25
 )
 
 const (
@@ -266,5 +276,7 @@ const (
 	RIO12 Register = 46
 	RIO13 Register = 47
 	RIO14 Register = 48
-	RIO15 Register = 48
+	RIO15 Register = 49
+
+	RProgramCounter Register = 50
 )

@@ -1,0 +1,16 @@
+// Test oasm file
+// Moves a single char to text register before looping
+
+def test_char "X"
+
+loop:
+jmp loop
+
+// Main routine
+
+lda $test_char
+
+mov d0 vt
+int vt
+
+jmp loop
