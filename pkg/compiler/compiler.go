@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"log"
+	"math"
 	"sccreeper/govm/pkg/constants"
 	"strings"
 	"time"
@@ -27,16 +28,14 @@ type jump_block struct {
 	instruction constants.Instruction
 }
 
-var jump_block_names []string
-var def_names []string
-
+// Compile method
 func Compile(code_string string, output_path string) {
 
 	start_time := time.Now().UnixMicro()
 
 	//Remove empty lines
 
-	code_string = strings.Replace(code_string, "\n\n", "\n", -1)
+	code_string = strings.ReplaceAll(code_string, "\n\n", "\n")
 
 	//Split code into array based on line breaks
 
@@ -45,18 +44,13 @@ func Compile(code_string string, output_path string) {
 	log.Printf("Code size: %d byte(s)", len(code_string))
 	log.Printf("Code lines: %d line(s)", len(program_list))
 
-	// var program_instructions []instruction
-	// var definitions []definition
-	// var jump_blocks []jump_block
-
-	// in_jump_block := false
-
-	in_element := false
-	_ = in_element
-
 	program_statements := make([][]string, 0)
 
 	//Begin parsing of statements
+
+	in_element := false
+	_ = in_element
+	in_string := false
 
 	for index, statement := range program_list {
 
@@ -76,11 +70,16 @@ func Compile(code_string string, output_path string) {
 
 			in_element = true
 
-			if char == ' ' {
+			if (char == ' ' && !in_string) || (in_string && char == '"') {
 
 				if len(program_statements)-1 < index || index == 0 {
 
 					program_statements = append(program_statements, make([]string, 0))
+				}
+
+				if char == '"' {
+					current_statement = strings.ReplaceAll(current_statement, "\"", "")
+					in_string = false
 				}
 
 				program_statements[index] = append(program_statements[index], current_statement)
@@ -88,6 +87,11 @@ func Compile(code_string string, output_path string) {
 				current_statement = ""
 
 			} else {
+
+				if char == '"' {
+					in_string = true
+				}
+
 				current_statement += string(char)
 				continue
 			}
@@ -117,7 +121,18 @@ func Compile(code_string string, output_path string) {
 
 	}
 
+	// Begin data construction
+
+	//var jump_block_names []string
+	//var def_names []string
+
+	// var program_instructions []instruction
+	// var definitions []definition
+	// var jump_blocks []jump_block
+
+	// in_jump_block := false
+
 	// Print elapsed time
-	log.Printf("Compiled in %d microseconds(s)", time.Now().UnixMicro()-start_time)
+	log.Printf("Compiled in %f second(s)", (float64(time.Now().UnixMicro())-float64(start_time))*math.Pow(10, -6))
 
 }

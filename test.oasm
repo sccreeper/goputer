@@ -1,7 +1,7 @@
 // Test oasm file
 // Moves a single char to text register before looping
 
-def test_char "X"
+def test_char "Hello world, this is a test of strings."
 
 loop:
 jmp loop
