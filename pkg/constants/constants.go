@@ -8,32 +8,35 @@ type Register uint32
 
 type Instruction uint8
 
+type DefType uint8
+
 //Maps are used by compiler
 
-var InteruptInts = map[string]Interrupt{
+var InterruptInts = map[string]Interrupt{
 
 	"ss":  0, //Stop sound
 	"sf":  1, //Flush sound registers
 	"va":  2, //Render area
 	"vp":  3, //Render pixel
 	"vt":  4, //Flush video text
-	"iof": 5, //Flush IO registers to IO
-	"ioc": 6, //Set all IO to 0x0
+	"vc":  5, //Clear video
+	"iof": 6, //Flush IO registers to IO
+	"ioc": 7, //Set all IO to 0x0
 
 	//Subscribable interrupts
 
-	"mm":   7, //Mouse move
-	"mb":   8, //Mouse button
-	"io08": 9, //IO on/off 8-15
-	"io09": 10,
-	"io10": 11,
-	"io11": 12,
-	"io12": 13,
-	"io13": 14,
-	"io14": 15,
-	"io15": 16,
-	"ku":   17, //Key up
-	"kd":   18, //Key down
+	"mm":   8,  //Mouse move
+	"mb":   9,  //Mouse button
+	"io08": 10, //IO on/off 8-15
+	"io09": 11,
+	"io10": 12,
+	"io11": 13,
+	"io12": 14,
+	"io13": 15,
+	"io14": 16,
+	"io15": 17,
+	"ku":   18, //Key up
+	"kd":   19, //Key down
 }
 
 var InstructionInts = map[string]uint32{
@@ -76,7 +79,7 @@ var InstructionInts = map[string]uint32{
 
 	"hlt": 24, // Halt the CPU for X miliseconds
 
-	"sqrt": 25,
+	"sqrt": 25, //Square root, will round to nearest uint it isn't a float instruction
 }
 
 var RegisterInts = map[string]uint32{
@@ -105,7 +108,7 @@ var RegisterInts = map[string]uint32{
 
 	"vc": 20, //Video colour
 	"vb": 21, //Video brightness
-	"vt": 22, //Video text
+	"vt": 22, //Video text (Special register, technically a buffer)
 
 	"kc": 23, //Current key being pressed
 	"kp": 24, //Is a key being pressed?
@@ -153,24 +156,25 @@ const (
 	IntVideoArea  Interrupt = 2
 	IntVideoPixel Interrupt = 3
 	IntVideoText  Interrupt = 4
-	IntIOFlush    Interrupt = 5
-	IntIOClear    Interrupt = 6
+	IntVideoClear Interrupt = 5
+	IntIOFlush    Interrupt = 6
+	IntIOClear    Interrupt = 7
 
 	//Subscribable interrupts
 
-	IntMouseMove   Interrupt = 7
-	IntMouseButton Interrupt = 8
-	IntIO08        Interrupt = 9
-	IntIO09        Interrupt = 10
-	IntIO10        Interrupt = 11
-	IntIO11        Interrupt = 12
-	IntIO12        Interrupt = 13
-	IntIO13        Interrupt = 14
-	IntIO14        Interrupt = 15
-	IntIO15        Interrupt = 16
+	IntMouseMove   Interrupt = 8
+	IntMouseButton Interrupt = 9
+	IntIO08        Interrupt = 10
+	IntIO09        Interrupt = 11
+	IntIO10        Interrupt = 12
+	IntIO11        Interrupt = 13
+	IntIO12        Interrupt = 14
+	IntIO13        Interrupt = 15
+	IntIO14        Interrupt = 16
+	IntIO15        Interrupt = 17
 
-	IntKeyboardUp   Interrupt = 17
-	IntKeyboardDown Interrupt = 18
+	IntKeyboardUp   Interrupt = 18
+	IntKeyboardDown Interrupt = 19
 )
 
 const (
@@ -279,4 +283,11 @@ const (
 	RIO15 Register = 49
 
 	RProgramCounter Register = 50
+)
+
+const (
+	StringType DefType = 0
+	FloatType  DefType = 1
+	IntType    DefType = 2
+	UintType   DefType = 3
 )

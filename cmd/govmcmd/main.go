@@ -52,7 +52,11 @@ func _compiler(ctx *cli.Context) error {
 	data, err := os.ReadFile(file_path)
 	util.CheckError(err)
 
-	compiler.Compile(string(data), ctx.Args().Get(1))
+	err = compiler.Compile(string(data), ctx.Args().Get(1))
+
+	if err != nil {
+		util.CheckError(err)
+	}
 
 	return nil
 }

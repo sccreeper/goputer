@@ -1,15 +1,45 @@
 // Test oasm file
 // Moves a single char to text register before looping
 
-def test_char "Hello world, this is a test of strings."
+def test_string "Hello world, this is a test of strings."
+def test_char "X"
+def vid_pos1 64
+def vid_pos2 128
+//Plan9 white
+def vid_colour 255
 
-loop:
+// Jump block for testing if interrupts work
+:test
+
+lda @test_char
+mov d0 vt
+
+lda @vid_pos1
+mov d0 vx0
+mov d0 vy0 
+
+lda @vid_pos2
+mov d0 vx1
+mov d0 vy1
+
+lda @vid_colour
+mov d0 vc
+
+int vc
+int va
+int vt
+
+end
+
+sub kd test
+
+:loop
 jmp loop
 end
 
 // Main routine 
 
-lda $test_char
+lda @test_string
 
 mov d0 vt
 int vt
