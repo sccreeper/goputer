@@ -26,3 +26,9 @@ A computer emulator/virtual machine intended to demonstrate how computers work a
 ### Documentation
 
 TODO
+
+---
+
+### License
+
+MIT - Refer to the `LICENSE` file
