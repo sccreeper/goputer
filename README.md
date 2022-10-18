@@ -25,7 +25,8 @@ A computer emulator/virtual machine intended to demonstrate how computers work a
 
 ### Documentation
 
-TODO
+See the [project wiki](https://github.com/sccreeper/goputer/wiki).
+
 
 ---
 
