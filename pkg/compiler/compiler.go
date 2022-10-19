@@ -128,6 +128,10 @@ func Compile(code_string string, config CompilerConfig) error {
 		//statement_items := make([]string, 0)
 		current_statement := ""
 
+		//Remove trailing whitespace
+
+		line = strings.Trim(line, " ")
+
 		//Loop to split the statement into individual elements (instructions, registers, data etc.)
 		for _, char := range line {
 
@@ -219,6 +223,7 @@ func Compile(code_string string, config CompilerConfig) error {
 			name_collision(e[1])
 
 			program_data.DefNames = append(program_data.DefNames, e[1])
+			program_data.AllNames = append(program_data.AllNames, e[1])
 
 			// Parse definition data, decide wether is int string, float, etc.
 
@@ -265,6 +270,7 @@ func Compile(code_string string, config CompilerConfig) error {
 				definition{
 					Name: e[1],
 					Data: data_array,
+					Type: def_type,
 				},
 			)
 
@@ -294,14 +300,15 @@ func Compile(code_string string, config CompilerConfig) error {
 				return errors.New("unexpected end statement")
 			}
 
-			in_jump_block = false
-			jump_block_name = ""
-
 			program_data.JumpBlocks[jump_block_name] = jump_block{
 
 				Name:         jump_block_name,
 				Instructions: current_jump_block_instructions,
 			}
+
+			in_jump_block = false
+			jump_block_name = ""
+			current_jump_block_instructions = nil
 
 			continue
 
@@ -315,6 +322,9 @@ func Compile(code_string string, config CompilerConfig) error {
 			}
 			//Check if name of jump block isn't shared by registers or instructions
 			name_collision(e[0][1:])
+
+			jump_block_name = e[0][1:]
+			program_data.AllNames = append(program_data.AllNames, e[0][1:])
 
 			in_jump_block = true
 			program_data.JumpBlockNames = append(program_data.JumpBlockNames, e[0][1:])
@@ -339,14 +349,19 @@ func Compile(code_string string, config CompilerConfig) error {
 				single_data = true
 			}
 
-			program_data.ProgramInstructions = append(
-				program_data.ProgramInstructions,
-				instruction{
-					SingleData:  single_data,
-					Data:        e[1:],
-					Instruction: constants.InstructionInts[e[0]],
-				},
-			)
+			instruction_to_be_added := instruction{
+				SingleData:  single_data,
+				Data:        e[1:],
+				Instruction: constants.InstructionInts[e[0]],
+			}
+
+			if in_jump_block {
+
+				current_jump_block_instructions = append(current_jump_block_instructions, instruction_to_be_added)
+
+			} else {
+				program_data.ProgramInstructions = append(program_data.ProgramInstructions, instruction_to_be_added)
+			}
 
 		}
 	}
