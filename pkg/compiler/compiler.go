@@ -64,7 +64,15 @@ type program_structure struct {
 	JumpBlocks          map[string]jump_block `json:"jump_blocks"`
 }
 
+//Constants
+
+const (
+	InstructionLength uint32 = 5 //Instruction length in bytes
+)
+
 var all_names []string
+
+//Name collision function
 
 func name_collision(s string) error {
 
@@ -85,6 +93,16 @@ func name_collision(s string) error {
 	}
 
 	return err
+}
+
+//General purpose instruction for generating instruction bytecode
+
+func generate_instruction_bytecode(i instruction, d_block_addr *map[string]uint32, j_blk_addr *map[string]uint32) []byte {
+
+	//Parse arguements
+
+	return []byte{0, 0, 0, 0}
+
 }
 
 // Compile method
@@ -370,9 +388,105 @@ func Compile(code_string string, config CompilerConfig) error {
 	// Begin bytecode generation
 	//--------------------------
 
-	//Generate addresses for definitions (data block)
+	log.Println("Starting bytecode generation")
+	log.Println("Starting data block generation")
 
-	//Defer finish compile time
+	//Start generating the data block.
+
+	var byte_index uint32 = 0
+
+	data_block_addresses := make(map[string]uint32)
+	data_block_bytes := []byte{}
+
+	data_start_index := byte_index
+
+	for _, v := range program_data.Definitions {
+
+		data_block_addresses[v.Name] = byte_index
+
+		data_array := make([]byte, 4)
+
+		binary.LittleEndian.PutUint32(data_array[:], uint32(len(v.Data)-1))
+
+		data_block_bytes = append(data_block_bytes, data_array...)
+		data_block_bytes = append(data_block_bytes, v.Data...)
+
+		byte_index += uint32(4 + (len(v.Data) - 1))
+		//                   4 - Length of uint32 which indicates length
+		//                     - Length of v.Data (which is already in bytes)
+
+	}
+
+	//Generate jump block bytecode and instructions
+
+	log.Println("Starting jump block generation")
+
+	jump_block_addresses := make(map[string]uint32)
+	jump_block_bytes := []byte{}
+
+	var instruction_byte_array []byte
+
+	jmp_block_start_index := byte_index
+
+	for _, jmp_blk := range program_data.JumpBlocks {
+
+		jump_block_addresses[jmp_blk.Name] = byte_index
+
+		for _, jmp_i := range jmp_blk.Instructions {
+
+			instruction_byte_array = append(
+				instruction_byte_array,
+				generate_instruction_bytecode(
+					jmp_i,
+					&data_block_addresses,
+					&jump_block_addresses,
+				)...,
+			)
+
+		}
+
+		//Add null terminator to jmp
+		instruction_byte_array = append(instruction_byte_array, []byte{0, 0, 0, 0}...)
+
+		//Add jump block to bytes
+		jump_block_bytes = append(jump_block_bytes, instruction_byte_array...)
+
+		byte_index += uint32((len(instruction_byte_array) - 1) + int(InstructionLength))
+
+	}
+
+	//Generate interrupt table
+
+	//---------------
+
+	//Finally, generate other instructions
+
+	log.Println("Starting other instruction generation")
+
+	var other_instruction_bytes []byte
+
+	instruction_start_index := byte_index
+
+	for _, v := range program_data.ProgramInstructions {
+
+		other_instruction_bytes = append(
+			other_instruction_bytes,
+			generate_instruction_bytecode(
+				v,
+				&data_block_addresses,
+				&jump_block_addresses,
+			)...,
+		)
+
+		byte_index += InstructionLength
+
+	}
+
+	//Output start indexes
+
+	log.Printf("Data start index: %d", data_start_index)
+	log.Printf("Jump start index: %d", jmp_block_start_index)
+	log.Printf("Program start index: %d", instruction_start_index)
 
 	// -----------------
 	// Output JSON
