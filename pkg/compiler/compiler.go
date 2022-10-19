@@ -3,10 +3,12 @@ package compiler
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"math"
+	"os"
 	"sccreeper/govm/pkg/constants"
 	"sccreeper/govm/pkg/util"
 	"strconv"
@@ -16,27 +18,50 @@ import (
 
 // Compiler backend
 
-type instruction struct {
-	SingleData bool
-	Data       []string
+//Config for CLI
 
-	Instruction uint32
+type CompilerConfig struct {
+	OutputPath string
+
+	OutputJSON bool
+	JSONPath   string
+}
+
+// Types for statements
+type instruction struct {
+	SingleData bool     `json:"single_data"`
+	Data       []string `json:"data"`
+
+	Instruction uint32 `json:"instruction"`
 }
 
 type definition struct {
-	Name string
-	Data []byte
-	Type constants.DefType
+	Name string            `json:"name"`
+	Data []byte            `json:"data"`
+	Type constants.DefType `json:"type"`
 }
 
 type interrupt_subscription struct {
-	Interrupt     constants.Interrupt
-	JumpBlockName string
+	Interrupt     constants.Interrupt `json:"interrupt"`
+	JumpBlockName string              `json:"jump_block_name"`
 }
 
 type jump_block struct {
-	Name         string
-	Instructions []instruction
+	Name         string        `json:"name"`
+	Instructions []instruction `json:"instructions"`
+}
+
+// Struct for holding program data
+type program_structure struct {
+	AllNames []string `json:"all_names"`
+
+	JumpBlockNames         []string                 `json:"jump_block_names"`
+	DefNames               []string                 `json:"definition_names"`
+	InterruptSubscriptions []interrupt_subscription `json:"interrupt_subscriptions"`
+
+	ProgramInstructions []instruction         `json:"program_instructions"`
+	Definitions         []definition          `json:"definitions"`
+	JumpBlocks          map[string]jump_block `json:"jump_blocks"`
 }
 
 var all_names []string
@@ -63,7 +88,7 @@ func name_collision(s string) error {
 }
 
 // Compile method
-func Compile(code_string string, output_path string) error {
+func Compile(code_string string, config CompilerConfig) error {
 
 	start_time := time.Now().UnixMicro()
 
@@ -159,16 +184,22 @@ func Compile(code_string string, output_path string) error {
 	// Begin data construction
 	//------------------------
 
+	//Make program data struct
+
+	var program_data = program_structure{
+		JumpBlocks: make(map[string]jump_block),
+	}
+
 	//Arrays for names
-	var jump_block_names []string
-	var def_names []string
-	var interrupt_subscriptions []interrupt_subscription
+	//var jump_block_names []string
+	//var def_names []string
+	//var interrupt_subscriptions []interrupt_subscription
 
 	//Instructions not contained in any jump blocks
-	var program_instructions []instruction
+	//var program_instructions []instruction
 
-	var definitions []definition
-	var jump_blocks = make(map[string]jump_block)
+	//var definitions []definition
+	//var jump_blocks = make(map[string]jump_block)
 
 	var current_jump_block_instructions []instruction
 	jump_block_name := ""
@@ -187,7 +218,7 @@ func Compile(code_string string, output_path string) error {
 		if e[0] == "def" { //Constant definition
 			name_collision(e[1])
 
-			def_names = append(def_names, e[1])
+			program_data.DefNames = append(program_data.DefNames, e[1])
 
 			// Parse definition data, decide wether is int string, float, etc.
 
@@ -230,7 +261,7 @@ func Compile(code_string string, output_path string) error {
 				data_array = []byte(buffer.Bytes())
 			}
 
-			definitions = append(definitions,
+			program_data.Definitions = append(program_data.Definitions,
 				definition{
 					Name: e[1],
 					Data: data_array,
@@ -245,12 +276,12 @@ func Compile(code_string string, output_path string) error {
 				return fmt.Errorf("unrecognized interrupt %s", e[1])
 			}
 
-			if !util.ContainsString(jump_block_names, e[2]) {
+			if !util.ContainsString(program_data.JumpBlockNames, e[2]) {
 				return fmt.Errorf("unreconized jump %s", e[2])
 			}
 
-			interrupt_subscriptions = append(
-				interrupt_subscriptions,
+			program_data.InterruptSubscriptions = append(
+				program_data.InterruptSubscriptions,
 
 				interrupt_subscription{
 					Interrupt:     constants.Interrupt(constants.InterruptInts[e[1]]),
@@ -266,7 +297,7 @@ func Compile(code_string string, output_path string) error {
 			in_jump_block = false
 			jump_block_name = ""
 
-			jump_blocks[jump_block_name] = jump_block{
+			program_data.JumpBlocks[jump_block_name] = jump_block{
 
 				Name:         jump_block_name,
 				Instructions: current_jump_block_instructions,
@@ -286,7 +317,7 @@ func Compile(code_string string, output_path string) error {
 			name_collision(e[0][1:])
 
 			in_jump_block = true
-			jump_block_names = append(jump_block_names, e[0][1:])
+			program_data.JumpBlockNames = append(program_data.JumpBlockNames, e[0][1:])
 			all_names = append(all_names, e[0][1:])
 
 			continue
@@ -308,8 +339,8 @@ func Compile(code_string string, output_path string) error {
 				single_data = true
 			}
 
-			program_instructions = append(
-				program_instructions,
+			program_data.ProgramInstructions = append(
+				program_data.ProgramInstructions,
 				instruction{
 					SingleData:  single_data,
 					Data:        e[1:],
@@ -327,6 +358,24 @@ func Compile(code_string string, output_path string) error {
 	//Generate addresses for definitions (data block)
 
 	//Defer finish compile time
+
+	// -----------------
+	// Output JSON
+	// ----------------
+
+	if config.OutputJSON {
+
+		json_bytes, err := json.MarshalIndent(program_data, "", "\t")
+
+		util.CheckError(err)
+
+		err = os.WriteFile(config.JSONPath, json_bytes, 0644)
+
+		util.CheckError(err)
+
+		log.Printf("Outputted JSON structure to '%s'", config.JSONPath)
+
+	}
 
 	// -------------------
 	// Output elapsed time
