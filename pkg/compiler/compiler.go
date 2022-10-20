@@ -42,6 +42,7 @@ type definition struct {
 }
 
 type interrupt_subscription struct {
+	InterruptName string              `json:"interrupt_name"`
 	Interrupt     constants.Interrupt `json:"interrupt"`
 	JumpBlockName string              `json:"jump_block_name"`
 }
@@ -68,6 +69,7 @@ type program_structure struct {
 
 const (
 	InstructionLength uint32 = 5 //Instruction length in bytes
+	BlockAddrSize            = 4 * 4
 )
 
 var all_names []string
@@ -97,11 +99,59 @@ func name_collision(s string) error {
 
 //General purpose instruction for generating instruction bytecode
 
-func generate_instruction_bytecode(i instruction, d_block_addr *map[string]uint32, j_blk_addr *map[string]uint32) []byte {
+func generate_instruction_bytecode(i instruction, d_block_addr map[string]uint32, j_blk_addr map[string]uint32) []byte {
 
-	//Parse arguements
+	//TODO: sign bit
+	//TODO: add offset for "hardware reserved" space
 
-	return []byte{0, 0, 0, 0}
+	var instruction_bytes []byte
+
+	instruction_bytes = append(instruction_bytes,
+		uint8(i.Instruction),
+	)
+
+	//Evaluate instruction args
+
+	var addresses []uint32
+
+	for _, v := range i.Data {
+		var addr uint32
+
+		if v[0] == '@' {
+
+			addr = j_blk_addr[v[1:]]
+
+		} else if i.Instruction == uint32(constants.IJump) {
+
+			addr = uint32(j_blk_addr[v])
+
+		} else {
+			addr = uint32(constants.InterruptInts[v])
+		}
+
+		addresses = append(addresses, addr)
+	}
+
+	//Add args to byte array
+
+	var data_array []byte
+
+	if i.SingleData {
+
+		data_array = make([]byte, 4)
+
+		binary.LittleEndian.PutUint32(data_array[:], addresses[0])
+
+	} else {
+		data_array = make([]byte, 4)
+
+		binary.LittleEndian.PutUint16(data_array[:], uint16(addresses[0]))
+		binary.LittleEndian.PutUint16(data_array[2:], uint16(addresses[1]))
+	}
+
+	instruction_bytes = append(instruction_bytes, data_array...)
+
+	return instruction_bytes
 
 }
 
@@ -308,6 +358,7 @@ func Compile(code_string string, config CompilerConfig) error {
 				program_data.InterruptSubscriptions,
 
 				interrupt_subscription{
+					InterruptName: e[1],
 					Interrupt:     constants.Interrupt(constants.InterruptInts[e[1]]),
 					JumpBlockName: e[2],
 				},
@@ -393,7 +444,7 @@ func Compile(code_string string, config CompilerConfig) error {
 
 	//Start generating the data block.
 
-	var byte_index uint32 = 0
+	var byte_index uint32 = BlockAddrSize
 
 	data_block_addresses := make(map[string]uint32)
 	data_block_bytes := []byte{}
@@ -406,12 +457,12 @@ func Compile(code_string string, config CompilerConfig) error {
 
 		data_array := make([]byte, 4)
 
-		binary.LittleEndian.PutUint32(data_array[:], uint32(len(v.Data)-1))
+		binary.LittleEndian.PutUint32(data_array[:], uint32(len(v.Data)))
 
 		data_block_bytes = append(data_block_bytes, data_array...)
 		data_block_bytes = append(data_block_bytes, v.Data...)
 
-		byte_index += uint32(4 + (len(v.Data) - 1))
+		byte_index += uint32(4 + len(v.Data))
 		//                   4 - Length of uint32 which indicates length
 		//                     - Length of v.Data (which is already in bytes)
 
@@ -438,8 +489,8 @@ func Compile(code_string string, config CompilerConfig) error {
 				instruction_byte_array,
 				generate_instruction_bytecode(
 					jmp_i,
-					&data_block_addresses,
-					&jump_block_addresses,
+					data_block_addresses,
+					jump_block_addresses,
 				)...,
 			)
 
@@ -457,6 +508,43 @@ func Compile(code_string string, config CompilerConfig) error {
 
 	//Generate interrupt table
 
+	interrupt_table_start_index := byte_index
+
+	var interrupt_bytes []byte
+
+	interrupts := make(map[string]interrupt_subscription)
+
+	//Generate interrupts map
+
+	for _, v := range program_data.InterruptSubscriptions {
+
+		interrupts[v.InterruptName] = v
+
+	}
+
+	var int_address uint32
+
+	for k, v := range constants.SubscribableInterrupts {
+
+		if _, exists := interrupts[k]; exists {
+
+			int_address = jump_block_addresses[interrupts[k].JumpBlockName]
+
+		} else {
+			int_address = uint32(0)
+		}
+
+		data_array := make([]byte, 8)
+
+		binary.LittleEndian.PutUint32(data_array[:], uint32(v))
+		binary.LittleEndian.PutUint32(data_array[4:], uint32(int_address))
+
+		interrupt_bytes = append(interrupt_bytes, data_array...)
+
+		byte_index += uint32(len(data_array))
+
+	}
+
 	//---------------
 
 	//Finally, generate other instructions
@@ -473,8 +561,8 @@ func Compile(code_string string, config CompilerConfig) error {
 			other_instruction_bytes,
 			generate_instruction_bytecode(
 				v,
-				&data_block_addresses,
-				&jump_block_addresses,
+				data_block_addresses,
+				jump_block_addresses,
 			)...,
 		)
 
@@ -482,11 +570,40 @@ func Compile(code_string string, config CompilerConfig) error {
 
 	}
 
+	//--------------------------
+	//Build final program binary
+	//--------------------------
+
+	var final_byte_array []byte
+
+	//Start with block indexes
+
+	block_index_array := make([]byte, 16)
+
+	binary.LittleEndian.PutUint32(block_index_array[:], data_start_index)
+	binary.LittleEndian.PutUint32(block_index_array[4:], jmp_block_start_index)
+	binary.LittleEndian.PutUint32(block_index_array[8:], interrupt_table_start_index)
+	binary.LittleEndian.PutUint32(block_index_array[12:], instruction_start_index)
+
+	final_byte_array = append(final_byte_array, block_index_array...)
+
+	//Add data, jumps, interrupts, and program
+
+	final_byte_array = append(final_byte_array, data_block_bytes...)
+	final_byte_array = append(final_byte_array, jump_block_bytes...)
+	final_byte_array = append(final_byte_array, interrupt_bytes...)
+	final_byte_array = append(final_byte_array, other_instruction_bytes...)
+
+	//Write to file
+
+	os.WriteFile(config.OutputPath, final_byte_array, 0666)
 	//Output start indexes
 
 	log.Printf("Data start index: %d", data_start_index)
 	log.Printf("Jump start index: %d", jmp_block_start_index)
+	log.Printf("Interrupt table start index: %d", interrupt_table_start_index)
 	log.Printf("Program start index: %d", instruction_start_index)
+	log.Printf("Final executable size: %d byte(s)", len(final_byte_array))
 
 	// -----------------
 	// Output JSON
@@ -498,7 +615,7 @@ func Compile(code_string string, config CompilerConfig) error {
 
 		util.CheckError(err)
 
-		err = os.WriteFile(config.JSONPath, json_bytes, 0644)
+		err = os.WriteFile(config.JSONPath, json_bytes, 0666)
 
 		util.CheckError(err)
 

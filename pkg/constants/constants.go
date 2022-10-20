@@ -3,8 +3,8 @@
 package constants
 
 // Custom types
-type Interrupt uint32
-type Register uint32
+type Interrupt uint16
+type Register uint16
 
 type Instruction uint8
 
@@ -25,6 +25,21 @@ var InterruptInts = map[string]Interrupt{
 
 	//Subscribable interrupts
 
+	"mm":   8,  //Mouse move
+	"mb":   9,  //Mouse button
+	"io08": 10, //IO on/off 8-15
+	"io09": 11,
+	"io10": 12,
+	"io11": 13,
+	"io12": 14,
+	"io13": 15,
+	"io14": 16,
+	"io15": 17,
+	"ku":   18, //Key up
+	"kd":   19, //Key down
+}
+
+var SubscribableInterrupts = map[string]Interrupt{
 	"mm":   8,  //Mouse move
 	"mb":   9,  //Mouse button
 	"io08": 10, //IO on/off 8-15
@@ -77,7 +92,7 @@ var InstructionInts = map[string]uint32{
 	"incr": 22, //Increment register and keep value in register
 	"decr": 23,
 
-	"hlt": 24, // Halt the CPU for X miliseconds
+	"hlt": 24, // Halt the CPU for X milliseconds
 
 	"sqrt": 25, //Square root, will round to nearest uint it isn't a float instruction
 }
