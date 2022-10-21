@@ -460,6 +460,16 @@ func Compile(code_string string, config CompilerConfig) error {
 		binary.LittleEndian.PutUint32(data_array[:], uint32(len(v.Data)))
 
 		data_block_bytes = append(data_block_bytes, data_array...)
+
+		//Modify data if it is string
+
+		if v.Type == constants.StringType {
+
+			v.Data = util.SliceRemove(v.Data, 0)
+			v.Data = util.SliceRemove(v.Data, len(v.Data)-1)
+
+		}
+
 		data_block_bytes = append(data_block_bytes, v.Data...)
 
 		byte_index += uint32(4 + len(v.Data))

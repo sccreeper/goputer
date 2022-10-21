@@ -10,7 +10,7 @@ func CheckError(err error) {
 
 var Check = CheckError
 
-func SliceRemove(slice []string, s int) []string {
+func SliceRemove[T string | byte](slice []T, s int) []T {
 	return append(slice[:s], slice[s+1:]...)
 }
 
