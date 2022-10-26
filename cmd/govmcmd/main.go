@@ -13,12 +13,25 @@ import (
 	"sccreeper/govm/pkg/util"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
 )
 
 var use_json bool
 var json_path string
 var output_path string
+
+var Commit string
+
+var green_bold_underline = color.New([]color.Attribute{color.FgGreen, color.Bold, color.Underline}...)
+var bold = color.New([]color.Attribute{color.Bold}...)
+var underline = color.New([]color.Attribute{color.FgWhite, color.Underline}...)
+
+func format_instruction(i_name string, i_data []string) string {
+
+	return fmt.Sprintf("%s %s", color.GreenString(i_name), color.CyanString(strings.Join(i_data[:], " ")))
+
+}
 
 func convert_hex(i int) string {
 
@@ -135,66 +148,76 @@ func _disassemble(ctx *cli.Context) error {
 
 	program, err := compiler.Disassemble(data, false)
 
-	//Reverse dict
+	//Reverse map
 
-	itn_dict := make(map[constants.Instruction]string)
+	itn_map := make(map[constants.Instruction]string)
 
 	for k, v := range constants.InstructionInts {
 
-		itn_dict[constants.Instruction(v)] = k
+		itn_map[constants.Instruction(v)] = k
 
 	}
 
 	//Output disassembled program
 
-	log.Println("Disassembled program structure")
+	green_bold_underline.Printf("goputer Disassembler (%s)\n", Commit[:10])
+	fmt.Println()
 
-	log.Println("Block addresses:")
+	underline.Println("Block addresses:")
+	fmt.Println()
 
-	log.Printf("Data block: %s", convert_hex(int(program.StartIndexes[0])))
-	log.Printf("Jump blocks: %s", convert_hex(int(program.StartIndexes[1])))
-	log.Printf("Interrupt table: %s", convert_hex(int(program.StartIndexes[2])))
-	log.Printf("Instruction block: %s", convert_hex(int(program.StartIndexes[3])))
+	color.White("Data block: %s", bold.Sprintf(convert_hex(int(program.StartIndexes[0]))))
+	color.White("Jump blocks: %s", bold.Sprintf(convert_hex(int(program.StartIndexes[1]))))
+	color.White("Interrupt table: %s", bold.Sprintf(convert_hex(int(program.StartIndexes[2]))))
+	color.White("Instruction block: %s", bold.Sprintf(convert_hex(int(program.StartIndexes[3]))))
 
-	log.Println("Definitions:")
+	fmt.Println()
+	underline.Println("Definitions:")
+	fmt.Println()
 
 	for index, v := range program.ProgramDefinitions {
 
-		log.Printf("Def %s = %s", convert_hex(index), v)
+		fmt.Printf("%s = %s\n", bold.Sprintf(convert_hex(index)), strings.ReplaceAll(string(v), "\n", ""))
 
 	}
 
-	log.Println("Interrupt table")
+	fmt.Println()
+	underline.Println("Interrupt table")
+	fmt.Println()
 
 	//Output to console
 
 	for k, v := range program.InterruptTable {
 
-		log.Printf("Int %d = %s", int(k), convert_hex(int(v)))
+		fmt.Printf("%02d = %s\n", int(k), bold.Sprintf(convert_hex(int(v))))
 
 	}
 
-	log.Println("Jump blocks")
+	fmt.Println()
+	underline.Println("Jump blocks")
+	fmt.Println()
 
 	for k, v := range program.JumpBlocks {
 
-		log.Printf("Jump %s:", convert_hex(int(k)))
+		fmt.Println()
+		bold.Printf("Jump %s:\n", convert_hex(int(k)))
+		fmt.Println()
 
 		for _, v1 := range v {
 
-			log.Printf("%s %s", itn_dict[constants.Instruction(v1.Instruction)], strings.Join(v1.Data[:], " "))
+			fmt.Println(format_instruction(itn_map[constants.Instruction(v1.Instruction)], v1.Data))
 
 		}
 
-		log.Println("============================")
-
 	}
 
-	log.Println("Instructions:")
+	fmt.Println()
+	underline.Println("Instructions:")
+	fmt.Println()
 
 	for _, v := range program.Instructions {
 
-		log.Printf("%s %s", itn_dict[constants.Instruction(v.Instruction)], strings.Join(v.Data[:], " "))
+		fmt.Println(format_instruction(itn_map[constants.Instruction(v.Instruction)], v.Data))
 
 	}
 
