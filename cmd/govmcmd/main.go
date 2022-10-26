@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/savioxavier/termlink"
 	"github.com/urfave/cli/v2"
 )
 
@@ -160,7 +161,7 @@ func _disassemble(ctx *cli.Context) error {
 
 	//Output disassembled program
 
-	green_bold_underline.Printf("goputer Disassembler (%s)\n", Commit[:10])
+	green_bold_underline.Printf("goputer Disassembler (%s)\n", termlink.Link(Commit[:10], fmt.Sprintf("https://github.com/sccreeper/goputer/commit/%s", Commit[0:10])))
 	fmt.Println()
 
 	underline.Println("Block addresses:")
