@@ -54,6 +54,22 @@ var SubscribableInterrupts = map[string]Interrupt{
 	"kd":   19, //Key down
 }
 
+// Array with keys in same order as map
+var SubscribableInterruptsKeys []string = []string{
+	"mm",   //Mouse move
+	"mb",   //Mouse button
+	"io08", //IO on/off 8-15
+	"io09",
+	"io10",
+	"io11",
+	"io12",
+	"io13",
+	"io14",
+	"io15",
+	"ku",
+	"kd",
+}
+
 var InstructionInts = map[string]uint32{
 
 	"mov": 0, //Move
@@ -236,6 +252,21 @@ const (
 
 	ISquareRoot Instruction = 25
 )
+
+// Instructions that take a single 32 bit arg, as opposed to 2x16bit args
+var SingleArgInstructions = []Instruction{
+
+	IJump,
+	IConditionalJump,
+	IInvert,
+	ICallInterrupt,
+	ILoad,
+	IStore,
+	IIncrement,
+	IDecrement,
+	IHalt,
+	ISquareRoot,
+}
 
 const (
 	RGeneralPurpose00 Register = 0

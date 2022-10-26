@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sccreeper/govm/pkg/compiler"
+	"sccreeper/govm/pkg/constants"
 	"sccreeper/govm/pkg/util"
 	"strings"
 
@@ -18,6 +19,12 @@ import (
 var use_json bool
 var json_path string
 var output_path string
+
+func convert_hex(i int) string {
+
+	return fmt.Sprintf("0x"+"%08X", i)
+
+}
 
 func main() {
 
@@ -50,6 +57,12 @@ func main() {
 						Destination: &output_path,
 					},
 				},
+			},
+			{
+				Name:    "disassemble",
+				Aliases: []string{"d"},
+				Usage:   "Used to disassemble programs",
+				Action:  _disassemble,
 			},
 		},
 	}
@@ -104,11 +117,87 @@ func _compiler(ctx *cli.Context) error {
 		JSONPath:   json_path,
 	}
 
-	err = compiler.Compile(string(data), compiler_config)
+	err = compiler.Assemble(string(data), compiler_config)
 
 	if err != nil {
 		util.CheckError(err)
 	}
 
 	return nil
+}
+
+func _disassemble(ctx *cli.Context) error {
+
+	file_path := ctx.Args().Get(0)
+
+	data, err := os.ReadFile(file_path)
+	util.CheckError(err)
+
+	program, err := compiler.Disassemble(data, false)
+
+	//Reverse dict
+
+	itn_dict := make(map[constants.Instruction]string)
+
+	for k, v := range constants.InstructionInts {
+
+		itn_dict[constants.Instruction(v)] = k
+
+	}
+
+	//Output disassembled program
+
+	log.Println("Disassembled program structure")
+
+	log.Println("Block addresses:")
+
+	log.Printf("Data block: %s", convert_hex(int(program.StartIndexes[0])))
+	log.Printf("Jump blocks: %s", convert_hex(int(program.StartIndexes[1])))
+	log.Printf("Interrupt table: %s", convert_hex(int(program.StartIndexes[2])))
+	log.Printf("Instruction block: %s", convert_hex(int(program.StartIndexes[3])))
+
+	log.Println("Definitions:")
+
+	for index, v := range program.ProgramDefinitions {
+
+		log.Printf("Def %s = %s", convert_hex(index), v)
+
+	}
+
+	log.Println("Interrupt table")
+
+	//Output to console
+
+	for k, v := range program.InterruptTable {
+
+		log.Printf("Int %d = %s", int(k), convert_hex(int(v)))
+
+	}
+
+	log.Println("Jump blocks")
+
+	for k, v := range program.JumpBlocks {
+
+		log.Printf("Jump %s:", convert_hex(int(k)))
+
+		for _, v1 := range v {
+
+			log.Printf("%s %s", itn_dict[constants.Instruction(v1.Instruction)], strings.Join(v1.Data[:], " "))
+
+		}
+
+		log.Println("============================")
+
+	}
+
+	log.Println("Instructions:")
+
+	for _, v := range program.Instructions {
+
+		log.Printf("%s %s", itn_dict[constants.Instruction(v.Instruction)], strings.Join(v.Data[:], " "))
+
+	}
+
+	return err
+
 }
