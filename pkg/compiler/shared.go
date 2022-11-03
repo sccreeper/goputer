@@ -56,9 +56,10 @@ type program_structure struct {
 //Constants
 
 const (
-	InstructionLength uint32 = 5 //Instruction length in bytes
-	BlockAddrSize     uint32 = 16
-	PadSize           uint32 = 4
-	PadValue          byte   = 0xFF
-	InterruptLength   uint32 = 6
+	InstructionLength uint32 = 5    //Instruction length in bytes
+	BlockAddrSize     uint32 = 16   // Size of the block address header
+	PadSize           uint32 = 4    //Padding size inbetween blocks
+	PadValue          byte   = 0xFF //Value to pad blocks with
+	InterruptLength   uint32 = 6    //Length of interrupt in bytes (1 uint16, 1 uint32)
+	StackSize         uint32 = 1024 //Default stack size (256 uint32)
 )

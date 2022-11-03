@@ -176,9 +176,22 @@ func _disassemble(ctx *cli.Context) error {
 	underline.Println("Definitions:")
 	fmt.Println()
 
-	for index, v := range program.ProgramDefinitions {
+	defintion_byte_index := compiler.BlockAddrSize + compiler.PadSize
 
-		fmt.Printf("%s = %s\n", bold.Sprintf(convert_hex(index)), strings.ReplaceAll(string(v), "\n", ""))
+	for _, v := range program.ProgramDefinitions {
+
+		// real_byte_index := ""
+
+		fmt.Printf(
+			"F: %s M: %s = %s\n",
+			bold.Sprintf(convert_hex(int(defintion_byte_index))),
+			bold.Sprintf(convert_hex(int(defintion_byte_index+compiler.StackSize))),
+			strings.ReplaceAll(string(v), "\n", ""),
+		)
+
+		//Calculate memory address and index in file
+
+		defintion_byte_index += uint32(len(v) + 4)
 
 	}
 
@@ -201,7 +214,7 @@ func _disassemble(ctx *cli.Context) error {
 	for k, v := range program.JumpBlocks {
 
 		fmt.Println()
-		bold.Printf("Jump %s:\n", convert_hex(int(k)))
+		bold.Printf("Jump %s (File: %s):\n", convert_hex(int(k+compiler.StackSize)), convert_hex(int(k)))
 		fmt.Println()
 
 		for _, v1 := range v {

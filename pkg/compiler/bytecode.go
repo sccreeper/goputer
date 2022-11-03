@@ -22,7 +22,7 @@ func generate_bytecode(p program_structure) []byte {
 
 	for _, d := range p.Definitions {
 
-		data_block_addr[d.Name] = definition_addr_index
+		data_block_addr[d.Name] = definition_addr_index + StackSize
 
 		length_bytes := make([]byte, 4)
 
@@ -212,7 +212,7 @@ func generate_instruction_bytecode(i instruction, d_block_addr map[string]uint32
 
 		} else if i.Instruction == uint32(constants.IJump) || i.Instruction == uint32(constants.IConditionalJump) { //jump
 
-			addr = uint32(j_blk_addr[v])
+			addr = uint32(j_blk_addr[v] + StackSize)
 
 		} else if i.Instruction == uint32(constants.ICallInterrupt) {
 			addr = uint32(constants.InterruptInts[v])
