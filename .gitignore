@@ -2,3 +2,4 @@ out
 test.json
 test
 goputer
+build/*

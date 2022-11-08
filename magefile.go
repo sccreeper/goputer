@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"sccreeper/govm/pkg/util"
 
+	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 )
 
@@ -27,7 +29,6 @@ var env_map map[string]string = map[string]string{
 const (
 	build_dir       string = "./build"
 	examples_dir    string = "examples/."
-	normal_ldflags  string = "-X main.Commit=Help"
 	goputer_cmd_out string = "./build/goputer"
 	frontend_dir    string = "./frontends"
 )
@@ -35,8 +36,17 @@ const (
 // Builds, clears directory beforehand & copies examples
 func All() {
 
-	sh.Rm("./build")
-	sh.Run("mkdir", "./build")
+	if _, err := os.Stat("./build"); !os.IsExist(err) {
+		sh.Rm("./build")
+		sh.Run("mkdir", "./build")
+	} else {
+		sh.Run("mkdir", "./build")
+	}
+
+	hash, err := exec.Command("git", "rev-parse", "HEAD").Output()
+	util.CheckError(err)
+
+	normal_ldflags := fmt.Sprintf("-X main.Commit=%s", hash)
 
 	sh.Run("go", "build", "-ldflags", normal_ldflags, "-o", goputer_cmd_out, "./cmd/goputer/main.go")
 
@@ -79,4 +89,25 @@ func All() {
 
 	}
 
+}
+
+// Builds the examples as well as main All command
+func Dev() {
+	mg.Deps(All)
+
+	os.Chdir("./build/")
+
+	example_list, err := ioutil.ReadDir("./examples")
+	util.CheckError(err)
+
+	for _, v := range example_list {
+
+		sh.Run("./goputer", "b", fmt.Sprintf("./examples/%s", v.Name()))
+
+	}
+
+}
+
+func Clean() {
+	sh.Rm("./build/")
 }

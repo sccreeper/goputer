@@ -140,7 +140,7 @@ func parse(code_string string) (program_structure, error) {
 	//Make program data struct
 
 	var program_data = program_structure{
-		JumpBlocks: make(map[string]jump_block),
+		InstructionBlocks: make(map[string]code_block),
 	}
 
 	var current_jump_block_instructions []instruction
@@ -224,7 +224,7 @@ func parse(code_string string) (program_structure, error) {
 				return program_data, fmt.Errorf("unrecognized interrupt %s", e[1])
 			}
 
-			if !util.SliceContains(program_data.JumpBlockNames, e[2]) {
+			if !util.SliceContains(program_data.InstructionBlockNames, e[2]) {
 				return program_data, fmt.Errorf("unreconized jump %s", e[2])
 			}
 
@@ -243,7 +243,7 @@ func parse(code_string string) (program_structure, error) {
 				return program_data, errors.New("unexpected end statement")
 			}
 
-			program_data.JumpBlocks[jump_block_name] = jump_block{
+			program_data.InstructionBlocks[jump_block_name] = code_block{
 
 				Name:         jump_block_name,
 				Instructions: current_jump_block_instructions,
@@ -270,7 +270,7 @@ func parse(code_string string) (program_structure, error) {
 			program_data.AllNames = append(program_data.AllNames, e[0][1:])
 
 			in_jump_block = true
-			program_data.JumpBlockNames = append(program_data.JumpBlockNames, e[0][1:])
+			program_data.InstructionBlockNames = append(program_data.InstructionBlockNames, e[0][1:])
 			all_names = append(all_names, e[0][1:])
 
 			continue

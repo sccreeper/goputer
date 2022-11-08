@@ -50,9 +50,9 @@ func generate_bytecode(p program_structure) []byte {
 
 	//Order keys first
 
-	for _, s := range p.JumpBlockNames {
+	for _, s := range p.InstructionBlockNames {
 
-		v := p.JumpBlocks[s]
+		v := p.InstructionBlocks[s]
 
 		current_jump_block_bytes := []byte{}
 

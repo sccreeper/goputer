@@ -35,7 +35,7 @@ type interrupt_subscription struct {
 	JumpBlockName string              `json:"jump_block_name"`
 }
 
-type jump_block struct {
+type code_block struct {
 	Name         string        `json:"name"`
 	Instructions []instruction `json:"instructions"`
 }
@@ -44,22 +44,24 @@ type jump_block struct {
 type program_structure struct {
 	AllNames []string `json:"all_names"`
 
-	JumpBlockNames         []string                 `json:"jump_block_names"`
+	InstructionBlockNames  []string                 `json:"instruction_block_names"`
 	DefNames               []string                 `json:"definition_names"`
 	InterruptSubscriptions []interrupt_subscription `json:"interrupt_subscriptions"`
 
 	ProgramInstructions []instruction         `json:"program_instructions"`
 	Definitions         []definition          `json:"definitions"`
-	JumpBlocks          map[string]jump_block `json:"jump_blocks"`
+	InstructionBlocks   map[string]code_block `json:"instruction_blocks"`
 }
 
 //Constants
 
 const (
-	InstructionLength uint32 = 5    //Instruction length in bytes
-	BlockAddrSize     uint32 = 16   // Size of the block address header
-	PadSize           uint32 = 4    //Padding size inbetween blocks
-	PadValue          byte   = 0xFF //Value to pad blocks with
-	InterruptLength   uint32 = 6    //Length of interrupt in bytes (1 uint16, 1 uint32)
-	StackSize         uint32 = 1024 //Default stack size (256 uint32)
+	InstructionLength uint32 = 5       //Instruction length in bytes
+	BlockAddrSize     uint32 = 16      // Size of the block address header
+	PadSize           uint32 = 4       //Padding size inbetween blocks
+	PadValue          byte   = 0xFF    //Value to pad blocks with
+	InterruptLength   uint32 = 6       //Length of interrupt in bytes (1 uint16, 1 uint32)
+	DataStackSize     uint32 = 4 * 256 //Default stack size, 1024 bytes(256 uint32)
+	CallStackSize     uint32 = 4 * 64  //Default call stack size, 256 bytes, 64 uint32
+	StackSize         uint32 = DataStackSize + CallStackSize
 )

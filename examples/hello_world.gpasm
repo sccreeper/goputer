@@ -1,0 +1,10 @@
+// Simple hello world example
+
+def hw "Hello World"
+
+lda @hw
+
+mov d0 vt
+int vt
+
+//Exit (fingers crossed)

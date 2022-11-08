@@ -1,0 +1,17 @@
+//Prints hello world lots of times
+def text "Hello World"
+def time 2500
+
+:loop
+int vt
+hlt r00
+jmp loop
+end
+
+lda @text
+mov d0 vt
+
+lda @time
+mov d0 r00
+
+jmp loop

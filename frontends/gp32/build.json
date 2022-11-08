@@ -1,0 +1,7 @@
+{
+
+    "command" : ["sh", "cmd.sh"],
+    "output_dir" : "build",
+    "is_plugin" : true
+
+}

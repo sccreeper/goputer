@@ -115,6 +115,9 @@ var InstructionInts = map[string]uint32{
 	"hlt": 24, // Halt the CPU for X milliseconds
 
 	"sqrt": 25, //Square root, will round to nearest uint it isn't a float instruction
+
+	"call":    26,
+	"cndcall": 27,
 }
 
 var RegisterInts = map[string]uint32{
@@ -159,7 +162,7 @@ var RegisterInts = map[string]uint32{
 	"d0": 31, //Data register (returns from interrupts and lda sta)
 
 	"stk": 32, //Current stack pointer
-	"stn": 33, //Stack "zero" point in memory
+	"stz": 33, //Stack "zero" point in memory
 
 	"io00": 34, //IO registers
 	"io01": 35,
@@ -179,6 +182,9 @@ var RegisterInts = map[string]uint32{
 	"io15": 49,
 
 	"prc": 50, //Program counter /
+
+	"cstk": 51,
+	"cstz": 52,
 }
 
 //Constants for use in runtime
@@ -257,6 +263,9 @@ const (
 	IHalt Instruction = 24
 
 	ISquareRoot Instruction = 25
+
+	ICall            Instruction = 26
+	IConditionalCall Instruction = 27
 )
 
 // Instructions that take a single 32 bit arg, as opposed to 2x16bit args
@@ -272,6 +281,8 @@ var SingleArgInstructions = []Instruction{
 	IDecrement,
 	IHalt,
 	ISquareRoot,
+	ICall,
+	IConditionalCall,
 }
 
 const (
@@ -335,6 +346,9 @@ const (
 	RIO15 Register = 49
 
 	RProgramCounter Register = 50
+
+	RCallStackPointer     Register = 51
+	RCallStackZeroPointer Register = 52
 )
 
 const (

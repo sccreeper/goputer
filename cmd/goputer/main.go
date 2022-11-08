@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"plugin"
 	"sccreeper/govm/pkg/compiler"
 	"sccreeper/govm/pkg/constants"
 	"sccreeper/govm/pkg/util"
@@ -21,6 +22,9 @@ import (
 var use_json bool
 var json_path string
 var output_path string
+
+var frontend_to_use string
+var exec string
 
 var Commit string
 
@@ -78,6 +82,27 @@ func main() {
 				Usage:   "Used to disassemble programs",
 				Action:  _disassemble,
 			},
+			{
+				Name:    "run",
+				Aliases: []string{"r"},
+				Usage:   "Run programs",
+				Action:  _run,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "frontend",
+						Aliases: []string{"f"},
+						Usage:   "Frontend to use",
+						// DefaultText: "gp32",
+						Destination: &frontend_to_use,
+					},
+					&cli.StringFlag{
+						Name:        "exec",
+						Aliases:     []string{"e"},
+						Usage:       "Executable to run",
+						Destination: &exec,
+					},
+				},
+			},
 		},
 	}
 
@@ -121,8 +146,6 @@ func _compiler(ctx *cli.Context) error {
 			json_path = ctx.String("jsonpath")
 		}
 	}
-
-	log.Println(use_json)
 
 	compiler_config := compiler.CompilerConfig{
 
@@ -236,5 +259,23 @@ func _disassemble(ctx *cli.Context) error {
 	}
 
 	return err
+
+}
+
+// Run the program using the default frontend
+func _run(ctx *cli.Context) error {
+
+	program_bytes, err := os.ReadFile(exec)
+	util.CheckError(err)
+
+	p, err := plugin.Open(fmt.Sprintf("./frontends/%s/%s.so", frontend_to_use, frontend_to_use))
+	util.CheckError(err)
+
+	run_func, err := p.Lookup("Run")
+	util.CheckError(err)
+
+	run_func.(func([]byte, []string))(program_bytes, []string{})
+
+	return nil
 
 }
