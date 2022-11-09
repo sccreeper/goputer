@@ -39,7 +39,7 @@ func name_collision(s string) error {
 }
 
 // Takes a string and returns a program structure
-func parse(code_string string) (program_structure, error) {
+func parse(code_string string, verbose bool) (ProgramStructure, error) {
 
 	//Remove empty lines
 
@@ -49,8 +49,11 @@ func parse(code_string string) (program_structure, error) {
 
 	program_list := strings.Split(code_string, "\n")
 
-	log.Printf("Code size: %d byte(s)", len(code_string))
-	log.Printf("Code lines: %d line(s)", len(program_list))
+	if verbose {
+
+		log.Printf("Code size: %d byte(s)", len(code_string))
+		log.Printf("Code lines: %d line(s)", len(program_list))
+	}
 
 	//---------------------------
 	//Begin parsing of statements
@@ -122,14 +125,17 @@ func parse(code_string string) (program_structure, error) {
 		program_statements[index] = append(program_statements[index], strings.TrimSpace(current_statement))
 	}
 
-	log.Println("Finished first stage of parsing...")
+	if verbose {
+		log.Println("Finished first stage of parsing...")
 
-	//Debug, print statements to console
+		//Debug, print statements to console
 
-	for _, e := range program_statements {
+		for _, e := range program_statements {
 
-		log.Printf("Statement %s\n", e)
-		//log.Printf("Statement data %s\n", e[0:])
+			log.Printf("Statement %s\n", e)
+			//log.Printf("Statement data %s\n", e[0:])
+
+		}
 
 	}
 
@@ -139,17 +145,19 @@ func parse(code_string string) (program_structure, error) {
 
 	//Make program data struct
 
-	var program_data = program_structure{
-		InstructionBlocks: make(map[string]code_block),
+	var program_data = ProgramStructure{
+		InstructionBlocks: make(map[string]CodeBlock),
 	}
 
-	var current_jump_block_instructions []instruction
+	var current_jump_block_instructions []Instruction
 	jump_block_name := ""
 	in_jump_block := false
 
 	for index, e := range program_statements {
 
-		log.Printf("Parsing statement %d", index)
+		if verbose {
+			log.Printf("Parsing statement %d", index)
+		}
 
 		if len(e) == 0 {
 			continue
@@ -209,7 +217,7 @@ func parse(code_string string) (program_structure, error) {
 			}
 
 			program_data.Definitions = append(program_data.Definitions,
-				definition{
+				Definition{
 					Name: e[1],
 					Data: data_array,
 					Type: def_type,
@@ -231,7 +239,7 @@ func parse(code_string string) (program_structure, error) {
 			program_data.InterruptSubscriptions = append(
 				program_data.InterruptSubscriptions,
 
-				interrupt_subscription{
+				InterruptSubscription{
 					InterruptName: e[1],
 					Interrupt:     constants.Interrupt(constants.InterruptInts[e[1]]),
 					JumpBlockName: e[2],
@@ -243,7 +251,7 @@ func parse(code_string string) (program_structure, error) {
 				return program_data, errors.New("unexpected end statement")
 			}
 
-			program_data.InstructionBlocks[jump_block_name] = code_block{
+			program_data.InstructionBlocks[jump_block_name] = CodeBlock{
 
 				Name:         jump_block_name,
 				Instructions: current_jump_block_instructions,
@@ -292,7 +300,7 @@ func parse(code_string string) (program_structure, error) {
 				single_data = true
 			}
 
-			instruction_to_be_added := instruction{
+			instruction_to_be_added := Instruction{
 				SingleData:  single_data,
 				Data:        e[1:],
 				Instruction: constants.InstructionInts[e[0]],

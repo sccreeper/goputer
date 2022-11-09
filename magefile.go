@@ -43,6 +43,8 @@ func All() {
 		sh.Run("mkdir", "./build")
 	}
 
+	fmt.Println("Building main executable...")
+
 	hash, err := exec.Command("git", "rev-parse", "HEAD").Output()
 	util.CheckError(err)
 
@@ -52,10 +54,13 @@ func All() {
 
 	//Copy the examples
 
+	fmt.Println("Copying examples...")
+
 	sh.Run("mkdir", "./build/examples")
 	sh.Run("cp", "-rf", "./examples/.", "./build/examples")
 
 	//Build the frontends
+	fmt.Println("Building frontends...")
 
 	sh.Run("mkdir", "./build/frontends")
 
@@ -64,6 +69,8 @@ func All() {
 	util.CheckError(err)
 
 	for _, v := range directories {
+
+		fmt.Printf("Building frontend %s...\n", v.Name())
 
 		util.CheckError(err)
 
@@ -94,6 +101,8 @@ func All() {
 // Builds the examples as well as main All command
 func Dev() {
 	mg.Deps(All)
+
+	fmt.Println("Building example programs...")
 
 	os.Chdir("./build/")
 

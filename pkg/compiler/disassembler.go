@@ -11,14 +11,14 @@ import (
 type DisassembledProgram struct {
 	ProgramDefinitions [][]byte
 	InterruptTable     map[constants.Interrupt]uint32
-	JumpBlocks         map[uint32][]instruction
-	Instructions       []instruction
+	JumpBlocks         map[uint32][]Instruction
+	Instructions       []Instruction
 	StartIndexes       []uint32
 }
 
-func decode_instruction(b []byte) instruction {
+func decode_instruction(b []byte) Instruction {
 
-	i := instruction{}
+	i := Instruction{}
 
 	itn := constants.Instruction(b[0])
 	itn_data_bytes := b[1:]
@@ -205,7 +205,7 @@ func Disassemble(program_bytes []byte, verbose bool) (DisassembledProgram, error
 
 	byte_index = jump_block_start
 
-	program.JumpBlocks = make(map[uint32][]instruction)
+	program.JumpBlocks = make(map[uint32][]Instruction)
 
 	jump_block_addr_index := byte_index
 
@@ -214,7 +214,7 @@ func Disassemble(program_bytes []byte, verbose bool) (DisassembledProgram, error
 	for _, v := range util.SliceChunks(jump_block_bytes, int(InstructionLength)) {
 
 		if !in_jump_block {
-			program.JumpBlocks[jump_block_addr_index] = make([]instruction, 0)
+			program.JumpBlocks[jump_block_addr_index] = make([]Instruction, 0)
 
 			program.JumpBlocks[jump_block_addr_index] = append(program.JumpBlocks[jump_block_addr_index], decode_instruction(v))
 

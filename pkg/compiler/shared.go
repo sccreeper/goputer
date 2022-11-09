@@ -13,44 +13,45 @@ type CompilerConfig struct {
 
 	OutputJSON bool
 	JSONPath   string
+	Verbose    bool
 }
 
 // Types for statements
-type instruction struct {
+type Instruction struct {
 	SingleData bool     `json:"single_data"`
 	Data       []string `json:"data"`
 
 	Instruction uint32 `json:"instruction"`
 }
 
-type definition struct {
+type Definition struct {
 	Name string            `json:"name"`
 	Data []byte            `json:"data"`
 	Type constants.DefType `json:"type"`
 }
 
-type interrupt_subscription struct {
+type InterruptSubscription struct {
 	InterruptName string              `json:"interrupt_name"`
 	Interrupt     constants.Interrupt `json:"interrupt"`
 	JumpBlockName string              `json:"jump_block_name"`
 }
 
-type code_block struct {
+type CodeBlock struct {
 	Name         string        `json:"name"`
-	Instructions []instruction `json:"instructions"`
+	Instructions []Instruction `json:"instructions"`
 }
 
 // Struct for holding program data
-type program_structure struct {
+type ProgramStructure struct {
 	AllNames []string `json:"all_names"`
 
-	InstructionBlockNames  []string                 `json:"instruction_block_names"`
-	DefNames               []string                 `json:"definition_names"`
-	InterruptSubscriptions []interrupt_subscription `json:"interrupt_subscriptions"`
+	InstructionBlockNames  []string                `json:"instruction_block_names"`
+	DefNames               []string                `json:"definition_names"`
+	InterruptSubscriptions []InterruptSubscription `json:"interrupt_subscriptions"`
 
-	ProgramInstructions []instruction         `json:"program_instructions"`
-	Definitions         []definition          `json:"definitions"`
-	InstructionBlocks   map[string]code_block `json:"instruction_blocks"`
+	ProgramInstructions []Instruction        `json:"program_instructions"`
+	Definitions         []Definition         `json:"definitions"`
+	InstructionBlocks   map[string]CodeBlock `json:"instruction_blocks"`
 }
 
 //Constants

@@ -24,6 +24,7 @@ import (
 var use_json bool
 var json_path string
 var output_path string
+var verbose bool = false
 
 var frontend_to_use string
 var exec string
@@ -84,6 +85,12 @@ func main() {
 						Usage:       "Output binary to `FILE`",
 						Destination: &output_path,
 					},
+					&cli.BoolFlag{
+						Name:        "verbose",
+						Aliases:     []string{"v"},
+						Usage:       "Verbose log output",
+						Destination: &verbose,
+					},
 				},
 			},
 			{
@@ -129,6 +136,8 @@ func main() {
 
 func _compiler(ctx *cli.Context) error {
 
+	log.Printf("goputer compiler Version: %s", Commit[:10])
+
 	file_path := ctx.Args().Get(0)
 
 	// See if file exists
@@ -167,12 +176,24 @@ func _compiler(ctx *cli.Context) error {
 		OutputPath: output_path,
 		OutputJSON: use_json,
 		JSONPath:   json_path,
+		Verbose:    verbose,
 	}
 
-	err = compiler.Assemble(string(data), compiler_config)
+	//Assemble program & write to disk
 
-	if err != nil {
+	assembled_program, err := compiler.Assemble(string(data), compiler_config)
+	util.CheckError(err)
+
+	os.WriteFile(compiler_config.OutputPath, assembled_program.ProgramBytes, 0666)
+
+	//JSON
+
+	if compiler_config.OutputJSON {
+		err = os.WriteFile(json_path, []byte(assembled_program.ProgramJson), 0666)
+
 		util.CheckError(err)
+
+		log.Printf("Outputted JSON structure to '%s'", json_path)
 	}
 
 	return nil

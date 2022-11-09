@@ -6,7 +6,7 @@ import (
 	"sccreeper/govm/pkg/util"
 )
 
-func generate_bytecode(p program_structure) []byte {
+func generate_bytecode(p ProgramStructure) []byte {
 
 	byte_index := BlockAddrSize + 4
 	final_bytes := make([]byte, 0)
@@ -188,7 +188,7 @@ func generate_bytecode(p program_structure) []byte {
 
 //General purpose instruction for generating instruction bytecode
 
-func generate_instruction_bytecode(i instruction, d_block_addr map[string]uint32, j_blk_addr map[string]uint32) []byte {
+func generate_instruction_bytecode(i Instruction, d_block_addr map[string]uint32, j_blk_addr map[string]uint32) []byte {
 
 	//TODO: sign bit
 	//TODO: add offset for "hardware reserved" space

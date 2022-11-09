@@ -4,56 +4,54 @@ import (
 	"encoding/json"
 	"log"
 	"math"
-	"os"
 	"sccreeper/govm/pkg/util"
 	"time"
 )
 
+type AssembledProgram struct {
+	ProgramBytes     []byte
+	ProgramStructure ProgramStructure
+	ProgramJson      string
+}
+
 // Assembler method
-func Assemble(code_string string, config CompilerConfig) error {
+func Assemble(code_string string, config CompilerConfig) (AssembledProgram, error) {
 
 	start_time := time.Now().UnixMicro()
 
 	//Parse
 
-	program_data, err := parse(code_string)
+	if config.Verbose {
+		log.Println("Parsing...")
+	}
+
+	program_data, err := parse(code_string, config.Verbose)
 
 	util.CheckError(err)
 
 	// Begin bytecode generation
 
-	log.Println("Starting bytecode generation")
+	if config.Verbose {
+		log.Println("Bytecode generation...")
+	}
 
-	final_byte_array := generate_bytecode(program_data)
+	program_bytes := generate_bytecode(program_data)
 
-	//Write to file
-
-	os.WriteFile(config.OutputPath, final_byte_array, 0666)
 	//Output start indexes
 
 	// log.Printf("Data start index: %d", data_start_index)
 	// log.Printf("Jump start index: %d", jmp_block_start_index)
 	// log.Printf("Interrupt table start index: %d", interrupt_table_start_index)
 	// log.Printf("Program start index: %d", instruction_start_index)
-	log.Printf("Final executable size: %d byte(s)", len(final_byte_array))
+	log.Printf("Final executable size: %d byte(s)", len(program_bytes))
 
 	// -----------------
-	// Output JSON
+	// Generate JSON
 	// ----------------
 
-	if config.OutputJSON {
+	json_bytes, err := json.MarshalIndent(program_data, "", "\t")
 
-		json_bytes, err := json.MarshalIndent(program_data, "", "\t")
-
-		util.CheckError(err)
-
-		err = os.WriteFile(config.JSONPath, json_bytes, 0666)
-
-		util.CheckError(err)
-
-		log.Printf("Outputted JSON structure to '%s'", config.JSONPath)
-
-	}
+	util.CheckError(err)
 
 	// -------------------
 	// Output elapsed time
@@ -73,6 +71,11 @@ func Assemble(code_string string, config CompilerConfig) error {
 
 	log.Printf("Compiled in %f %ss", elapsed_time, time_unit)
 
-	return nil
+	return AssembledProgram{
+
+		ProgramBytes:     program_bytes,
+		ProgramStructure: program_data,
+		ProgramJson:      string(json_bytes),
+	}, nil
 
 }
