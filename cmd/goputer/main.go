@@ -5,10 +5,12 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"plugin"
+	"runtime"
 	"sccreeper/govm/pkg/compiler"
 	"sccreeper/govm/pkg/constants"
 	"sccreeper/govm/pkg/util"
@@ -32,6 +34,8 @@ var green_bold_underline = color.New([]color.Attribute{color.FgGreen, color.Bold
 var bold = color.New([]color.Attribute{color.Bold}...)
 var underline = color.New([]color.Attribute{color.FgWhite, color.Underline}...)
 
+var plugin_ext string
+
 func format_instruction(i_name string, i_data []string) string {
 
 	return fmt.Sprintf("%s %s", color.GreenString(i_name), color.CyanString(strings.Join(i_data[:], " ")))
@@ -45,6 +49,12 @@ func convert_hex(i int) string {
 }
 
 func main() {
+
+	if runtime.GOOS == "windows" {
+		plugin_ext = ".dll"
+	} else {
+		plugin_ext = ".so"
+	}
 
 	app := &cli.App{
 		Name:        "govmcd",
@@ -102,6 +112,11 @@ func main() {
 						Destination: &exec,
 					},
 				},
+			},
+			{
+				Name:   "list",
+				Usage:  "Lists plugins available",
+				Action: _list_plugins,
 			},
 		},
 	}
@@ -268,7 +283,7 @@ func _run(ctx *cli.Context) error {
 	program_bytes, err := os.ReadFile(exec)
 	util.CheckError(err)
 
-	p, err := plugin.Open(fmt.Sprintf("./frontends/%s/%s.so", frontend_to_use, frontend_to_use))
+	p, err := plugin.Open(fmt.Sprintf("./frontends/%s/%s%s", frontend_to_use, frontend_to_use, plugin_ext))
 	util.CheckError(err)
 
 	run_func, err := p.Lookup("Run")
@@ -278,4 +293,40 @@ func _run(ctx *cli.Context) error {
 
 	return nil
 
+}
+
+func _list_plugins(ctx *cli.Context) error {
+
+	plugin_dir, err := ioutil.ReadDir("./frontends/")
+	util.CheckError(err)
+
+	for _, v := range plugin_dir {
+
+		p, err := plugin.Open(fmt.Sprintf("./frontends/%s/%s%s", v.Name(), v.Name(), plugin_ext))
+		util.CheckError(err)
+
+		_name, err := p.Lookup("Name")
+		util.CheckError(err)
+		description, err := p.Lookup("Description")
+		util.CheckError(err)
+		authour, err := p.Lookup("Authour")
+		util.CheckError(err)
+		repo, err := p.Lookup("Repository")
+		util.CheckError(err)
+
+		fmt.Println()
+		bold.Print(*_name.(*string) + "\n")
+		fmt.Println()
+
+		fmt.Printf("%s %s\n", bold.Sprintf("Description:"), *description.(*string))
+		fmt.Printf("%s %s\n", bold.Sprintf("Authour:"), *authour.(*string))
+		fmt.Printf("%s %s\n", bold.Sprintf("Repository:"), *repo.(*string))
+
+	}
+
+	fmt.Println()
+
+	fmt.Printf("Found %d frontend(s)", len(plugin_dir))
+
+	return nil
 }

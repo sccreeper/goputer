@@ -2,11 +2,12 @@ module sccreeper/govm
 
 go 1.19
 
+require github.com/magefile/mage v1.14.0
+
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/jwalton/go-supportscolor v1.1.0 // indirect
-	github.com/magefile/mage v1.14.0 // indirect
 	github.com/mattn/go-colorable v0.1.9 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
