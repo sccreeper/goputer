@@ -85,6 +85,8 @@ func Run(program []byte, args []string) {
 	}
 
 	for !rl.WindowShouldClose() {
+		rl.BeginDrawing()
+		rl.EndDrawing()
 	}
 
 	rl.CloseWindow()
