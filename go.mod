@@ -7,6 +7,7 @@ require github.com/magefile/mage v1.14.0
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/fatih/color v1.13.0 // indirect
+	github.com/gen2brain/raylib-go/raylib v0.0.0-20221105143954-3f14ff470c35 // indirect
 	github.com/jwalton/go-supportscolor v1.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.9 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect

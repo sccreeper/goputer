@@ -1,8 +1,9 @@
 //Prints hello world lots of times
-def text "Hello World"
-def time 2500
+def text "\nHello World"
+def time 1000
 
 :loop
+int vc
 int vt
 hlt r00
 jmp loop

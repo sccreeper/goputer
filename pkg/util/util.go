@@ -1,6 +1,9 @@
 package util
 
-import "sccreeper/govm/pkg/constants"
+import (
+	"math/rand"
+	"sccreeper/govm/pkg/constants"
+)
 
 func CheckError(err error) {
 
@@ -49,5 +52,11 @@ func SliceChunks[T any](slice []T, chunk_size int) [][]T {
 	}
 
 	return chunks
+
+}
+
+func RandomNumber[T uint8 | int | uint32](min T, max T) T {
+
+	return T(rand.Intn(int(max-min+1)) + int(min))
 
 }
