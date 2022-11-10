@@ -1,4 +1,4 @@
-module sccreeper/govm
+module sccreeper/goputer
 
 go 1.19
 

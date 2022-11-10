@@ -2,8 +2,8 @@ package vm
 
 import (
 	"encoding/binary"
-	"sccreeper/govm/pkg/compiler"
-	c "sccreeper/govm/pkg/constants"
+	"sccreeper/goputer/pkg/compiler"
+	c "sccreeper/goputer/pkg/constants"
 )
 
 // Calls

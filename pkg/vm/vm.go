@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	comp "sccreeper/govm/pkg/compiler"
-	c "sccreeper/govm/pkg/constants"
-	"sccreeper/govm/pkg/util"
+	comp "sccreeper/goputer/pkg/compiler"
+	c "sccreeper/goputer/pkg/constants"
+	"sccreeper/goputer/pkg/util"
 	"sync"
 	"time"
 )

@@ -2,7 +2,7 @@ package vm
 
 import (
 	"encoding/binary"
-	c "sccreeper/govm/pkg/constants"
+	c "sccreeper/goputer/pkg/constants"
 )
 
 func (m *VM) move() {

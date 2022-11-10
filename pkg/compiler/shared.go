@@ -1,6 +1,6 @@
 package compiler
 
-import "sccreeper/govm/pkg/constants"
+import "sccreeper/goputer/pkg/constants"
 
 //File for code shared in the compiler
 

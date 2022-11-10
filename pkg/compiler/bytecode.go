@@ -2,8 +2,8 @@ package compiler
 
 import (
 	"encoding/binary"
-	"sccreeper/govm/pkg/constants"
-	"sccreeper/govm/pkg/util"
+	"sccreeper/goputer/pkg/constants"
+	"sccreeper/goputer/pkg/util"
 )
 
 func generate_bytecode(p ProgramStructure) []byte {

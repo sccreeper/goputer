@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	c "sccreeper/govm/pkg/constants"
-	"sccreeper/govm/pkg/vm"
+	c "sccreeper/goputer/pkg/constants"
+	"sccreeper/goputer/pkg/vm"
 	"strings"
 	"time"
 

@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"sccreeper/govm/pkg/util"
+	"sccreeper/goputer/pkg/util"
 
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"

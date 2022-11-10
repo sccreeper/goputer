@@ -11,9 +11,9 @@ import (
 	"path/filepath"
 	"plugin"
 	"runtime"
-	"sccreeper/govm/pkg/compiler"
-	"sccreeper/govm/pkg/constants"
-	"sccreeper/govm/pkg/util"
+	"sccreeper/goputer/pkg/compiler"
+	"sccreeper/goputer/pkg/constants"
+	"sccreeper/goputer/pkg/util"
 	"strings"
 
 	"github.com/fatih/color"

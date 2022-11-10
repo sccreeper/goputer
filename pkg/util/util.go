@@ -2,7 +2,7 @@ package util
 
 import (
 	"math/rand"
-	"sccreeper/govm/pkg/constants"
+	"sccreeper/goputer/pkg/constants"
 )
 
 func CheckError(err error) {

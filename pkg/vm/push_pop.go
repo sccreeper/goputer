@@ -3,8 +3,8 @@ package vm
 import (
 	"encoding/binary"
 	"errors"
-	"sccreeper/govm/pkg/compiler"
-	"sccreeper/govm/pkg/constants"
+	"sccreeper/goputer/pkg/compiler"
+	"sccreeper/goputer/pkg/constants"
 )
 
 func (m *VM) pop_stack() {

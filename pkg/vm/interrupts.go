@@ -1,6 +1,6 @@
 package vm
 
-import c "sccreeper/govm/pkg/constants"
+import c "sccreeper/goputer/pkg/constants"
 
 type InterruptInfo struct {
 	Type uint32

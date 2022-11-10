@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"sccreeper/govm/pkg/constants"
-	"sccreeper/govm/pkg/util"
+	"sccreeper/goputer/pkg/constants"
+	"sccreeper/goputer/pkg/util"
 	"strconv"
 	"strings"
 )

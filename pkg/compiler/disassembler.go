@@ -4,8 +4,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"log"
-	"sccreeper/govm/pkg/constants"
-	"sccreeper/govm/pkg/util"
+	"sccreeper/goputer/pkg/constants"
+	"sccreeper/goputer/pkg/util"
 )
 
 type DisassembledProgram struct {
