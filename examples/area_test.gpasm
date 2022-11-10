@@ -1,0 +1,17 @@
+//Draws a rectangle to the screen & tests some multiplication
+def pos 64
+def size 5
+
+lda @pos
+mov d0 r00
+lda @size
+mov d0 r01
+
+mul r00 r01
+mov a0 vx1
+mov a0 vy1
+
+mov r00 vx0
+mov r00 vy0
+
+int va

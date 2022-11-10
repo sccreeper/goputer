@@ -1,0 +1,17 @@
+// Draws a line
+
+def pos 0
+
+def pos1x 639
+def pos1y 479
+
+lda @pos
+mov d0 vx0
+mov d0 vy0
+
+lda @pos1x
+mov d0 vx1
+lda @pos1y
+mov d0 vy1
+
+int vl
