@@ -1,0 +1,17 @@
+def test_number 64
+def test_string "Hello World"
+def x "HHH"
+def shift_int 12
+
+lda @shift_int
+mov d0 r00
+
+lda @test_string
+mov d0 vt
+
+sr vt r00
+
+lda @test_string
+mov d0 vt
+
+int vt

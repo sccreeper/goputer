@@ -11,11 +11,11 @@ func (m *VM) move() {
 
 	if m.ArgSmall0 == uint16(c.RData) && m.ArgSmall1 == uint16(c.RVideoText) {
 
-		copy(m.TextBuffer[:], m.DataBuffer[:])
+		copy(m.TextBuffer[:m.Registers[c.RDataLength]], m.DataBuffer[:m.Registers[c.RDataLength]])
 
 	} else if m.ArgSmall0 == uint16(c.RVideoText) && m.ArgSmall1 == uint16(c.RData) {
 
-		copy(m.DataBuffer[:], m.TextBuffer[:])
+		copy(m.DataBuffer[:m.Registers[c.RDataLength]], m.TextBuffer[:m.Registers[c.RDataLength]])
 
 		//Copying from buffer -> register
 	} else if m.ArgSmall0 == uint16(c.RData) || m.ArgSmall0 == uint16(c.RVideoText) {

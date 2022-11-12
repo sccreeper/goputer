@@ -183,8 +183,10 @@ var RegisterInts = map[string]uint32{
 
 	"prc": 50, //Program counter /
 
-	"cstk": 51,
-	"cstz": 52,
+	"cstk": 51, //Call stack
+	"cstz": 52, //Call stack zero
+
+	"dl": 53, //Data length
 }
 
 //Constants for use in runtime
@@ -349,6 +351,8 @@ const (
 
 	RCallStackPointer     Register = 51
 	RCallStackZeroPointer Register = 52
+
+	RDataLength Register = 53
 )
 
 const (

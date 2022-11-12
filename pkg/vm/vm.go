@@ -17,7 +17,7 @@ import (
 const (
 	_MemSize                uint32 = 65536 // 2 ^ 16
 	_SubscribableInterrupts uint16 = 22
-	RegisterCount           uint16 = 52
+	RegisterCount           uint16 = 53
 )
 
 type VM struct {
@@ -219,9 +219,9 @@ func (m *VM) Run() {
 			m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] ^ m.Registers[m.ArgSmall1]
 
 		case c.IShiftLeft:
-			m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] << m.Registers[m.ArgSmall1]
+			m.shift_left()
 		case c.IShiftRight:
-			m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] >> m.Registers[m.ArgSmall1]
+			m.shift_right()
 
 		//Other
 		case c.ICallInterrupt:
