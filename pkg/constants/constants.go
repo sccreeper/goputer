@@ -268,6 +268,10 @@ const (
 
 	ICall            Instruction = 26
 	IConditionalCall Instruction = 27
+
+	IPower Instruction = 28
+
+	IClear Instruction = 29
 )
 
 // Instructions that take a single 32 bit arg, as opposed to 2x16bit args
@@ -285,6 +289,7 @@ var SingleArgInstructions = []Instruction{
 	ISquareRoot,
 	ICall,
 	IConditionalCall,
+	IClear,
 }
 
 const (

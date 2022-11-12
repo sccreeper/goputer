@@ -180,6 +180,12 @@ func (m *VM) Run() {
 			m.Registers[m.ArgSmall0]--
 		case c.IInvert:
 			m.Registers[m.ArgSmall0] = ^m.Registers[m.ArgSmall0]
+		case c.IPower:
+			if m.Registers[m.ArgSmall0] == 10 {
+				m.Registers[c.RAccumulator] = uint32(math.Pow10(int(m.Registers[m.ArgSmall1])))
+			} else {
+				m.Registers[c.RAccumulator] = uint32(math.Pow(float64(m.Registers[m.ArgSmall0]), float64(m.Registers[m.ArgSmall1])))
+			}
 
 		//Logic
 
@@ -228,6 +234,21 @@ func (m *VM) Run() {
 			m.called_interrupt()
 		case c.IHalt:
 			time.Sleep(time.Duration(m.Registers[m.ArgSmall0]) * time.Millisecond)
+		case c.IClear:
+			if m.ArgLarge != uint32(c.RData) && m.ArgLarge != uint32(c.RVideoText) {
+
+				m.Registers[m.ArgLarge] = 0
+
+			} else {
+
+				switch m.ArgLarge {
+				case uint32(c.RData):
+					m.DataBuffer = [128]byte{}
+				case uint32(c.RVideoText):
+					m.TextBuffer = [128]byte{}
+				}
+
+			}
 
 		}
 
