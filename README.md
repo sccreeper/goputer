@@ -11,14 +11,18 @@ A computer emulator/virtual machine intended to demonstrate how computers work a
 
 **Note:** Most of these have not been fully implemented yet.
 
-###### Working on
+###### Complete
 
 - Custom assembly language and compiler.
+- Backend for running programs.
+
+###### Working on
+
+- Frontend that shows output from VM backend.
 
 ###### In the future
 
-- Backend for running programs.
-- Frontend that shows output from VM backend.
+- WASM based frontend.
 - High level language.
 
 ---
