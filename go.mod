@@ -3,6 +3,7 @@ module sccreeper/goputer
 go 1.19
 
 require (
+	github.com/faiface/beep v1.1.0
 	github.com/fatih/color v1.13.0
 	github.com/gen2brain/raylib-go/raylib v0.0.0-20221105143954-3f14ff470c35
 	github.com/magefile/mage v1.14.0
@@ -12,7 +13,6 @@ require (
 
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
-	github.com/faiface/beep v1.1.0 // indirect
 	github.com/hajimehoshi/oto v1.0.1 // indirect
 	github.com/jwalton/go-supportscolor v1.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.9 // indirect

@@ -91,6 +91,8 @@ func Run(program []byte, args []string) {
 				speaker.Clear()
 				sine, _ := sound.SineTone(sr, float64(gp32.Registers[c.RSoundTone]))
 				speaker.Play(sine)
+			case c.IntSoundStop:
+				speaker.Clear()
 
 			}
 		default:

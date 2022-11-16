@@ -1,0 +1,16 @@
+def x 500
+
+:loop
+int sf
+hlt r00
+int ss
+hlt r00
+jmp loop
+end
+
+lda @x
+mov d0 r00
+
+mov d0 st
+
+jmp loop
