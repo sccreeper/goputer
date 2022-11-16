@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"sccreeper/goputer/frontends/gp32/sound"
 	c "sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/vm"
 	"strings"
 	"time"
 
+	"github.com/faiface/beep"
+	"github.com/faiface/beep/speaker"
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
@@ -19,6 +22,9 @@ var Authour string = "Oscar Peace (sccreeper)"
 var Repository string = "https://github.com/sccreeper/goputer"
 
 func Run(program []byte, args []string) {
+
+	sr := beep.SampleRate(44100)
+	speaker.Init(sr, sr.N(time.Second/10))
 
 	rand.Seed(time.Now().UnixNano())
 
@@ -37,7 +43,6 @@ func Run(program []byte, args []string) {
 	rl.SetTargetFPS(128)
 
 	for !rl.WindowShouldClose() {
-
 		rl.BeginDrawing()
 
 		if gp32.Finished {
@@ -50,10 +55,15 @@ func Run(program []byte, args []string) {
 			//Video interrupts
 			//TODO: Change colour to use colour in vc register
 			case c.IntVideoText:
-				str_temp := string(gp32.TextBuffer[:])
-				str_temp = strings.ReplaceAll(str_temp, "\x00", "")
-				text_string += strings.ReplaceAll(str_temp, `\n`, "\n")
-				rl.DrawText(text_string, 0, 0, 16, rl.White)
+				if gp32.TextBuffer[0] == 0 {
+					text_string = ""
+				} else {
+					str_temp := string(gp32.TextBuffer[:])
+					str_temp = strings.ReplaceAll(str_temp, "\x00", "")
+					text_string += strings.ReplaceAll(str_temp, `\n`, "\n")
+					rl.DrawText(text_string, 0, 0, 16, rl.White)
+				}
+
 			case c.IntVideoClear:
 				rl.ClearBackground(rl.Black)
 			case c.IntVideoPixel:
@@ -77,6 +87,11 @@ func Run(program []byte, args []string) {
 					int32(gp32.Registers[c.RVideoY1]-gp32.Registers[c.RVideoY0]),
 					rl.White,
 				)
+			case c.IntSoundFlush:
+				speaker.Clear()
+				sine, _ := sound.SineTone(sr, float64(gp32.Registers[c.RSoundTone]))
+				speaker.Play(sine)
+
 			}
 		default:
 		}

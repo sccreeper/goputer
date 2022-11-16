@@ -1,0 +1,20 @@
+def x 10
+def t 50
+
+:loop
+add r00 r02
+mov a0 r00
+mov r00 st
+int sf
+hlt r01
+jmp loop
+end
+
+lda @x
+mov d0 r00
+mov d0 r02
+
+lda @t
+mov d0 r01
+
+jmp loop
