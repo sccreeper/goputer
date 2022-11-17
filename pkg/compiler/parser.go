@@ -3,6 +3,7 @@ package compiler
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log"
@@ -183,6 +184,8 @@ func parse(code_string string, verbose bool) (ProgramStructure, error) {
 				def_type = constants.IntType
 			} else if e[2][0] == '"' {
 				def_type = constants.StringType
+			} else if len(e[2]) > 2 && e[2][0:2] == "0x" {
+				def_type = constants.BytesType
 			} else {
 				def_type = constants.UintType
 			}
@@ -214,6 +217,8 @@ func parse(code_string string, verbose bool) (ProgramStructure, error) {
 				binary.Write(buffer, binary.LittleEndian, i)
 
 				data_array = []byte(buffer.Bytes())
+			case constants.BytesType:
+				data_array, _ = hex.DecodeString(e[2][2:])
 			}
 
 			program_data.Definitions = append(program_data.Definitions,

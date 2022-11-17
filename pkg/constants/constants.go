@@ -367,4 +367,5 @@ const (
 	FloatType  DefType = 1
 	IntType    DefType = 2
 	UintType   DefType = 3
+	BytesType  DefType = 4
 )

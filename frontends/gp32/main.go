@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"sccreeper/goputer/frontends/gp32/colour"
 	"sccreeper/goputer/frontends/gp32/sound"
 	c "sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/vm"
@@ -61,23 +62,23 @@ func Run(program []byte, args []string) {
 					str_temp := string(gp32.TextBuffer[:])
 					str_temp = strings.ReplaceAll(str_temp, "\x00", "")
 					text_string += strings.ReplaceAll(str_temp, `\n`, "\n")
-					rl.DrawText(text_string, 0, 0, 16, rl.White)
+					rl.DrawText(text_string, 0, 0, 16, colour.ConvertColour(gp32.Registers[c.RVideoColour]))
 				}
 
 			case c.IntVideoClear:
-				rl.ClearBackground(rl.Black)
+				rl.ClearBackground(colour.ConvertColour(gp32.Registers[c.RVideoColour]))
 			case c.IntVideoPixel:
 				rl.DrawPixel(
 					int32(gp32.Registers[c.RVideoX0]),
 					int32(gp32.Registers[c.RVideoX1]),
-					rl.White)
+					colour.ConvertColour(gp32.Registers[c.RVideoColour]))
 			case c.IntVideoLine:
 				rl.DrawLine(
 					int32(gp32.Registers[c.RVideoX0]),
 					int32(gp32.Registers[c.RVideoY0]),
 					int32(gp32.Registers[c.RVideoX1]),
 					int32(gp32.Registers[c.RVideoY1]),
-					rl.White,
+					colour.ConvertColour(gp32.Registers[c.RVideoColour]),
 				)
 			case c.IntVideoArea:
 				rl.DrawRectangle(
@@ -85,7 +86,7 @@ func Run(program []byte, args []string) {
 					int32(gp32.Registers[c.RVideoY0]),
 					int32(gp32.Registers[c.RVideoX1]-gp32.Registers[c.RVideoX0]),
 					int32(gp32.Registers[c.RVideoY1]-gp32.Registers[c.RVideoY0]),
-					rl.White,
+					colour.ConvertColour(gp32.Registers[c.RVideoColour]),
 				)
 			case c.IntSoundFlush:
 				speaker.Clear()
