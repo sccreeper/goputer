@@ -48,7 +48,7 @@ func All() {
 	hash, err := exec.Command("git", "rev-parse", "HEAD").Output()
 	util.CheckError(err)
 
-	normal_ldflags := fmt.Sprintf("-X main.Commit=%s", hash)
+	normal_ldflags := fmt.Sprintf("-s -w -X main.Commit=%s", hash)
 
 	sh.Run("go", "build", "-ldflags", normal_ldflags, "-o", goputer_cmd_out, "./cmd/goputer/main.go")
 

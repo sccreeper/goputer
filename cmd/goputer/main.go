@@ -3,11 +3,13 @@ package main
 // VM & Compiler CMD front end
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"plugin"
 	"runtime"
@@ -15,11 +17,19 @@ import (
 	"sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/util"
 	"strings"
+	"text/template"
 
 	"github.com/fatih/color"
 	"github.com/savioxavier/termlink"
 	"github.com/urfave/cli/v2"
+
+	_ "embed"
 )
+
+//go:embed standalone/standalone.go
+var standalone_code_go string
+
+type standalone_template map[string]interface{}
 
 var use_json bool
 var json_path string
@@ -27,7 +37,8 @@ var output_path string
 var verbose bool = false
 
 var frontend_to_use string
-var exec string
+var gp_exec string
+var is_standalone bool
 
 var Commit string
 
@@ -91,6 +102,20 @@ func main() {
 						Usage:       "Verbose log output",
 						Destination: &verbose,
 					},
+					&cli.BoolFlag{
+						Name:        "standalone",
+						Aliases:     []string{"s"},
+						Usage:       "Create a standalone executable",
+						Destination: &is_standalone,
+						Required:    false,
+					},
+					&cli.StringFlag{
+						Name:        "frontend",
+						Aliases:     []string{"f"},
+						Usage:       "Frontend to create standalone with",
+						Destination: &frontend_to_use,
+						Required:    false,
+					},
 				},
 			},
 			{
@@ -116,7 +141,7 @@ func main() {
 						Name:        "exec",
 						Aliases:     []string{"e"},
 						Usage:       "Executable to run",
-						Destination: &exec,
+						Destination: &gp_exec,
 					},
 				},
 			},
@@ -184,7 +209,34 @@ func _compiler(ctx *cli.Context) error {
 	assembled_program, err := compiler.Assemble(string(data), compiler_config)
 	util.CheckError(err)
 
-	os.WriteFile(compiler_config.OutputPath, assembled_program.ProgramBytes, 0666)
+	//If standlone write to disk differently
+	if is_standalone {
+
+		standalone_bytes := _standalone(assembled_program.ProgramBytes)
+		temp_file, err := os.Create("./alone_temp.go")
+		util.CheckError(err)
+
+		temp_file.Write(standalone_bytes)
+
+		os.Remove(compiler_config.OutputPath)
+
+		ld_flags := "-s -w"
+		cmd := exec.Command("go", "build", "-ldflags", ld_flags, "-o", compiler_config.OutputPath, "./alone_temp.go")
+		var out bytes.Buffer
+
+		cmd.Stdout = &out
+
+		cmd.Run()
+
+		//Cleanup
+		//os.Remove("alone_temp.go")
+		//os.Remove("alone_program_bytes")
+
+		log.Printf("Finished making executable %s", compiler_config.OutputPath)
+
+	} else {
+		os.WriteFile(compiler_config.OutputPath, assembled_program.ProgramBytes, 0666)
+	}
 
 	//JSON
 
@@ -301,7 +353,7 @@ func _disassemble(ctx *cli.Context) error {
 // Run the program using the default frontend
 func _run(ctx *cli.Context) error {
 
-	program_bytes, err := os.ReadFile(exec)
+	program_bytes, err := os.ReadFile(gp_exec)
 	util.CheckError(err)
 
 	p, err := plugin.Open(fmt.Sprintf("./frontends/%s/%s%s", frontend_to_use, frontend_to_use, plugin_ext))
@@ -350,4 +402,26 @@ func _list_plugins(ctx *cli.Context) error {
 	fmt.Printf("Found %d frontend(s)", len(plugin_dir))
 
 	return nil
+}
+
+func _standalone(program []byte) []byte {
+
+	log.Println("Making standalone executable...")
+
+	var final_code bytes.Buffer
+
+	bytes_file, err := os.Create("alone_program_bytes")
+	util.CheckError(err)
+	bytes_file.Write(program)
+
+	t := template.Must(template.New("").Parse(standalone_code_go))
+	t.Execute(
+		&final_code,
+		standalone_template{
+			"plugin":       fmt.Sprintf("frontends/%s/%s%s", frontend_to_use, frontend_to_use, plugin_ext),
+			"program_code": bytes_file.Name(),
+		},
+	)
+
+	return final_code.Bytes()
 }
