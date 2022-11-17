@@ -1,12 +1,17 @@
 package main
 
 import (
+	"bytes"
+	"compress/zlib"
 	"crypto/sha256"
 	_ "embed"
 	"encoding/hex"
+	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"plugin"
+	"sccreeper/goputer/pkg/util"
 )
 
 //go:embed {{.plugin}}
@@ -19,7 +24,14 @@ var ProgramCheck string
 var PluginCheck string
 
 func main() {
-	plugin_file, err := os.CreateTemp(os.TempDir(), "*.so")
+
+	//Decompress
+	plugin_bytes = decompress(plugin_bytes)
+	program_code = decompress(program_code)
+
+	//Create temporary plugin and load
+
+	plugin_file, err := os.CreateTemp(os.TempDir(), "*")
 	check_err(err)
 
 	plugin_file.Write(plugin_bytes)
@@ -32,19 +44,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	p, err := plugin.Open(plugin_file.Name())
+	frontend_plugin, err := plugin.Open(plugin_file.Name())
 	check_err(err)
 
-	b, err := os.ReadFile(plugin_file.Name())
+	plugin_file_bytes, err := os.ReadFile(plugin_file.Name())
 
-	if PluginCheck != checksum(b) || PluginCheck != checksum(plugin_bytes) {
+	if PluginCheck != checksum(plugin_file_bytes) || PluginCheck != checksum(plugin_bytes) {
 		log.Println("Invalid checksum")
 		os.Exit(1)
 	}
 
-	run_func, err := p.Lookup("Run")
+	run_func, err := frontend_plugin.Lookup("Run")
 
-	run_func.(func([]byte, []string))(program_code, []string{})
+	run_func.(func([]byte, []string))(program_code, []string{filepath.Base(os.Args[0])})
 
 }
 
@@ -62,5 +74,17 @@ func checksum(b []byte) string {
 	h.Write(b)
 
 	return hex.EncodeToString(h.Sum(nil))
+
+}
+
+func decompress(b []byte) []byte {
+
+	z, err := zlib.NewReader(bytes.NewBuffer(b))
+	defer z.Close()
+
+	data, err := io.ReadAll(z)
+	util.CheckError(err)
+
+	return data
 
 }

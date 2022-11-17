@@ -4,6 +4,7 @@ package main
 
 import (
 	"bytes"
+	"compress/zlib"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -222,7 +223,7 @@ func _compiler(ctx *cli.Context) error {
 
 		os.Remove(compiler_config.OutputPath)
 
-		//Calculate checksums
+		//Calculate checksums before compression
 
 		program_hash := sha256.New()
 		program_hash.Write(assembled_program.ProgramBytes)
@@ -233,13 +234,32 @@ func _compiler(ctx *cli.Context) error {
 		plugin_hash := sha256.New()
 		plugin_hash.Write(plugin_file)
 
+		//Compress files
+		var b bytes.Buffer
+
+		plugin_compressed, err := os.Create("plugin_compressed")
+		util.CheckError(err)
+
+		w := zlib.NewWriter(&b)
+		w.Write(plugin_file)
+		w.Close()
+		plugin_compressed.Write(b.Bytes())
+		b.Reset()
+
+		code_compressed, err := os.Create("code_compressed")
+		util.CheckError(err)
+
+		w = zlib.NewWriter(&b)
+		w.Write(assembled_program.ProgramBytes)
+		w.Close()
+		code_compressed.Write(b.Bytes())
+		b.Reset()
+
 		ld_flags := fmt.Sprintf(
 			"-s -w -X main.ProgramCheck=%s -X main.PluginCheck=%s",
 			hex.EncodeToString(program_hash.Sum(nil)),
 			hex.EncodeToString(plugin_hash.Sum(nil)),
 		)
-
-		fmt.Println(ld_flags)
 
 		cmd := exec.Command("go", "build", "-ldflags", ld_flags, "-o", compiler_config.OutputPath, "./alone_temp.go")
 		var out bytes.Buffer
@@ -382,7 +402,7 @@ func _run(ctx *cli.Context) error {
 	run_func, err := p.Lookup("Run")
 	util.CheckError(err)
 
-	run_func.(func([]byte, []string))(program_bytes, []string{})
+	run_func.(func([]byte, []string))(program_bytes, []string{filepath.Base(gp_exec)})
 
 	return nil
 
@@ -438,8 +458,8 @@ func _standalone(program []byte) []byte {
 	t.Execute(
 		&final_code,
 		standalone_template{
-			"plugin":       fmt.Sprintf("frontends/%s/%s%s", frontend_to_use, frontend_to_use, plugin_ext),
-			"program_code": bytes_file.Name(),
+			"plugin":       "plugin_compressed",
+			"program_code": "code_compressed",
 		},
 	)
 

@@ -40,7 +40,7 @@ func Run(program []byte, args []string) {
 
 	go gp32.Run()
 
-	rl.InitWindow(640, 480, fmt.Sprintf("gp32 - %s", "Program Name"))
+	rl.InitWindow(640, 480, fmt.Sprintf("gp32 - %s", args[0]))
 	rl.SetTargetFPS(128)
 
 	for !rl.WindowShouldClose() {
