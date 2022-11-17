@@ -4,6 +4,8 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -220,7 +222,25 @@ func _compiler(ctx *cli.Context) error {
 
 		os.Remove(compiler_config.OutputPath)
 
-		ld_flags := "-s -w"
+		//Calculate checksums
+
+		program_hash := sha256.New()
+		program_hash.Write(assembled_program.ProgramBytes)
+
+		plugin_file, err := os.ReadFile(fmt.Sprintf("./frontends/%s/%s%s", frontend_to_use, frontend_to_use, plugin_ext))
+		util.CheckError(err)
+
+		plugin_hash := sha256.New()
+		plugin_hash.Write(plugin_file)
+
+		ld_flags := fmt.Sprintf(
+			"-s -w -X main.ProgramCheck=%s -X main.PluginCheck=%s",
+			hex.EncodeToString(program_hash.Sum(nil)),
+			hex.EncodeToString(plugin_hash.Sum(nil)),
+		)
+
+		fmt.Println(ld_flags)
+
 		cmd := exec.Command("go", "build", "-ldflags", ld_flags, "-o", compiler_config.OutputPath, "./alone_temp.go")
 		var out bytes.Buffer
 
