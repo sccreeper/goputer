@@ -14,7 +14,8 @@ A computer emulator/virtual machine intended to demonstrate how computers work a
 ###### Complete
 
 - Custom assembly language and compiler.
-- Backend for running programs.
+- Custom runtime.
+- Standalone executables.
 
 ###### Working on
 
@@ -24,6 +25,7 @@ A computer emulator/virtual machine intended to demonstrate how computers work a
 
 - WASM based frontend.
 - High level language.
+- IDE for easy development.
 
 ---
 
