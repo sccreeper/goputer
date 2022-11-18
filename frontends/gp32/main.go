@@ -90,7 +90,7 @@ func Run(program []byte, args []string) {
 				)
 			case c.IntSoundFlush:
 				speaker.Clear()
-				sine, _ := sound.SineTone(sr, float64(gp32.Registers[c.RSoundTone]))
+				sine, _ := sound.SquareTone(sr, float64(gp32.Registers[c.RSoundTone]))
 				speaker.Play(sine)
 			case c.IntSoundStop:
 				speaker.Clear()
