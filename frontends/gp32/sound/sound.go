@@ -3,9 +3,14 @@ package sound
 import (
 	"errors"
 	"math"
+	"sccreeper/goputer/pkg/constants"
+	"time"
 
 	"github.com/faiface/beep"
+	"github.com/faiface/beep/speaker"
 )
+
+var sr beep.SampleRate = beep.SampleRate(44100)
 
 //https://dev.to/thilanka/sine-wave-generator-using-golang-nom
 
@@ -80,5 +85,27 @@ func SquareTone(sr beep.SampleRate, freq float64) (beep.Streamer, error) {
 	}
 
 	return &SquareWave{dt, 0.1}, nil
+
+}
+
+func SoundInit() {
+	speaker.Init(sr, sr.N(time.Second/10))
+}
+
+func PlaySound(sound_type uint32, sound_tone uint32) {
+
+	var str beep.Streamer
+
+	speaker.Clear()
+
+	switch constants.SoundWaveType(sound_type) {
+	case constants.SWSine:
+		str, _ = SineTone(sr, float64(sound_tone))
+	case constants.SWSquare:
+		str, _ = SquareTone(sr, float64(sound_tone))
+
+	}
+
+	speaker.Play(str)
 
 }

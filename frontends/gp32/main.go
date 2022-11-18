@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/faiface/beep"
 	"github.com/faiface/beep/speaker"
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
@@ -23,9 +22,6 @@ var Authour string = "Oscar Peace (sccreeper)"
 var Repository string = "https://github.com/sccreeper/goputer"
 
 func Run(program []byte, args []string) {
-
-	sr := beep.SampleRate(44100)
-	speaker.Init(sr, sr.N(time.Second/10))
 
 	rand.Seed(time.Now().UnixNano())
 
@@ -42,6 +38,8 @@ func Run(program []byte, args []string) {
 
 	rl.InitWindow(640, 480, fmt.Sprintf("gp32 - %s", args[0]))
 	rl.SetTargetFPS(128)
+
+	sound.SoundInit()
 
 	for !rl.WindowShouldClose() {
 		rl.BeginDrawing()
@@ -89,9 +87,7 @@ func Run(program []byte, args []string) {
 					colour.ConvertColour(gp32.Registers[c.RVideoColour]),
 				)
 			case c.IntSoundFlush:
-				speaker.Clear()
-				sine, _ := sound.SquareTone(sr, float64(gp32.Registers[c.RSoundTone]))
-				speaker.Play(sine)
+				sound.PlaySound(gp32.Registers[c.RSoundWave], gp32.Registers[c.RSoundTone])
 			case c.IntSoundStop:
 				speaker.Clear()
 

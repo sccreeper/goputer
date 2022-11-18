@@ -1,4 +1,4 @@
-def x 100
+def x 1000
 
 :loop
 int sf
@@ -12,5 +12,6 @@ lda @x
 mov d0 r00
 
 mov d0 st
+incr sw
 
 jmp loop

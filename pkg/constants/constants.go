@@ -10,6 +10,8 @@ type Instruction uint8
 
 type DefType uint8
 
+type SoundWaveType uint32
+
 //Maps are used by compiler
 
 var InterruptInts = map[string]Interrupt{
@@ -188,6 +190,8 @@ var RegisterInts = map[string]uint32{
 
 	"dl": 53, //Data length
 	"dp": 54,
+
+	"sw": 55, //Sound wave type
 }
 
 //Constants for use in runtime
@@ -360,6 +364,8 @@ const (
 
 	RDataLength  Register = 53
 	RDataPointer Register = 54
+
+	RSoundWave Register = 55
 )
 
 const (
@@ -368,4 +374,9 @@ const (
 	IntType    DefType = 2
 	UintType   DefType = 3
 	BytesType  DefType = 4
+)
+
+const (
+	SWSquare SoundWaveType = 0
+	SWSine   SoundWaveType = 1
 )
