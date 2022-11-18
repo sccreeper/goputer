@@ -1,10 +1,14 @@
 // Simple hello world example
 
 def hw "Hello World"
+def white 0xFFFFFFFF
 
 lda @hw
-
 mov d0 vt
+
+lda @black
+mov d0 vc
+
 int vt
 
 //Exit (fingers crossed)

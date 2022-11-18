@@ -6,7 +6,7 @@ def test_char "X"
 def vid_pos1 64
 def vid_pos2 128
 //Plan9 white
-def vid_colour 255
+def vid_colour 0xFFFFFFFF
 
 // Jump block for testing if interrupts work
 :test

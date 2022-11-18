@@ -5,6 +5,8 @@ def pos 0
 def pos1x 639
 def pos1y 479
 
+def white 0xFFFFFFFF
+
 lda @pos
 mov d0 vx0
 mov d0 vy0
@@ -13,5 +15,8 @@ lda @pos1x
 mov d0 vx1
 lda @pos1y
 mov d0 vy1
+
+lda @white
+mov d0 vc
 
 int vl

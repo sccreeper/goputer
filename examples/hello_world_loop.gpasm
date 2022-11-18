@@ -1,9 +1,13 @@
 //Prints hello world lots of times
 def text "\nHello World"
 def time 1000
+def black 0x000000FF
+def white 0xFFFFFFFF
 
 :loop
+mov r14 vc
 int vc
+mov r15 vc
 int vt
 hlt r00
 jmp loop
@@ -14,5 +18,10 @@ mov d0 vt
 
 lda @time
 mov d0 r00
+
+lda @black
+mov d0 r14
+lda @white
+mov d0 r15
 
 jmp loop

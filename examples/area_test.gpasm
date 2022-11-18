@@ -2,6 +2,11 @@
 def pos 64
 def size 5
 
+def white 0xFFFFFFFF
+
+lda @white
+mov d0 vc
+
 lda @pos
 mov d0 r00
 lda @size
