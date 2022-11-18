@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"os"
 	"sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/util"
 	"strconv"
@@ -184,7 +185,7 @@ func parse(code_string string, verbose bool) (ProgramStructure, error) {
 				def_type = constants.IntType
 			} else if e[2][0] == '"' {
 				def_type = constants.StringType
-			} else if len(e[2]) > 2 && e[2][0:2] == "0x" {
+			} else if len(e[2]) > 2 && e[2][0:2] == "0x" || e[2][0] == '@' {
 				def_type = constants.BytesType
 			} else {
 				def_type = constants.UintType
@@ -218,7 +219,17 @@ func parse(code_string string, verbose bool) (ProgramStructure, error) {
 
 				data_array = []byte(buffer.Bytes())
 			case constants.BytesType:
-				data_array, _ = hex.DecodeString(e[2][2:])
+				if e[2][0] == '@' {
+
+					b, err := os.ReadFile(e[2][1:])
+					util.CheckError(err)
+
+					data_array = b
+
+				} else {
+					data_array, _ = hex.DecodeString(e[2][2:])
+				}
+
 			}
 
 			program_data.Definitions = append(program_data.Definitions,

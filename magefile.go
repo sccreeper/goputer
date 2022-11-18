@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"sccreeper/goputer/pkg/util"
 
 	"github.com/magefile/mage/mg"
@@ -102,16 +103,28 @@ func All() {
 func Dev() {
 	mg.Deps(All)
 
+	comp_path, err := os.Getwd()
+	util.CheckError(err)
+
+	comp_path += "/build/goputer"
+
 	fmt.Println("Building example programs...")
 
-	os.Chdir("./build/")
+	os.Chdir("./build/examples/")
 
-	example_list, err := ioutil.ReadDir("./examples")
+	dir, err := os.Getwd()
+	util.CheckError(err)
+
+	example_list, err := ioutil.ReadDir(dir)
 	util.CheckError(err)
 
 	for _, v := range example_list {
 
-		sh.Run("./goputer", "b", fmt.Sprintf("./examples/%s", v.Name()))
+		if filepath.Ext(v.Name()) != ".gpasm" {
+			continue
+		}
+
+		sh.Run(comp_path, "b", v.Name())
 
 	}
 

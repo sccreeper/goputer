@@ -1,0 +1,10 @@
+def bin @bin_test_file
+def white 0xFFFFFFFF
+
+lda @bin
+mov d0 vt
+
+lda @white
+mov d0 vc
+
+int vt

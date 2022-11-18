@@ -11,7 +11,12 @@ func (m *VM) load() {
 		data_length := binary.LittleEndian.Uint32(m.MemArray[m.ArgLarge : m.ArgLarge+4])
 		m.Registers[c.RDataLength] = data_length
 
-		copy(m.DataBuffer[:data_length], m.MemArray[m.ArgLarge+4:m.ArgLarge+data_length+4])
+		if data_length > 128 {
+			copy(m.DataBuffer[:], m.MemArray[m.ArgLarge+4:m.ArgLarge+128+4])
+			m.Registers[c.RDataLength] = 128
+		} else {
+			copy(m.DataBuffer[:data_length], m.MemArray[m.ArgLarge+4:m.ArgLarge+data_length+4])
+		}
 
 		m.Registers[c.RDataPointer] = m.ArgLarge
 	} else {
@@ -25,6 +30,10 @@ func (m *VM) store() {
 	if m.ArgLarge > uint32(RegisterCount) {
 		data_length := binary.LittleEndian.Uint32(m.MemArray[m.ArgLarge : m.ArgLarge+4])
 		m.Registers[c.RDataLength] = data_length
+
+		if data_length > 128 {
+			data_length = 128
+		}
 
 		copy(m.MemArray[m.ArgLarge+4:m.ArgLarge+data_length+4], m.DataBuffer[:data_length])
 
