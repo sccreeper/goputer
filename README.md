@@ -1,4 +1,4 @@
-# goputer
+# goputer <!-- omit in toc -->
 <sup>`Go + Computer = goputer`</sup>
 
 ---
@@ -7,21 +7,35 @@ A computer emulator/virtual machine intended to demonstrate how computers work a
 
 ---
 
+**Contents**
+- [Features](#features)
+  - [Complete](#complete)
+  - [Working on](#working-on)
+  - [In the future](#in-the-future)
+- [Documentation & getting started.](#documentation--getting-started)
+- [Project layout](#project-layout)
+- [Credits](#credits)
+  - [GP32 Frontend](#gp32-frontend)
+  - [CLI tool](#cli-tool)
+- [License](#license)
+
+---
+
 ### Features
 
 **Note:** Most of these have not been fully implemented yet.
 
-###### Complete
+#### Complete
 
 - Custom assembly language and compiler.
 - Custom runtime.
 - Standalone executables.
 
-###### Working on
+#### Working on
 
 - Frontend that shows output from VM backend.
 
-###### In the future
+#### In the future
 
 - WASM based frontend.
 - High level language.
@@ -29,20 +43,33 @@ A computer emulator/virtual machine intended to demonstrate how computers work a
 
 ---
 
-### Documentation
+### Documentation & getting started.
 
 See the [project wiki](https://github.com/sccreeper/goputer/wiki).
 
+---
+
+### Project layout
+
+- `frontends` Contains source for the frontends.
+- `examples` A list of example code to get started with.
+- `cmd/goputer` The CLI tool for compiling, running & disassembling code.
+- `pkg` Shared code. Includes the compiler & the VM runtime.
 
 ---
 
 ### Credits
 
+#### GP32 Frontend
+
 - Raylib Go Bindings - [gen2brain/raylib-go](https://github.com/gen2brain/raylib-go)
-  - Rendering library used by default gp32 frontend.
+  - Very useful rendering library.
   - See also: Raylib - [raysan5/raylib](https://github.com/raysan5/raylib)
 - Beep - [faiface/beep](https://github.com/faiface/beep)
-  - Used for producing sound in the default gp32 frontend.
+  - Used for producing sound on the fly.
+
+#### CLI tool
+
 - CLI - [urfave/cli](https://github.com/urfave/cli)
   - Used by the compiler for getting input from the terminal.
 - Color - [fatih/color](https://github.com/fatih/color)
