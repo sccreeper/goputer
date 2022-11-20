@@ -3,7 +3,6 @@ package vm
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"math"
 	comp "sccreeper/goputer/pkg/compiler"
 	c "sccreeper/goputer/pkg/constants"
@@ -38,12 +37,16 @@ type VM struct {
 	ArgSmall1 uint16
 	ArgLarge  uint32
 
-	InterruptChannel chan c.Interrupt
-	RegisterSync     sync.Mutex
+	InterruptChannel       chan c.Interrupt
+	SubbedInterruptChannel chan c.Interrupt
+	RegisterSync           sync.Mutex
+
+	HandlingInterrupt bool
+	InterruptQueue    []uint32
 }
 
-// Initialise VM and registers, load code into "memory" etc.
-func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt) error {
+// Initialize VM and registers, load code into "memory" etc.
+func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt, subbed_interrupt_channel chan c.Interrupt) error {
 
 	if len(vm_program) > int(_MemSize) {
 		return errors.New("program too large")
@@ -58,8 +61,18 @@ func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt) 
 	machine.Registers[c.RProgramCounter] = program_start_index + comp.StackSize
 	machine.CurrentInstruction = vm_program[program_start_index : program_start_index+comp.InstructionLength]
 	machine.InterruptChannel = interrupt_channel
+	machine.SubbedInterruptChannel = subbed_interrupt_channel
 	machine.Finished = false
 	machine.ProgramBounds = comp.StackSize + uint32(len(vm_program[:len(vm_program)-int(comp.PadSize)]))
+
+	machine.Registers[c.RCallStackZeroPointer] = comp.StackSize - comp.CallStackSize
+	machine.Registers[c.RCallStackPointer] = machine.Registers[c.RCallStackZeroPointer]
+
+	machine.Registers[c.RStackZeroPointer] = 0
+	machine.Registers[c.RStackPointer] = 0
+
+	machine.HandlingInterrupt = false
+	machine.InterruptQueue = []uint32{}
 
 	//Interrupt table
 
@@ -83,19 +96,11 @@ func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt) 
 
 func (m *VM) Run() {
 
+	var temp_call_stack int
+
 	for {
 
 		m.RegisterSync.Lock()
-
-		//Interrupts
-		select {
-		case x := <-m.InterruptChannel:
-			m.subbed_interrupt(x)
-		default:
-
-		}
-
-		//m.RegisterSync.Lock()
 
 		m.CurrentInstruction = m.MemArray[m.Registers[c.RProgramCounter] : m.Registers[c.RProgramCounter]+comp.InstructionLength]
 		m.Opcode = c.Instruction(m.CurrentInstruction[0])
@@ -104,26 +109,62 @@ func (m *VM) Run() {
 		m.ArgSmall1 = binary.LittleEndian.Uint16(m.CurrentInstruction[3:5])
 		m.ArgLarge = binary.LittleEndian.Uint32(m.CurrentInstruction[1:5])
 
+		//Interrupts
+		select {
+		case x := <-m.SubbedInterruptChannel:
+
+			//Place the interrupts into a "queue"
+			if m.HandlingInterrupt {
+				if m.Subscribed(c.Interrupt(x)) {
+					m.InterruptQueue = append(m.InterruptQueue, uint32(x))
+				}
+			} else {
+
+				var i c.Interrupt
+
+				if len(m.InterruptQueue) == 0 {
+					i = x
+				} else {
+					i = c.Interrupt(m.InterruptQueue[len(m.InterruptQueue)-1])
+					m.InterruptQueue = m.InterruptQueue[:len(m.InterruptQueue)-1]
+				}
+
+				if m.Subscribed(i) {
+					m.HandlingInterrupt = true
+					m.subbed_interrupt(i)
+					m.call()
+					//fmt.Printf("Interrupt %d\n", x)
+					m.RegisterSync.Unlock()
+					continue
+				}
+			}
+
+		default:
+
+		}
+
 		//If it is null itn, could be end of program or end of call block
 		if m.Opcode == 0 && m.ArgLarge == 0 {
 
-			if m.Registers[c.RProgramCounter] >= m.ProgramBounds {
+			//If the next opcode and arg is 0 as well we exit
+			//If not we pop from the call stack
+
+			next_instruction := m.MemArray[m.Registers[c.RProgramCounter]+comp.InstructionLength : m.Registers[c.RProgramCounter]+(comp.InstructionLength*2)]
+
+			if next_instruction[0] == 0 && util.AllEqualToX(m.CurrentInstruction[1:5], 0) {
 				m.Finished = true
+				m.RegisterSync.Unlock()
 				break
+			} else {
+				m.pop_call()
+
+				if m.HandlingInterrupt {
+					m.HandlingInterrupt = false
+				}
+
+				m.RegisterSync.Unlock()
+				continue
 			}
-
-			fmt.Println("null itn")
-
-			//Set program pointer to call stack pointer
-			m.Registers[c.RProgramCounter] = binary.BigEndian.Uint32(m.MemArray[m.Registers[c.RCallStackPointer] : m.Registers[c.RCallStackPointer]+4])
-
-			//Clear previous pointer from call stack
-			copy(m.MemArray[m.Registers[c.RStackPointer]:m.Registers[c.RStackPointer]+4], []byte{0, 0, 0, 0})
-
-			m.Registers[c.RCallStackPointer]--
-			m.RegisterSync.Unlock()
-
-			continue
 
 		}
 
@@ -140,6 +181,7 @@ func (m *VM) Run() {
 		case c.ICall:
 			m.call()
 			m.RegisterSync.Unlock()
+			continue
 
 		case c.IConditionalCall:
 			m.conditional_call()
@@ -252,6 +294,14 @@ func (m *VM) Run() {
 
 		}
 
+		if m.Registers[c.RCallStackPointer] != uint32(temp_call_stack) {
+
+			temp_call_stack = int(m.Registers[c.RCallStackPointer])
+			//fmt.Printf("Opcode %d\n", m.Opcode)
+			//fmt.Printf("Call stack %d\n", temp_call_stack)
+
+		}
+
 		m.Registers[c.RProgramCounter] += comp.InstructionLength
 
 		m.RegisterSync.Unlock()
@@ -259,4 +309,7 @@ func (m *VM) Run() {
 	}
 
 	m.RegisterSync.Unlock()
+	close(m.InterruptChannel)
+	close(m.SubbedInterruptChannel)
+
 }

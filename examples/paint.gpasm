@@ -1,0 +1,38 @@
+//Paint program
+
+def background 0xFFFFFFFF
+def pen 0x000000FF
+def size 8
+
+:handle_mouse_move
+
+mov mx vx0
+mov my vy0
+
+add mx r00
+mov a0 vx1
+
+add my r00
+mov a0 vy1
+
+int va
+
+end
+
+sub mm handle_mouse_move
+
+:hang_loop
+jmp hang_loop
+end
+
+lda @background
+mov d0 vc
+int vc
+
+lda @pen
+mov d0 vc
+
+lda @size
+mov d0 r00
+
+jmp hang_loop

@@ -120,6 +120,10 @@ var InstructionInts = map[string]uint32{
 
 	"call":    26,
 	"cndcall": 27,
+
+	"pow": 28,
+
+	"clr": 29,
 }
 
 var RegisterInts = map[string]uint32{

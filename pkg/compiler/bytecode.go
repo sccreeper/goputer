@@ -92,7 +92,7 @@ func generate_bytecode(p ProgramStructure) []byte {
 		i_bytes := make([]byte, 2)
 		binary.LittleEndian.PutUint16(i_bytes[:], uint16(i))
 		j_addr_bytes := make([]byte, 4)
-		binary.LittleEndian.PutUint32(j_addr_bytes[:], j_addr)
+		binary.LittleEndian.PutUint32(j_addr_bytes[:], j_addr+StackSize)
 
 		current_interrupt_bytes = append(current_interrupt_bytes, i_bytes...)
 		current_interrupt_bytes = append(current_interrupt_bytes, j_addr_bytes...)

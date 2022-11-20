@@ -7,11 +7,13 @@ def vid_pos1 64
 def vid_pos2 128
 //Plan9 white
 def vid_colour 0xFFFFFFFF
+def other_colour 0xFF00FFFF
 
 // Jump block for testing if interrupts work
 :test
 
 lda @test_char
+clr vt
 mov d0 vt
 
 lda @vid_pos1
@@ -22,10 +24,6 @@ lda @vid_pos2
 mov d0 vx1
 mov d0 vy1
 
-lda @vid_colour
-mov d0 vc
-
-int vc
 int va
 int vt
 
@@ -38,6 +36,9 @@ jmp loop
 end
 
 // Main routine 
+
+lda @vid_colour
+mov d0 vc
 
 lda @test_string
 

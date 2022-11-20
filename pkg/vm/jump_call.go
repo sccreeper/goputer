@@ -6,12 +6,23 @@ import (
 	c "sccreeper/goputer/pkg/constants"
 )
 
-// Calls
+// Calls the address of m.ArgLarge
 func (m *VM) call() {
+
+	var increment uint32
+
+	if m.Opcode != c.ICall {
+		increment = 0
+	} else {
+		increment = compiler.InstructionLength
+	}
+
 	m.Registers[c.RCallStackPointer] += 4
+
 	binary.LittleEndian.PutUint32(
 		m.MemArray[m.Registers[c.RCallStackPointer]:m.Registers[c.RCallStackPointer]+4],
-		m.Registers[c.RProgramCounter]+compiler.InstructionLength)
+		m.Registers[c.RProgramCounter]+increment)
+
 	m.Registers[c.RProgramCounter] = m.ArgLarge
 }
 

@@ -1,6 +1,8 @@
 package vm
 
-import c "sccreeper/goputer/pkg/constants"
+import (
+	c "sccreeper/goputer/pkg/constants"
+)
 
 type InterruptInfo struct {
 	Type uint32
@@ -8,12 +10,17 @@ type InterruptInfo struct {
 
 func (m *VM) subbed_interrupt(i c.Interrupt) {
 
+	m.ArgLarge = m.InterruptTable[i]
+
+}
+
+func (m *VM) Subscribed(i c.Interrupt) bool {
+
 	if m.InterruptTable[i] == 0 {
-		return
+		return false
 	} else {
 
-		m.ArgLarge = m.InterruptTable[i]
-		m.call()
+		return true
 
 	}
 
