@@ -1,0 +1,15 @@
+// Simple flashing IO test
+def t 250
+
+:loop
+incr io00
+hlt r00
+decr io00
+hlt r00
+jmp loop
+end
+
+lda @t
+mov d0 r00
+
+jmp loop

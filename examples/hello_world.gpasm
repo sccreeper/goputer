@@ -6,7 +6,7 @@ def white 0xFFFFFFFF
 lda @hw
 mov d0 vt
 
-lda @black
+lda @white
 mov d0 vc
 
 int vt

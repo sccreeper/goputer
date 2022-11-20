@@ -153,7 +153,6 @@ func (m *VM) Run() {
 
 			if next_instruction[0] == 0 && util.AllEqualToX(m.CurrentInstruction[1:5], 0) {
 				m.Finished = true
-				m.RegisterSync.Unlock()
 				break
 			} else {
 				m.pop_call()

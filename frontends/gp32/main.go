@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/rand"
 	"sccreeper/goputer/frontends/gp32/colour"
+	"sccreeper/goputer/frontends/gp32/rendering"
 	"sccreeper/goputer/frontends/gp32/sound"
 	c "sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/vm"
@@ -41,6 +42,8 @@ func Run(program []byte, args []string) {
 	var gp32_subbed_chan chan c.Interrupt = make(chan c.Interrupt)
 	var text_string string = ""
 
+	var IO_status [16]bool = [16]bool{}
+
 	var previous_mouse PreviousMousePos = PreviousMousePos{
 		Button: 69,
 	}
@@ -57,9 +60,27 @@ func Run(program []byte, args []string) {
 	for !rl.WindowShouldClose() {
 		rl.BeginDrawing()
 
+		//Render IO
+
+		for i := c.RIO00 - 34; i <= c.RIO15-34; i++ {
+
+			if gp32.Registers[i+34] != 0 {
+				IO_status[i] = true
+			} else {
+				IO_status[i] = false
+			}
+
+		}
+
+		rendering.RenderIO(IO_status[:])
+
+		//Check if finished and then exit program loop
+
 		if gp32.Finished {
 			break
 		}
+
+		//Handle interrupts
 
 		select {
 		case x := <-gp32_chan:
@@ -108,7 +129,7 @@ func Run(program []byte, args []string) {
 		default:
 		}
 
-		//Handle inputs
+		//Handle subscribed interrupts
 
 		var key int32
 
