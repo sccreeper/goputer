@@ -1,4 +1,5 @@
 def x 1000
+def vol 16
 
 :loop
 int sf
@@ -13,5 +14,8 @@ mov d0 r00
 
 mov d0 st
 incr sw
+
+lda @vol
+mov d0 sv
 
 jmp loop

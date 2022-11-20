@@ -100,7 +100,7 @@ func Run(program []byte, args []string) {
 					colour.ConvertColour(gp32.Registers[c.RVideoColour]),
 				)
 			case c.IntSoundFlush:
-				sound.PlaySound(gp32.Registers[c.RSoundWave], gp32.Registers[c.RSoundTone])
+				sound.PlaySound(gp32.Registers[c.RSoundWave], gp32.Registers[c.RSoundTone], gp32.Registers[c.RSoundVolume])
 			case c.IntSoundStop:
 				speaker.Clear()
 

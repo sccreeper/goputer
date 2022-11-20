@@ -1,5 +1,6 @@
 def x 10
 def t 50
+def vol 16
 
 :loop
 add r00 r02
@@ -16,5 +17,8 @@ mov d0 r02
 
 lda @t
 mov d0 r01
+
+lda @vol
+mov d0 sv
 
 jmp loop
