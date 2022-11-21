@@ -48,6 +48,18 @@ func Run(program []byte, args []string) {
 	var text_string string = ""
 
 	var IO_status [16]bool = [16]bool{}
+	var IOToggleSwitches [8]rendering.IOSwitch = [8]rendering.IOSwitch{}
+
+	for index := range IOToggleSwitches {
+
+		IOToggleSwitches[index] = rendering.IOSwitch{
+			Toggled: false,
+			ID:      uint32(index) + 8,
+			X:       float32((index * rendering.IOUISize) + (8 * rendering.IOUISize)),
+			Y:       0,
+		}
+
+	}
 
 	var VideoRenderTexture rl.RenderTexture2D = rl.LoadRenderTexture(640, 480)
 	var IOStatusRenderTexture rl.RenderTexture2D = rl.LoadRenderTexture(640, int32(rendering.IOUISize))
@@ -98,7 +110,7 @@ func Run(program []byte, args []string) {
 		}
 
 		rl.BeginTextureMode(IOStatusRenderTexture)
-		rendering.RenderIO(IO_status[:])
+		rendering.RenderIO(IO_status[:], IOToggleSwitches[:])
 		rl.EndTextureMode()
 
 		rl.BeginTextureMode(VMStatusRenderTexture)
@@ -168,6 +180,8 @@ func Run(program []byte, args []string) {
 
 		rl.BeginDrawing()
 
+		rl.ClearBackground(rl.Black)
+
 		rl.DrawTexture(VMStatusRenderTexture.Texture, 0, 0, rl.White)
 
 		rl.DrawTextureRec(
@@ -181,7 +195,17 @@ func Run(program []byte, args []string) {
 			rl.White,
 		)
 
-		rl.DrawTexture(IOStatusRenderTexture.Texture, 0, int32(rendering.DebugUISize), rl.White)
+		rl.DrawTextureRec(
+			IOStatusRenderTexture.Texture,
+			rl.Rectangle{
+				X:      0,
+				Y:      0,
+				Width:  640,
+				Height: -float32(rendering.IOUISize),
+			},
+			rl.Vector2{X: 0, Y: float32(rendering.DebugUISize)},
+			rl.White,
+		)
 
 		rl.DrawLine(0, int32(rendering.IOUISize+rendering.DebugUISize+3), 640, int32(rendering.IOUISize+rendering.DebugUISize+3), rl.LightGray)
 
@@ -270,6 +294,27 @@ func Run(program []byte, args []string) {
 
 				if gp32.Subscribed(c.IntMouseUp) {
 					gp32_subbed_chan <- c.IntMouseUp
+				}
+
+			}
+
+		}
+
+		//For updating IO
+
+		if rl.IsMouseButtonPressed(rl.MouseLeftButton) {
+
+			for index := range IOToggleSwitches {
+
+				if IOToggleSwitches[index].Update(rl.Vector2{
+					X: float32(rl.GetMouseX()),
+					Y: float32(rl.GetMouseY()),
+				}) {
+
+					if gp32.Subscribed(c.Interrupt(index + int(c.IntIO08))) {
+						gp32_chan <- c.Interrupt(index + int(c.IntIO08))
+					}
+
 				}
 
 			}
