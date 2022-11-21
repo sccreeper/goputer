@@ -57,12 +57,6 @@ func format_instruction(i_name string, i_data []string) string {
 
 }
 
-func convert_hex(i int) string {
-
-	return fmt.Sprintf("0x"+"%08X", i)
-
-}
-
 func main() {
 
 	if runtime.GOOS == "windows" {
@@ -318,10 +312,10 @@ func _disassemble(ctx *cli.Context) error {
 	underline.Println("Block addresses:")
 	fmt.Println()
 
-	color.White("Data block: %s", bold.Sprintf(convert_hex(int(program.StartIndexes[0]))))
-	color.White("Jump blocks: %s", bold.Sprintf(convert_hex(int(program.StartIndexes[1]))))
-	color.White("Interrupt table: %s", bold.Sprintf(convert_hex(int(program.StartIndexes[2]))))
-	color.White("Instruction block: %s", bold.Sprintf(convert_hex(int(program.StartIndexes[3]))))
+	color.White("Data block: %s", bold.Sprintf(util.ConvertHex(int(program.StartIndexes[0]))))
+	color.White("Jump blocks: %s", bold.Sprintf(util.ConvertHex(int(program.StartIndexes[1]))))
+	color.White("Interrupt table: %s", bold.Sprintf(util.ConvertHex(int(program.StartIndexes[2]))))
+	color.White("Instruction block: %s", bold.Sprintf(util.ConvertHex(int(program.StartIndexes[3]))))
 
 	fmt.Println()
 	underline.Println("Definitions:")
@@ -335,8 +329,8 @@ func _disassemble(ctx *cli.Context) error {
 
 		fmt.Printf(
 			"F: %s M: %s = %s\n",
-			bold.Sprintf(convert_hex(int(defintion_byte_index))),
-			bold.Sprintf(convert_hex(int(defintion_byte_index+compiler.StackSize))),
+			bold.Sprintf(util.ConvertHex(int(defintion_byte_index))),
+			bold.Sprintf(util.ConvertHex(int(defintion_byte_index+compiler.StackSize))),
 			strings.ReplaceAll(string(v), "\n", ""),
 		)
 
@@ -354,7 +348,7 @@ func _disassemble(ctx *cli.Context) error {
 
 	for k, v := range program.InterruptTable {
 
-		fmt.Printf("%02d = %s\n", int(k), bold.Sprintf(convert_hex(int(v))))
+		fmt.Printf("%02d = %s\n", int(k), bold.Sprintf(util.ConvertHex(int(v))))
 
 	}
 
@@ -365,7 +359,7 @@ func _disassemble(ctx *cli.Context) error {
 	for k, v := range program.JumpBlocks {
 
 		fmt.Println()
-		bold.Printf("Jump %s (File: %s):\n", convert_hex(int(k+compiler.StackSize)), convert_hex(int(k)))
+		bold.Printf("Jump %s (File: %s):\n", util.ConvertHex(int(k+compiler.StackSize)), util.ConvertHex(int(k)))
 		fmt.Println()
 
 		for _, v1 := range v {

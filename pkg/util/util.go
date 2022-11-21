@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"math/rand"
 	c "sccreeper/goputer/pkg/constants"
 )
@@ -74,5 +75,11 @@ func AllEqualToX[T uint32 | byte](splice []T, check_value T) bool {
 	}
 
 	return true
+
+}
+
+func ConvertHex[T int | uint32 | uint64](i T) string {
+
+	return fmt.Sprintf("0x"+"%08X", i)
 
 }

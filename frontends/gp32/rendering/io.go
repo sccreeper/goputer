@@ -2,10 +2,6 @@ package rendering
 
 import rl "github.com/gen2brain/raylib-go/raylib"
 
-const (
-	IOUISize int = 40
-)
-
 var ColourIOOn rl.Color = rl.Color{
 	R: 251,
 	G: 250,
@@ -21,6 +17,8 @@ var ColourIOOff rl.Color = rl.Color{
 }
 
 func RenderIO(status []bool) {
+
+	rl.ClearBackground(rl.DarkGray)
 
 	for index, v := range status {
 
@@ -42,6 +40,18 @@ func RenderIO(status []bool) {
 			0.5,
 			16,
 			c,
+		)
+
+		rl.DrawRectangleRoundedLines(rl.Rectangle{
+			Width:  float32(IOUISize),
+			Height: float32(IOUISize),
+			X:      float32(index * IOUISize),
+			Y:      0,
+		},
+			0.5,
+			16,
+			1,
+			rl.Black,
 		)
 
 	}

@@ -32,10 +32,15 @@ type PreviousMousePos struct {
 
 func Run(program []byte, args []string) {
 
+	//Init
+
 	rand.Seed(time.Now().UnixNano())
 
 	log.Println("GP32 frontend starting...")
 	fmt.Println()
+
+	rl.InitWindow(640, 480+int32(rendering.TotalYOffset), fmt.Sprintf("gp32 - %s", args[0]))
+	rl.SetTargetFPS(128)
 
 	var gp32 vm.VM
 	var gp32_chan chan c.Interrupt = make(chan c.Interrupt)
@@ -43,6 +48,28 @@ func Run(program []byte, args []string) {
 	var text_string string = ""
 
 	var IO_status [16]bool = [16]bool{}
+
+	var VideoRenderTexture rl.RenderTexture2D = rl.LoadRenderTexture(640, 480)
+	var IOStatusRenderTexture rl.RenderTexture2D = rl.LoadRenderTexture(640, int32(rendering.IOUISize))
+	var VMStatusRenderTexture rl.RenderTexture2D = rl.LoadRenderTexture(640, int32(rendering.DebugUISize))
+
+	//Clear backgrounds of both textures
+
+	rl.BeginTextureMode(VideoRenderTexture)
+	rl.ClearBackground(rl.Black)
+	rl.EndTextureMode()
+
+	rl.BeginTextureMode(IOStatusRenderTexture)
+	rl.ClearBackground(rl.Black)
+	rl.EndTextureMode()
+
+	rl.BeginTextureMode(VMStatusRenderTexture)
+	rl.ClearBackground(rl.Black)
+	rl.EndTextureMode()
+
+	rendering.InitVMDebug()
+
+	//Set mouse to arbitrary number so inputs register
 
 	var previous_mouse PreviousMousePos = PreviousMousePos{
 		Button: 69,
@@ -52,13 +79,11 @@ func Run(program []byte, args []string) {
 
 	go gp32.Run()
 
-	rl.InitWindow(640, 480, fmt.Sprintf("gp32 - %s", args[0]))
-	rl.SetTargetFPS(128)
-
 	sound.SoundInit()
 
+	//Start rendering
+
 	for !rl.WindowShouldClose() {
-		rl.BeginDrawing()
 
 		//Render IO
 
@@ -72,7 +97,13 @@ func Run(program []byte, args []string) {
 
 		}
 
+		rl.BeginTextureMode(IOStatusRenderTexture)
 		rendering.RenderIO(IO_status[:])
+		rl.EndTextureMode()
+
+		rl.BeginTextureMode(VMStatusRenderTexture)
+		rendering.RenderVMDebug(&gp32)
+		rl.EndTextureMode()
 
 		//Check if finished and then exit program loop
 
@@ -81,6 +112,8 @@ func Run(program []byte, args []string) {
 		}
 
 		//Handle interrupts
+
+		rl.BeginTextureMode(VideoRenderTexture)
 
 		select {
 		case x := <-gp32_chan:
@@ -129,6 +162,39 @@ func Run(program []byte, args []string) {
 		default:
 		}
 
+		rl.EndTextureMode()
+
+		//Draw render textures to screen
+
+		rl.BeginDrawing()
+
+		rl.DrawTexture(VMStatusRenderTexture.Texture, 0, 0, rl.White)
+
+		rl.DrawTextureRec(
+			VMStatusRenderTexture.Texture,
+			rl.Rectangle{X: 0,
+				Y:      0,
+				Width:  640,
+				Height: -float32(rendering.DebugUISize),
+			},
+			rl.Vector2{X: 0, Y: 0},
+			rl.White,
+		)
+
+		rl.DrawTexture(IOStatusRenderTexture.Texture, 0, int32(rendering.DebugUISize), rl.White)
+
+		rl.DrawLine(0, int32(rendering.IOUISize+rendering.DebugUISize+3), 640, int32(rendering.IOUISize+rendering.DebugUISize+3), rl.LightGray)
+
+		rl.DrawTextureRec(VideoRenderTexture.Texture, rl.Rectangle{
+			X:      0,
+			Y:      0,
+			Width:  640,
+			Height: -480,
+		},
+			rl.Vector2{X: 0, Y: float32(rendering.TotalYOffset)},
+			rl.White,
+		)
+
 		//Handle subscribed interrupts
 
 		var key int32
@@ -173,13 +239,13 @@ func Run(program []byte, args []string) {
 
 		//Mouse
 
-		if uint32(rl.GetMouseX()) != previous_mouse.MouseX && uint32(rl.GetMouseY()) != previous_mouse.MouseY {
+		if uint32(rl.GetMouseX()) != previous_mouse.MouseX && uint32(CorrectedMouseY()) != previous_mouse.MouseY {
 
 			gp32.Registers[c.RMouseX] = uint32(rl.GetMouseX())
-			gp32.Registers[c.RMouseY] = uint32(rl.GetMouseY())
+			gp32.Registers[c.RMouseY] = uint32(CorrectedMouseY())
 
 			previous_mouse.MouseX = uint32(rl.GetMouseX())
-			previous_mouse.MouseY = uint32(rl.GetMouseY())
+			previous_mouse.MouseY = uint32(CorrectedMouseY())
 
 			if gp32.Subscribed(c.IntMouseMove) {
 				gp32_subbed_chan <- c.IntMouseMove
@@ -211,6 +277,7 @@ func Run(program []byte, args []string) {
 		}
 
 		rl.EndDrawing()
+
 	}
 
 	for !rl.WindowShouldClose() {
@@ -219,4 +286,10 @@ func Run(program []byte, args []string) {
 	}
 
 	rl.CloseWindow()
+}
+
+func CorrectedMouseY() int32 {
+
+	return rl.GetMouseY() - int32(rendering.TotalYOffset)
+
 }
