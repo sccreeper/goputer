@@ -217,15 +217,15 @@ const (
 
 	IntMouseMove Interrupt = 9
 	IntMouseUp   Interrupt = 10
-	IntMouseDown Interrupt = 12
-	IntIO08      Interrupt = 13
-	IntIO09      Interrupt = 14
-	IntIO10      Interrupt = 15
-	IntIO11      Interrupt = 16
-	IntIO12      Interrupt = 17
-	IntIO13      Interrupt = 18
-	IntIO14      Interrupt = 19
-	IntIO15      Interrupt = 20
+	IntMouseDown Interrupt = 11
+	IntIO08      Interrupt = 12
+	IntIO09      Interrupt = 13
+	IntIO10      Interrupt = 14
+	IntIO11      Interrupt = 15
+	IntIO12      Interrupt = 16
+	IntIO13      Interrupt = 17
+	IntIO14      Interrupt = 18
+	IntIO15      Interrupt = 19
 
 	IntKeyboardUp   Interrupt = 20
 	IntKeyboardDown Interrupt = 21
@@ -352,7 +352,7 @@ const (
 	RIO05 Register = 39
 	RIO06 Register = 40
 	RIO07 Register = 41
-	RIO08 Register = 32
+	RIO08 Register = 42
 	RIO09 Register = 43
 	RIO10 Register = 44
 	RIO11 Register = 45

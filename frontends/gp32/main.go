@@ -99,9 +99,9 @@ func Run(program []byte, args []string) {
 
 		//Render IO
 
-		for i := c.RIO00 - 34; i <= c.RIO15-34; i++ {
+		for i := 0; i < 8; i++ {
 
-			if gp32.Registers[i+34] != 0 {
+			if gp32.Registers[i+int(c.RIO00)] != 0 {
 				IO_status[i] = true
 			} else {
 				IO_status[i] = false
@@ -311,8 +311,15 @@ func Run(program []byte, args []string) {
 					Y: float32(rl.GetMouseY()),
 				}) {
 
-					if gp32.Subscribed(c.Interrupt(index + int(c.IntIO08))) {
-						gp32_chan <- c.Interrupt(index + int(c.IntIO08))
+					if IOToggleSwitches[index].Toggled {
+						gp32.Registers[int(c.RIO08)+index] = 1
+					} else {
+						gp32.Registers[int(c.RIO08)+index] = 0
+					}
+
+					if gp32.Subscribed(c.Interrupt(int(c.IntIO08) + index)) {
+
+						gp32_subbed_chan <- c.Interrupt(int(c.IntIO08) + index)
 					}
 
 				}

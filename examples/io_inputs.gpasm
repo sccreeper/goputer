@@ -1,0 +1,29 @@
+def x 0
+
+:handle_io
+
+mov io08 io00
+mov io09 io01
+mov io10 io02
+mov io11 io03
+mov io12 io04
+mov io13 io05
+mov io14 io06
+mov io15 io07
+
+end
+
+sub io08 handle_io
+sub io09 handle_io
+sub io10 handle_io
+sub io11 handle_io
+sub io12 handle_io
+sub io13 handle_io
+sub io14 handle_io
+sub io15 handle_io
+
+:hang_loop
+jmp hang_loop
+end
+
+jmp hang_loop
