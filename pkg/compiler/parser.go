@@ -69,6 +69,10 @@ func parse(code_string string, verbose bool) (ProgramStructure, error) {
 
 	for index, statement := range program_list {
 
+		if statement == "" {
+			continue
+		}
+
 		in_string = false
 
 		//Ignore if comment
