@@ -3,7 +3,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -11,14 +10,16 @@ import (
 	"path/filepath"
 	"sccreeper/goputer/pkg/util"
 
+	"github.com/BurntSushi/toml"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 )
 
 type FrontendBuildConfig struct {
-	Command   []string `json:"command"`
-	OutputDir string   `json:"output_dir"`
-	IsPlugin  bool     `json:"is_plugin"`
+	Build struct {
+		Command   []string `toml:"command"`
+		OutputDir string   `toml:"output_dir"`
+	} `toml:"build"`
 }
 
 var env_map map[string]string = map[string]string{
@@ -77,24 +78,24 @@ func All() {
 
 		//Build plugin and copy output folder
 
-		build_json, err := os.ReadFile(fmt.Sprintf("./frontends/%s/build.json", v.Name()))
+		build_toml, err := os.ReadFile(fmt.Sprintf("./frontends/%s/frontend.toml", v.Name()))
 		util.CheckError(err)
 
 		var build_config FrontendBuildConfig
-		json.Unmarshal(build_json, &build_config)
+		toml.Unmarshal(build_toml, &build_config)
 
 		previous_dir, err := os.Getwd()
 		util.CheckError(err)
 
 		os.Chdir(fmt.Sprintf("./frontends/%s/", v.Name()))
 
-		sh.Run(build_config.Command[0], build_config.Command[1:]...)
+		sh.Run(build_config.Build.Command[0], build_config.Build.Command[1:]...)
 
 		//Escape back to previous directory
 		os.Chdir(previous_dir)
 
-		sh.Run("cp", "-rf", fmt.Sprintf("./frontends/%s/build", v.Name()), fmt.Sprintf("./build/frontends/%s", v.Name()))
-
+		sh.Run("cp", "-rf", fmt.Sprintf("./frontends/%s/%s", v.Name(), build_config.Build.OutputDir), fmt.Sprintf("./build/frontends/%s", v.Name()))
+		sh.Run("cp", fmt.Sprintf("./frontends/%s/frontend.toml", v.Name()), fmt.Sprintf("./build/frontends/%s/frontend.toml", v.Name()))
 	}
 
 }

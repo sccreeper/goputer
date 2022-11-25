@@ -22,6 +22,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/BurntSushi/toml"
 	"github.com/fatih/color"
 	"github.com/savioxavier/termlink"
 	"github.com/urfave/cli/v2"
@@ -402,6 +403,21 @@ func _run(ctx *cli.Context) error {
 
 }
 
+type FrontendInfo struct {
+	Info struct {
+		Name        string `toml:"name"`
+		Description string `toml:"description"`
+		Authour     string `toml:"authour"`
+		Repository  string `toml:"repository"`
+		IsPlugin    bool   `toml:"is_plugin"`
+	} `toml:"info"`
+
+	Build struct {
+		BuildCommand    []string `toml:"command"`
+		OutputDirectory string   `toml:"output_dir"`
+	} `toml:"build"`
+}
+
 func _list_plugins(ctx *cli.Context) error {
 
 	plugin_dir, err := ioutil.ReadDir("./frontends/")
@@ -409,25 +425,23 @@ func _list_plugins(ctx *cli.Context) error {
 
 	for _, v := range plugin_dir {
 
-		p, err := plugin.Open(fmt.Sprintf("./frontends/%s/%s%s", v.Name(), v.Name(), plugin_ext))
+		//Load TOML
+
+		toml_file, err := os.ReadFile(fmt.Sprintf("./frontends/%s/frontend.toml", v.Name()))
 		util.CheckError(err)
 
-		_name, err := p.Lookup("Name")
-		util.CheckError(err)
-		description, err := p.Lookup("Description")
-		util.CheckError(err)
-		authour, err := p.Lookup("Authour")
-		util.CheckError(err)
-		repo, err := p.Lookup("Repository")
+		var frontend_info FrontendInfo
+
+		toml.Unmarshal(toml_file, &frontend_info)
 		util.CheckError(err)
 
 		fmt.Println()
-		bold.Print(*_name.(*string) + "\n")
+		bold.Print(frontend_info.Info.Name + "\n")
 		fmt.Println()
 
-		fmt.Printf("%s %s\n", bold.Sprintf("Description:"), *description.(*string))
-		fmt.Printf("%s %s\n", bold.Sprintf("Authour:"), *authour.(*string))
-		fmt.Printf("%s %s\n", bold.Sprintf("Repository:"), *repo.(*string))
+		fmt.Printf("%s %s\n", bold.Sprintf("Description:"), frontend_info.Info.Description)
+		fmt.Printf("%s %s\n", bold.Sprintf("Authour:"), frontend_info.Info.Authour)
+		fmt.Printf("%s %s\n", bold.Sprintf("Repository:"), frontend_info.Info.Repository)
 
 	}
 
