@@ -41,7 +41,13 @@ func name_collision(s string) error {
 }
 
 // Takes a string and returns a program structure
-func parse(code_string string, verbose bool) (ProgramStructure, error) {
+//
+// code_string - code string
+//
+// verbose - wether to output console when parsing
+//
+// imported - are we importing this file from another file
+func parse(code_string string, verbose bool, imported bool) (ProgramStructure, error) {
 
 	//Remove empty lines
 
@@ -145,15 +151,41 @@ func parse(code_string string, verbose bool) (ProgramStructure, error) {
 
 	}
 
+	var program_data = ProgramStructure{
+		InstructionBlocks: make(map[string]CodeBlock),
+	}
+
+	//--------------------------
+	//Evaluate import statements
+	//--------------------------
+
+	for _, e := range program_statements {
+
+		if len(e) < 2 {
+			continue
+		} else if e[0] == "import" {
+
+			//Read other file
+			f_name := strings.Trim(e[1], "\"")
+
+			imported_file, err := os.ReadFile(f_name)
+			util.CheckError(err)
+
+			imported_program_structure, err := parse(string(imported_file), false, true)
+			util.CheckError(err)
+
+			program_data, err = combine(program_data, imported_program_structure)
+			util.CheckError(err)
+
+		}
+
+	}
+
 	//------------------------
 	// Begin data construction
 	//------------------------
 
 	//Make program data struct
-
-	var program_data = ProgramStructure{
-		InstructionBlocks: make(map[string]CodeBlock),
-	}
 
 	var current_jump_block_instructions []Instruction
 	jump_block_name := ""
@@ -166,6 +198,10 @@ func parse(code_string string, verbose bool) (ProgramStructure, error) {
 		}
 
 		if len(e) == 0 {
+			continue
+		}
+
+		if e[0] == "import" {
 			continue
 		}
 
@@ -330,7 +366,7 @@ func parse(code_string string, verbose bool) (ProgramStructure, error) {
 
 				current_jump_block_instructions = append(current_jump_block_instructions, instruction_to_be_added)
 
-			} else {
+			} else if !imported {
 				program_data.ProgramInstructions = append(program_data.ProgramInstructions, instruction_to_be_added)
 			}
 
@@ -338,4 +374,39 @@ func parse(code_string string, verbose bool) (ProgramStructure, error) {
 	}
 
 	return program_data, nil
+}
+
+func combine(s0 ProgramStructure, s1 ProgramStructure) (ProgramStructure, error) {
+
+	var combined ProgramStructure
+
+	//Merge splices & check for name conflicts
+
+	for _, v := range s0.AllNames {
+
+		if util.SliceContains(s1.AllNames, v) {
+			return ProgramStructure{}, fmt.Errorf("Name conflict involving '%s'")
+		}
+
+	}
+
+	combined.AllNames = append(s0.AllNames, s1.AllNames...)
+
+	combined.InstructionBlockNames = append(s0.InstructionBlockNames, s1.InstructionBlockNames...)
+	combined.DefNames = append(s0.DefNames, s1.DefNames...)
+
+	combined.Definitions = append(s0.Definitions, s1.Definitions...)
+
+	//Combine instruction blocks
+
+	combined.InstructionBlocks = s0.InstructionBlocks
+
+	for k, v := range s1.InstructionBlocks {
+
+		combined.InstructionBlocks[k] = v
+
+	}
+
+	return combined, nil
+
 }

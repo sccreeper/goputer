@@ -1,0 +1,8 @@
+//Simple program to test the import of other symbols
+
+import "colours.gpasm"
+
+lda @red
+mov d0 vc
+
+int vc
