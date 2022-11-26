@@ -385,7 +385,7 @@ func combine(s0 ProgramStructure, s1 ProgramStructure) (ProgramStructure, error)
 	for _, v := range s0.AllNames {
 
 		if util.SliceContains(s1.AllNames, v) {
-			return ProgramStructure{}, fmt.Errorf("Name conflict involving '%s'")
+			return ProgramStructure{}, fmt.Errorf("name conflict involving '%s'", v)
 		}
 
 	}
