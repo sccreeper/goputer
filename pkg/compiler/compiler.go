@@ -25,7 +25,7 @@ func Assemble(code_string string, config CompilerConfig) (AssembledProgram, erro
 		log.Println("Parsing...")
 	}
 
-	program_data, err := parse(code_string, config.Verbose, false)
+	program_data, err := parse(code_string, config.FileName, config.Verbose, false)
 
 	util.CheckError(err)
 

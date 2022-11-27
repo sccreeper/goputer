@@ -69,6 +69,7 @@ func _compiler(ctx *cli.Context) error {
 	compiler_config := compiler.CompilerConfig{
 
 		OutputPath: OutputPath,
+		FileName:   file_path,
 		OutputJSON: UseJson,
 		JSONPath:   JsonPath,
 		Verbose:    Verbose,

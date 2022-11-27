@@ -10,6 +10,7 @@ import "sccreeper/goputer/pkg/constants"
 
 type CompilerConfig struct {
 	OutputPath string
+	FileName   string
 
 	OutputJSON bool
 	JSONPath   string
