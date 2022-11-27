@@ -52,7 +52,16 @@ func All() {
 
 	normal_ldflags := fmt.Sprintf("-s -w -X main.Commit=%s", hash)
 
-	sh.Run("go", "build", "-ldflags", normal_ldflags, "-o", goputer_cmd_out, "./cmd/goputer/main.go")
+	previous_dir, err := os.Getwd()
+	util.CheckError(err)
+
+	os.Chdir("./cmd/goputer/")
+
+	sh.Run("go", "build", "-ldflags", normal_ldflags, "-o", "goputer")
+
+	os.Chdir(previous_dir)
+
+	sh.Run("cp", "./cmd/goputer/goputer", "./build/goputer")
 
 	//Copy the examples
 
