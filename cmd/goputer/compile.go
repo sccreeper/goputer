@@ -31,7 +31,7 @@ type standalone_template map[string]interface{}
 // Main compile method for CLI
 func _compiler(ctx *cli.Context) error {
 
-	log.Printf("goputer compiler Version: %s", Commit[:10])
+	fmt.Printf("goputer compiler Version: %s\n", Commit[:10])
 
 	file_path := ctx.Args().Get(0)
 
@@ -41,7 +41,7 @@ func _compiler(ctx *cli.Context) error {
 		log.Fatal(err)
 	}
 
-	log.Printf("Compiling %s", file_path)
+	fmt.Printf("Compiling %s\n", file_path)
 
 	//Read file
 

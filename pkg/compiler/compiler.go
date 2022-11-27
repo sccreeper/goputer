@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"math"
 	"sccreeper/goputer/pkg/util"
@@ -25,7 +26,22 @@ func Assemble(code_string string, config CompilerConfig) (AssembledProgram, erro
 		log.Println("Parsing...")
 	}
 
-	program_data, err := parse(code_string, config.FileName, config.Verbose, false)
+	p := Parser{
+		CodeString: code_string,
+		FileName:   config.FileName,
+		Verbose:    false,
+		Imported:   false,
+	}
+
+	program_data, err := p.parse()
+
+	util.CheckError(err)
+
+	// -----------------
+	// Generate JSON
+	// ----------------
+
+	json_bytes, err := json.MarshalIndent(program_data, "", "\t")
 
 	util.CheckError(err)
 
@@ -43,15 +59,7 @@ func Assemble(code_string string, config CompilerConfig) (AssembledProgram, erro
 	// log.Printf("Jump start index: %d", jmp_block_start_index)
 	// log.Printf("Interrupt table start index: %d", interrupt_table_start_index)
 	// log.Printf("Program start index: %d", instruction_start_index)
-	log.Printf("Final executable size: %d byte(s)", len(program_bytes))
-
-	// -----------------
-	// Generate JSON
-	// ----------------
-
-	json_bytes, err := json.MarshalIndent(program_data, "", "\t")
-
-	util.CheckError(err)
+	fmt.Printf("Final executable size: %d byte(s)\n", len(program_bytes))
 
 	// -------------------
 	// Output elapsed time
@@ -69,7 +77,7 @@ func Assemble(code_string string, config CompilerConfig) (AssembledProgram, erro
 
 	}
 
-	log.Printf("Compiled in %f %ss", elapsed_time, time_unit)
+	fmt.Printf("Compiled in %f %ss\n", elapsed_time, time_unit)
 
 	return AssembledProgram{
 

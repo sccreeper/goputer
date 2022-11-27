@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -15,34 +14,22 @@ import (
 	"strings"
 )
 
-var all_names []string
+type Parser struct {
+	CodeString string
+	CodeLines  []string
 
-//Name collision function
+	LineIndex   int
+	CurrentLine string
 
-func name_collision(s string, line_number int, file_name string, line_string string) string {
+	AllNames []string
 
-	var err string = ""
+	ProgramStatements [][]string
+	ProgramStructure  ProgramStructure
 
-	if _, exists := constants.InstructionInts[s]; exists {
-		err = fmt.Sprintf("name %s shares name with instruction", s)
-	}
-	if _, exists := constants.RegisterInts[s]; exists {
-		err = fmt.Sprintf("name %s shares name with register", s)
-	}
-	if _, exists := constants.InterruptInts[s]; exists {
-		err = fmt.Sprintf("name %s shares name with interrupt", s)
-	}
+	FileName string
+	Imported bool
 
-	if util.SliceContains(all_names, s) {
-		err = fmt.Sprintf("%s collides with %s", s, s)
-	}
-
-	if err != "" {
-		parsing_error(ErrSymbol, line_number, file_name, line_string, ErrorType(err))
-		return ""
-	} else {
-		return err
-	}
+	Verbose bool
 }
 
 // Takes a string and returns a program structure
@@ -52,44 +39,45 @@ func name_collision(s string, line_number int, file_name string, line_string str
 // verbose - wether to output console when parsing
 //
 // imported - are we importing this file from another file
-func parse(code_string string, file_name string, verbose bool, imported bool) (ProgramStructure, error) {
+
+func (p *Parser) parse() (ProgramStructure, error) {
 
 	//Remove empty lines
 
-	code_string = strings.ReplaceAll(code_string, "\n\n", "\n")
+	//p.CodeString = strings.ReplaceAll(p.CodeString, "\n\n", "\n")
 
 	//Split code into array based on line breaks
 
-	program_list := strings.Split(code_string, "\n")
+	p.CodeLines = strings.Split(p.CodeString, "\n")
 
-	if verbose {
+	if p.Verbose {
 
-		log.Printf("Code size: %d byte(s)", len(code_string))
-		log.Printf("Code lines: %d line(s)", len(program_list))
+		log.Printf("Code size: %d byte(s)", len(p.CodeLines))
+		log.Printf("Code lines: %d line(s)", len(p.CodeLines))
 	}
 
 	//---------------------------
 	//Begin parsing of statements
 	//---------------------------
 
-	program_statements := make([][]string, 0)
+	p.ProgramStatements = make([][]string, 0)
 
 	in_element := false
 	_ = in_element
 	in_string := false
 
-	for index, statement := range program_list {
-
-		if statement == "" {
-			continue
-		}
+	for index, statement := range p.CodeLines {
 
 		in_string = false
 
-		//Ignore if comment
-
-		if statement[:2] == "//" {
-			program_statements = append(program_statements, nil)
+		if statement == "" {
+			p.ProgramStatements = append(p.ProgramStatements, []string{})
+			continue
+		} else if statement == "\n" {
+			p.ProgramStatements = append(p.ProgramStatements, []string{})
+			continue
+		} else if statement[:2] == "//" { //Ignore if comment
+			p.ProgramStatements = append(p.ProgramStatements, []string{statement})
 			continue
 		}
 
@@ -110,16 +98,16 @@ func parse(code_string string, file_name string, verbose bool, imported bool) (P
 
 			if (char == ' ' && !in_string) || (in_string && char == '"') {
 
-				if len(program_statements)-1 < index || index == 0 {
+				if len(p.ProgramStatements)-1 < index || index == 0 {
 
-					program_statements = append(program_statements, make([]string, 0))
+					p.ProgramStatements = append(p.ProgramStatements, make([]string, 0))
 				}
 
 				if char == '"' {
 					in_string = false
 				}
 
-				program_statements[index] = append(program_statements[index], strings.TrimSpace(current_statement))
+				p.ProgramStatements[index] = append(p.ProgramStatements[index], strings.TrimSpace(current_statement))
 
 				current_statement = ""
 
@@ -134,29 +122,29 @@ func parse(code_string string, file_name string, verbose bool, imported bool) (P
 
 		}
 
-		if len(program_statements)-1 < index || index == 0 {
+		if len(p.ProgramStatements)-1 < index || index == 0 {
 
-			program_statements = append(program_statements, make([]string, 0))
+			p.ProgramStatements = append(p.ProgramStatements, make([]string, 0))
 		}
 
-		program_statements[index] = append(program_statements[index], strings.TrimSpace(current_statement))
+		p.ProgramStatements[index] = append(p.ProgramStatements[index], strings.TrimSpace(current_statement))
 	}
 
-	if verbose {
+	if p.Verbose {
 		log.Println("Finished first stage of parsing...")
 
 		//Debug, print statements to console
 
-		for _, e := range program_statements {
+		for _, e := range p.ProgramStatements {
 
 			log.Printf("Statement %s\n", e)
-			//log.Printf("Statement data %s\n", e[0:])
+			log.Printf("Statement length %d\n", len(e))
 
 		}
 
 	}
 
-	var program_data = ProgramStructure{
+	p.ProgramStructure = ProgramStructure{
 		InstructionBlocks: make(map[string]CodeBlock),
 	}
 
@@ -164,7 +152,7 @@ func parse(code_string string, file_name string, verbose bool, imported bool) (P
 	//Evaluate import statements
 	//--------------------------
 
-	for _, e := range program_statements {
+	for _, e := range p.ProgramStatements {
 
 		if len(e) < 2 {
 			continue
@@ -176,10 +164,17 @@ func parse(code_string string, file_name string, verbose bool, imported bool) (P
 			imported_file, err := os.ReadFile(f_name)
 			util.CheckError(err)
 
-			imported_program_structure, err := parse(string(imported_file), file_name, false, true)
+			import_parser := Parser{
+				CodeString: string(imported_file),
+				FileName:   p.FileName,
+				Imported:   true,
+				Verbose:    false,
+			}
+
+			imported_program_structure, err := import_parser.parse()
 			util.CheckError(err)
 
-			program_data, err = combine(program_data, imported_program_structure)
+			p.ProgramStructure, err = p.combine(imported_program_structure)
 			util.CheckError(err)
 
 		}
@@ -196,27 +191,32 @@ func parse(code_string string, file_name string, verbose bool, imported bool) (P
 	jump_block_name := ""
 	in_jump_block := false
 
-	for index, e := range program_statements {
+	for index, e := range p.ProgramStatements {
 
-		if verbose {
+		p.LineIndex = index
+		p.CurrentLine = p.CodeLines[index]
+
+		if p.Verbose {
 			log.Printf("Parsing statement %d", index)
 		}
 
 		if len(e) == 0 {
 			continue
-		}
-
-		if e[0] == "import" {
+		} else if len(e) == 1 && e[0] == "" {
+			continue
+		} else if e[0] == "import" {
+			continue
+		} else if e[0][:2] == "//" {
 			continue
 		}
 
 		// Parse for special purpose statements
 
 		if e[0] == "def" { //Constant definition
-			name_collision(e[1], index, file_name, program_list[index])
+			p.name_collision(e[1])
 
-			program_data.DefNames = append(program_data.DefNames, e[1])
-			program_data.AllNames = append(program_data.AllNames, e[1])
+			p.ProgramStructure.DefNames = append(p.ProgramStructure.DefNames, e[1])
+			p.ProgramStructure.AllNames = append(p.ProgramStructure.AllNames, e[1])
 
 			// Parse definition data, decide wether is int string, float, etc.
 
@@ -277,7 +277,7 @@ func parse(code_string string, file_name string, verbose bool, imported bool) (P
 
 			}
 
-			program_data.Definitions = append(program_data.Definitions,
+			p.ProgramStructure.Definitions = append(p.ProgramStructure.Definitions,
 				Definition{
 					Name: e[1],
 					Data: data_array,
@@ -285,20 +285,22 @@ func parse(code_string string, file_name string, verbose bool, imported bool) (P
 				},
 			)
 
+			continue
+
 		} else if e[0] == "sub" { //Interrupt subscription
 
 			//Error checking
 
 			if _, exists := constants.InterruptInts[e[1]]; !exists || constants.InterruptInts[e[1]] < constants.IntMouseMove {
-				parsing_error(ErrSymbol, index, file_name, program_list[index], SymbolDoesNotExist)
+				p.parsing_error(ErrSymbol, SymbolDoesNotExist)
 			}
 
-			if !util.SliceContains(program_data.InstructionBlockNames, e[2]) {
-				parsing_error(ErrSymbol, index, file_name, program_list[index], ErrorType(fmt.Sprintf("unrecognized jump %s", e[2])))
+			if !util.SliceContains(p.ProgramStructure.InstructionBlockNames, e[2]) {
+				p.parsing_error(ErrSymbol, ErrorType(fmt.Sprintf("unrecognized jump %s", e[2])))
 			}
 
-			program_data.InterruptSubscriptions = append(
-				program_data.InterruptSubscriptions,
+			p.ProgramStructure.InterruptSubscriptions = append(
+				p.ProgramStructure.InterruptSubscriptions,
 
 				InterruptSubscription{
 					InterruptName: e[1],
@@ -309,10 +311,10 @@ func parse(code_string string, file_name string, verbose bool, imported bool) (P
 
 		} else if e[0] == "end" { //Reaching end of jump block
 			if !in_jump_block {
-				parsing_error(ErrSyntax, index, file_name, program_list[index], UnexpectedEndStatement)
+				p.parsing_error(ErrSyntax, UnexpectedEndStatement)
 			}
 
-			program_data.InstructionBlocks[jump_block_name] = CodeBlock{
+			p.ProgramStructure.InstructionBlocks[jump_block_name] = CodeBlock{
 
 				Name:         jump_block_name,
 				Instructions: current_jump_block_instructions,
@@ -327,20 +329,19 @@ func parse(code_string string, file_name string, verbose bool, imported bool) (P
 		} else if e[0][0] == ':' {
 			//Errors
 			if in_jump_block {
-				parsing_error(ErrSyntax, index, file_name, program_list[index], MinimumNameLength)
+				p.parsing_error(ErrSyntax, NestingError)
 			}
 			if len(e[0]) == 1 {
-				return program_data, errors.New("jumpblock names must have minimum length of one")
+				p.parsing_error(ErrSyntax, MinimumNameLength)
 			}
 			//Check if name of jump block isn't shared by registers or instructions
-			name_collision(e[0][1:], index, file_name, program_list[index])
+			p.name_collision(e[0][1:])
 
 			jump_block_name = e[0][1:]
-			program_data.AllNames = append(program_data.AllNames, e[0][1:])
+			p.ProgramStructure.AllNames = append(p.ProgramStructure.AllNames, e[0][1:])
 
 			in_jump_block = true
-			program_data.InstructionBlockNames = append(program_data.InstructionBlockNames, e[0][1:])
-			all_names = append(all_names, e[0][1:])
+			p.ProgramStructure.InstructionBlockNames = append(p.ProgramStructure.InstructionBlockNames, e[0][1:])
 
 			continue
 
@@ -350,44 +351,98 @@ func parse(code_string string, file_name string, verbose bool, imported bool) (P
 
 			//Check if statement exists in instructions
 			if _, exists := constants.InstructionInts[e[0]]; !exists {
-				parsing_error(ErrDoesNotExist, index, file_name, program_list[index], InstructionDoesNotExist)
+				p.parsing_error(ErrDoesNotExist, InstructionDoesNotExist)
 			}
 
-			//If does exist, continue
+			//Check if args are valid
 
-			single_data := false
+			for _, arg := range e[1:] {
 
-			if len(e[1:]) == 1 {
-				single_data = true
-			}
+				if e[0] == "int" {
+					if _, exists := constants.InterruptInts[arg]; !exists {
+						p.parsing_error(ErrSymbol, InvalidArgument)
+					}
 
-			instruction_to_be_added := Instruction{
-				SingleData:  single_data,
-				Data:        e[1:],
-				Instruction: constants.InstructionInts[e[0]],
-			}
+				} else if arg[0] == '@' && (e[0] == "lda" || e[0] == "sta") {
 
-			if in_jump_block {
+					var exists bool = false
 
-				current_jump_block_instructions = append(current_jump_block_instructions, instruction_to_be_added)
+					for _, v := range p.ProgramStructure.DefNames {
 
-			} else if !imported {
-				program_data.ProgramInstructions = append(program_data.ProgramInstructions, instruction_to_be_added)
+						if arg[1:] == v {
+							exists = true
+							break
+						}
+					}
+
+					if !exists {
+						p.parsing_error(ErrDoesNotExist, ErrorType(fmt.Sprintf("definition '%s' does not exist", e[1][1:])))
+					}
+				} else if e[0] == "jmp" || e[0] == "cndjmp" || e[0] == "call" || e[0] == "cndcall" {
+
+					var exists bool = false
+
+					for _, v := range p.ProgramStructure.InstructionBlockNames {
+
+						if e[1] == v {
+							exists = true
+							break
+						}
+
+					}
+
+					if !exists {
+						p.parsing_error(ErrDoesNotExist, ErrorType(fmt.Sprintf("unknown instruction block '%s'", arg)))
+					}
+
+				} else {
+
+					if _, exists := constants.RegisterInts[arg]; !exists {
+
+						p.parsing_error(ErrDoesNotExist, ErrorType(fmt.Sprintf("unknown register '%s'", arg)))
+
+					}
+
+				}
+
 			}
 
 		}
+
+		//If does exist, continue
+
+		single_data := false
+
+		if len(e[1:]) == 1 {
+			single_data = true
+		}
+
+		instruction_to_be_added := Instruction{
+			SingleData:  single_data,
+			Data:        e[1:],
+			Instruction: constants.InstructionInts[e[0]],
+		}
+
+		if in_jump_block {
+
+			current_jump_block_instructions = append(current_jump_block_instructions, instruction_to_be_added)
+
+		} else if !p.Imported {
+			p.ProgramStructure.ProgramInstructions = append(p.ProgramStructure.ProgramInstructions, instruction_to_be_added)
+		}
+
 	}
 
-	return program_data, nil
+	return p.ProgramStructure, nil
 }
 
-func combine(s0 ProgramStructure, s1 ProgramStructure) (ProgramStructure, error) {
+func (p *Parser) combine(s1 ProgramStructure) (ProgramStructure, error) {
 
 	var combined ProgramStructure
 
 	//Merge splices & check for name conflicts
 
-	for _, v := range s0.AllNames {
+	for _, v := range p.ProgramStructure.AllNames {
 
 		if util.SliceContains(s1.AllNames, v) {
 			return ProgramStructure{}, ErrSymbol
@@ -395,16 +450,16 @@ func combine(s0 ProgramStructure, s1 ProgramStructure) (ProgramStructure, error)
 
 	}
 
-	combined.AllNames = append(s0.AllNames, s1.AllNames...)
+	combined.AllNames = append(p.ProgramStructure.AllNames, s1.AllNames...)
 
-	combined.InstructionBlockNames = append(s0.InstructionBlockNames, s1.InstructionBlockNames...)
-	combined.DefNames = append(s0.DefNames, s1.DefNames...)
+	combined.InstructionBlockNames = append(p.ProgramStructure.InstructionBlockNames, s1.InstructionBlockNames...)
+	combined.DefNames = append(p.ProgramStructure.DefNames, s1.DefNames...)
 
-	combined.Definitions = append(s0.Definitions, s1.Definitions...)
+	combined.Definitions = append(p.ProgramStructure.Definitions, s1.Definitions...)
 
 	//Combine instruction blocks
 
-	combined.InstructionBlocks = s0.InstructionBlocks
+	combined.InstructionBlocks = p.ProgramStructure.InstructionBlocks
 
 	for k, v := range s1.InstructionBlocks {
 
@@ -414,4 +469,32 @@ func combine(s0 ProgramStructure, s1 ProgramStructure) (ProgramStructure, error)
 
 	return combined, nil
 
+}
+
+//Name collision function
+
+func (p *Parser) name_collision(s string) string {
+
+	var err string = ""
+
+	if _, exists := constants.InstructionInts[s]; exists {
+		err = fmt.Sprintf("name %s shares name with instruction", s)
+	}
+	if _, exists := constants.RegisterInts[s]; exists {
+		err = fmt.Sprintf("name %s shares name with register", s)
+	}
+	if _, exists := constants.InterruptInts[s]; exists {
+		err = fmt.Sprintf("name %s shares name with interrupt", s)
+	}
+
+	if util.SliceContains(p.ProgramStructure.AllNames, s) {
+		err = fmt.Sprintf("%s collides with %s", s, s)
+	}
+
+	if err != "" {
+		p.parsing_error(ErrSymbol, ErrorType(err))
+		return ""
+	} else {
+		return err
+	}
 }
