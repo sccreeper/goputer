@@ -12,11 +12,12 @@ A computer emulator/virtual machine intended to demonstrate how computers work a
   - [Complete](#complete)
   - [Working on](#working-on)
   - [In the future](#in-the-future)
-- [Documentation & getting started.](#documentation--getting-started)
+- [Documentation \& getting started.](#documentation--getting-started)
 - [Project layout](#project-layout)
 - [Credits](#credits)
   - [GP32 Frontend](#gp32-frontend)
   - [CLI tool](#cli-tool)
+    - [Other](#other)
 - [License](#license)
 
 ---
@@ -67,6 +68,9 @@ See the [project wiki](https://github.com/sccreeper/goputer/wiki).
   - See also: Raylib - [raysan5/raylib](https://github.com/raysan5/raylib)
 - Beep - [faiface/beep](https://github.com/faiface/beep)
   - Used for producing sound on the fly.
+- TOML - [BurntSushi/toml](https://github.com/BurntSushi/toml)
+  - Configuration format used by frontends.
+  - See also: TOML - [toml-lang/toml](https://github.com/toml-lang/toml)
 
 #### CLI tool
 
@@ -76,6 +80,10 @@ See the [project wiki](https://github.com/sccreeper/goputer/wiki).
   - Used for colouring & formatting the terminal output i.e. making it look nice.
 - Termlink - [savioxavier/termlink](https://github.com/savioxavier/termlink)
   - Inserting links into the terminal.
+
+##### Other
+- Mage - [magefile/mage](https://github.com/magefile/mage)
+  - Build system used for development.
   
 ---
 
