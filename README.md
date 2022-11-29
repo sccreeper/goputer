@@ -17,6 +17,7 @@ A computer emulator/virtual machine intended to demonstrate how computers work a
 - [Credits](#credits)
   - [GP32 Frontend](#gp32-frontend)
   - [CLI tool](#cli-tool)
+  - [GUI launcher](#gui-launcher)
     - [Other](#other)
 - [License](#license)
 
@@ -80,6 +81,12 @@ See the [project wiki](https://github.com/sccreeper/goputer/wiki).
   - Used for colouring & formatting the terminal output i.e. making it look nice.
 - Termlink - [savioxavier/termlink](https://github.com/savioxavier/termlink)
   - Inserting links into the terminal.
+
+#### GUI launcher
+- Fyne - [fyne-io/fyne](https://github.com/fyne-io/fyne)
+  - UI library used
+- dialog - [sqweek/dialog](https://github.com/sqweek/dialog)
+  - Used for file open dialogs.
 
 ##### Other
 - Mage - [magefile/mage](https://github.com/magefile/mage)

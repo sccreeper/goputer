@@ -63,6 +63,20 @@ func All() {
 
 	sh.Run("cp", "./cmd/goputer/goputer", "./build/goputer")
 
+	//Build launcher
+
+	fmt.Println("Building launcher...")
+
+	previous_dir, err = os.Getwd()
+
+	os.Chdir("./cmd/gplauncher")
+
+	sh.Run("go", "build", "-o", "gplauncher")
+
+	os.Chdir(previous_dir)
+
+	sh.Run("cp", "./cmd/gplauncher/gplauncher", "./build/gplauncher")
+
 	//Copy the examples
 
 	fmt.Println("Copying examples...")
