@@ -1,0 +1,12 @@
+[info]
+
+name = "Goputer Python"
+description = "Graphical frontend implemented in Python"
+authour = "Oscar Peace (sccreeper)"
+repository = "https://github.com/sccreeper/goputer"
+is_plugin = true
+
+[build]
+
+command = ["sh", "cmd.sh"]
+output_dir = "build"
