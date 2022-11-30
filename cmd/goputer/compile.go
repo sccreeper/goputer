@@ -69,7 +69,7 @@ func _compiler(ctx *cli.Context) error {
 	compiler_config := compiler.CompilerConfig{
 
 		OutputPath: OutputPath,
-		FileName:   file_path,
+		FilePath:   file_path,
 		OutputJSON: UseJson,
 		JSONPath:   JsonPath,
 		Verbose:    Verbose,
@@ -77,7 +77,7 @@ func _compiler(ctx *cli.Context) error {
 
 	//Assemble program & write to disk
 
-	assembled_program, err := compiler.Assemble(string(data), compiler_config)
+	assembled_program, err := compiler.Compile(string(data), compiler_config)
 	util.CheckError(err)
 
 	//If standlone write to disk differently

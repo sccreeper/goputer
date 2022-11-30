@@ -146,6 +146,7 @@ func (p *Parser) parse() (ProgramStructure, error) {
 
 	p.ProgramStructure = ProgramStructure{
 		InstructionBlocks: make(map[string]CodeBlock),
+		ImportedFiles:     []string{p.FileName},
 	}
 
 	//--------------------------
@@ -161,8 +162,18 @@ func (p *Parser) parse() (ProgramStructure, error) {
 			//Read other file
 			f_name := strings.Trim(e[1], "\"")
 
+			if util.SliceContains(p.ProgramStructure.ImportedFiles, f_name) {
+				//Already imported
+				continue
+			}
+
 			imported_file, err := os.ReadFile(f_name)
-			util.CheckError(err)
+
+			if err == os.ErrNotExist {
+				p.parsing_error(ErrImport, FileNotFound)
+			} else {
+				util.CheckError(err)
+			}
 
 			import_parser := Parser{
 				CodeString: string(imported_file),
@@ -436,6 +447,9 @@ func (p *Parser) parse() (ProgramStructure, error) {
 	return p.ProgramStructure, nil
 }
 
+// Method for combining program structures.
+//
+// Used for imports.
 func (p *Parser) combine(s1 ProgramStructure) (ProgramStructure, error) {
 
 	var combined ProgramStructure
@@ -450,22 +464,59 @@ func (p *Parser) combine(s1 ProgramStructure) (ProgramStructure, error) {
 
 	}
 
-	combined.AllNames = append(p.ProgramStructure.AllNames, s1.AllNames...)
+	if len(s1.AllNames) > 0 {
+		combined.AllNames = append(p.ProgramStructure.AllNames, s1.AllNames...)
+	} else {
+		combined.AllNames = p.ProgramStructure.AllNames
+	}
+	if len(s1.InstructionBlockNames) > 0 {
+		combined.InstructionBlockNames = append(p.ProgramStructure.InstructionBlockNames, s1.InstructionBlockNames...)
+	} else {
+		combined.InstructionBlockNames = p.ProgramStructure.InstructionBlockNames
+	}
+	if len(s1.AllNames) > 0 {
+		combined.DefNames = append(p.ProgramStructure.DefNames, s1.DefNames...)
+	} else {
+		combined.DefNames = p.ProgramStructure.DefNames
+	}
 
-	combined.InstructionBlockNames = append(p.ProgramStructure.InstructionBlockNames, s1.InstructionBlockNames...)
-	combined.DefNames = append(p.ProgramStructure.DefNames, s1.DefNames...)
-
-	combined.Definitions = append(p.ProgramStructure.Definitions, s1.Definitions...)
+	if len(s1.Definitions) > 0 {
+		combined.Definitions = append(p.ProgramStructure.Definitions, s1.Definitions...)
+	} else {
+		combined.Definitions = p.ProgramStructure.Definitions
+	}
 
 	//Combine instruction blocks
 
 	combined.InstructionBlocks = p.ProgramStructure.InstructionBlocks
 
-	for k, v := range s1.InstructionBlocks {
+	if len(s1.InstructionBlocks) > 0 {
+		for k, v := range s1.InstructionBlocks {
 
-		combined.InstructionBlocks[k] = v
+			combined.InstructionBlocks[k] = v
+
+		}
+	}
+
+	//Check for circular imports
+
+	if util.SliceContains(s1.ImportedFiles, p.FileName) {
+
+		p.parsing_error(ErrImport, CircularImport)
 
 	}
+
+	//Combine imports
+
+	for _, v := range s1.ImportedFiles {
+
+		if !util.SliceContains(p.ProgramStructure.ImportedFiles, v) {
+			combined.ImportedFiles = append(combined.ImportedFiles, v)
+		}
+
+	}
+
+	combined.ImportedFiles = append(p.ProgramStructure.ImportedFiles, s1.ImportedFiles...)
 
 	return combined, nil
 

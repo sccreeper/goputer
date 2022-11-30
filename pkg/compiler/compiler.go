@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"os"
+	"path/filepath"
 	"sccreeper/goputer/pkg/util"
 	"time"
 )
@@ -16,9 +18,15 @@ type AssembledProgram struct {
 }
 
 // Assembler method
-func Assemble(code_string string, config CompilerConfig) (AssembledProgram, error) {
+func Compile(code_string string, config CompilerConfig) (AssembledProgram, error) {
 
 	start_time := time.Now().UnixMicro()
+
+	prev_dir, err := os.Getwd()
+	util.CheckError(err)
+
+	//Change working directory so file imports are relative
+	os.Chdir(filepath.Dir(config.FilePath))
 
 	//Parse
 
@@ -28,7 +36,7 @@ func Assemble(code_string string, config CompilerConfig) (AssembledProgram, erro
 
 	p := Parser{
 		CodeString: code_string,
-		FileName:   config.FileName,
+		FileName:   config.FilePath,
 		Verbose:    false,
 		Imported:   false,
 	}
@@ -78,6 +86,8 @@ func Assemble(code_string string, config CompilerConfig) (AssembledProgram, erro
 	}
 
 	fmt.Printf("Compiled in %f %ss\n", elapsed_time, time_unit)
+
+	os.Chdir(prev_dir)
 
 	return AssembledProgram{
 

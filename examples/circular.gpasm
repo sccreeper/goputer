@@ -1,0 +1,4 @@
+//Test circular import
+import "circular_import.gpasm"
+
+decr r00

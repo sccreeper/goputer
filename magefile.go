@@ -67,11 +67,13 @@ func All() {
 
 	fmt.Println("Building launcher...")
 
+	launcher_ld_flags := "-s -w"
+
 	previous_dir, err = os.Getwd()
 
 	os.Chdir("./cmd/gplauncher")
 
-	sh.Run("go", "build", "-o", "gplauncher")
+	sh.Run("go", "build", "-ldflags", launcher_ld_flags, "-o", "gplauncher")
 
 	os.Chdir(previous_dir)
 

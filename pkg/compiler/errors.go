@@ -21,12 +21,16 @@ const (
 	InstructionDoesNotExist ErrorType = "instruction does not exist"
 	SymbolDoesNotExist      ErrorType = "symbol does not exist"
 	InvalidArgument         ErrorType = "invalid argument"
+
+	CircularImport ErrorType = "circular import"
+	FileNotFound   ErrorType = "file not found"
 )
 
 var ErrSyntax error = errors.New("syntax error")
 var ErrSymbol error = errors.New("symbol error")
 var ErrDoesNotExist error = errors.New("does not exist error")
 var ErrInvalidArgument error = errors.New("invalid argument")
+var ErrImport error = errors.New("import error")
 
 var RedError color.Color = *color.New(color.FgHiRed, color.Bold)
 var ItalicCode color.Color = *color.New(color.Italic)
@@ -60,6 +64,9 @@ func (p *Parser) parsing_error(e error, error_type ErrorType) {
 		os.Exit(1)
 	case ErrInvalidArgument:
 		fmt.Printf("%s %s\n", RedError.Sprint("Invalid argument:"), error_type)
+		os.Exit(1)
+	case ErrImport:
+		fmt.Printf("%s %s\n", RedError.Sprint("Import error:"), error_type)
 		os.Exit(1)
 	}
 

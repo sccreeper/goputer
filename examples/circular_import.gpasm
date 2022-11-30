@@ -1,0 +1,4 @@
+//Test circular import error
+import "circular.gpasm"
+
+incr r00

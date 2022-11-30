@@ -10,7 +10,7 @@ import "sccreeper/goputer/pkg/constants"
 
 type CompilerConfig struct {
 	OutputPath string
-	FileName   string
+	FilePath   string
 
 	OutputJSON bool
 	JSONPath   string
@@ -44,7 +44,8 @@ type CodeBlock struct {
 
 // Struct for holding program data
 type ProgramStructure struct {
-	AllNames []string `json:"all_names"`
+	AllNames      []string `json:"all_names"`
+	ImportedFiles []string `json:"imported_files"`
 
 	InstructionBlockNames  []string                `json:"instruction_block_names"`
 	DefNames               []string                `json:"definition_names"`
