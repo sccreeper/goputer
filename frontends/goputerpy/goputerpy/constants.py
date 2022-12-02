@@ -1,8 +1,8 @@
 # Constants
 #Copied from pkg/constants/constants.go
-from enum import Enum
+from enum import IntEnum
 
-class Register(Enum):
+class Register(IntEnum):
     RGeneralPurpose00  = 0
     RGeneralPurpose01  = 1
     RGeneralPurpose02  = 2
@@ -72,7 +72,7 @@ class Register(Enum):
 
     RSoundWave  = 55
 
-class Interrupt(Enum):
+class Interrupt(IntEnum):
     IntSoundStop   = 0
     IntSoundFlush  = 1
     IntVideoArea   = 2

@@ -2,6 +2,7 @@ package main
 
 import "C"
 import (
+	"fmt"
 	"log"
 	"sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/vm"
@@ -15,11 +16,13 @@ var py32SubbedInterruptChannel chan constants.Interrupt = make(chan constants.In
 func main() {}
 
 //export Init
-func Init(program_bytes []C.char, code_length C.int) {
+func Init(program_bytes *C.char, code_length C.int) {
+
+	fmt.Println(code_length)
 
 	vm.InitVM(
 		&py32,
-		C.GoBytes(unsafe.Pointer(&program_bytes), code_length),
+		C.GoBytes(unsafe.Pointer(program_bytes), code_length),
 		py32InteruptChannel,
 		py32SubbedInterruptChannel,
 	)
@@ -62,23 +65,23 @@ func GetRegister(r C.ulong) C.ulong {
 }
 
 //export GetBuffer
-func GetBuffer(b C.ulong) []C.char {
+func GetBuffer(b C.ulong) *C.char {
 
 	//Convert to C.char array
 
-	char_array := make([]C.char, 128)
+	char_array := []rune{}
 
-	for index := range char_array {
+	for i := 0; i < 128; i++ {
 
 		if constants.Register(b) == constants.RVideoText {
-			char_array[index] = C.char(py32.TextBuffer[index])
+			char_array = append(char_array, rune(py32.TextBuffer[i]))
 		} else {
-			char_array[index] = C.char(py32.DataBuffer[index])
+			char_array = append(char_array, rune(py32.DataBuffer[i]))
 		}
 
 	}
 
-	return char_array
+	return C.CString(string(char_array))
 
 }
 

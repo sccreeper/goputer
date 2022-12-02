@@ -18,7 +18,6 @@ _init.restype = ctypes.c_void_p
 
 _run = _lib.Run
 _run.restype = ctypes.c_void_p
-_run.restype = ctypes.c_void_p
 
 _get_interrupt = _lib.GetInterrupt
 _get_interrupt.restype = ctypes.c_ulong
@@ -29,7 +28,7 @@ _send_interrupt.restype = ctypes.c_void_p
 
 _get_buffer = _lib.GetBuffer
 _get_buffer.argtypes = [ctypes.c_ulong]
-_get_buffer.restype = ctypes.Array
+_get_buffer.restype = ctypes.POINTER(ctypes.c_char * 128)
 
 _set_register = _lib.SetRegister
 _set_register.argtypes = [ctypes.c_ulong]
@@ -40,13 +39,20 @@ print("SO loaded!")
 _vm_inited = False
 _vm_alive = False
 
-def Init(program_bytes: bytes) -> None:
-    a = ctypes.c_buffer(program_bytes, len(program_bytes))
-    vm_inited = True
+def Init(program_bytes: list) -> None:
+    global _vm_inited
+    a = (ctypes.c_char * len(program_bytes))(*program_bytes) 
+    _vm_inited = True
+
+    print(len(a))
+    print(len(program_bytes))
+
     _init(a, ctypes.c_int(len(program_bytes)))
     
 
 def Run() -> None:
+    global _vm_alive
+
     if _vm_inited:
         _run()
         _vm_alive = True
@@ -65,11 +71,15 @@ def SendInterrupt(interrupt: constants.Interrupt):
     
     _send_interrupt(ctypes.c_ulong(interrupt))
 
-def GetBuffer(b: constants.Register) -> bytearray:
-    if b != constants.Register.RVideoText or b != constants.Register.RData:
-        raise ValueError("Not a buffer")
+def GetBuffer(b: constants.Register) -> list:
+    if b == constants.Register.RVideoText or b == constants.Register.RData:
+        a = _get_buffer(ctypes.c_ulong(b))
 
-    return bytearray(_get_buffer())
+        l = [x for x in a.contents]
+
+        return l
+    else:
+        raise ValueError("Not a buffer!")
 
 def SetRegister(r: constants.Register, v: int) -> None:
     _set_register(ctypes.c_ulong(r), ctypes.c_ulong(v))
