@@ -2,3 +2,4 @@ out
 test.json
 test
 build/*
+.venv

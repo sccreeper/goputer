@@ -2,7 +2,6 @@ package main
 
 import "C"
 import (
-	"fmt"
 	"log"
 	"math"
 	"sccreeper/goputer/pkg/constants"
@@ -18,8 +17,6 @@ func main() {}
 
 //export Init
 func Init(program_bytes *C.char, code_length C.int) {
-
-	fmt.Println(code_length)
 
 	vm.InitVM(
 		&py32,

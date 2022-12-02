@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "goputerpy"
+version = "0.1.0"
+description = "Python goputer frontend"
+authors = ["Oscar Peace <oscar@oscarcp.net>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pygame = "^2.1.2"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

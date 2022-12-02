@@ -34,6 +34,10 @@ _set_register = _lib.SetRegister
 _set_register.argtypes = [ctypes.c_ulong]
 _set_register.restype = ctypes.c_void_p
 
+_get_register = _lib.GetRegister
+_get_register.argtypes = [ctypes.c_ulong]
+_get_register.restype = ctypes.c_void_p
+
 _free = _lib.free
 _free.argtypes = [ctypes.c_void_p]
 
@@ -46,9 +50,6 @@ def Init(program_bytes: list) -> None:
     global _vm_inited
     a = (ctypes.c_char * len(program_bytes))(*program_bytes) 
     _vm_inited = True
-
-    print(len(a))
-    print(len(program_bytes))
 
     _init(a, ctypes.c_int(len(program_bytes)))
     
@@ -92,3 +93,11 @@ def GetBuffer(b: constants.Register) -> list:
 
 def SetRegister(r: constants.Register, v: int) -> None:
     _set_register(ctypes.c_ulong(r), ctypes.c_ulong(v))
+
+def GetRegister(r: constants.Register) -> int:
+    x = _get_register(ctypes.c_ulong(r))
+
+    if x == None:
+        x = 0
+
+    return int(x)
