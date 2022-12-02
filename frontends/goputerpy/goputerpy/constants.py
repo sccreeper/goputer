@@ -72,7 +72,7 @@ class Register(Enum):
 
     RSoundWave  = 55
 
-class Interrupts(Enum):
+class Interrupt(Enum):
     IntSoundStop   = 0
     IntSoundFlush  = 1
     IntVideoArea   = 2
