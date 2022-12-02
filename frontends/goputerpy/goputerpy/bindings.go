@@ -4,6 +4,7 @@ import "C"
 import (
 	"fmt"
 	"log"
+	"math"
 	"sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/vm"
 	"unsafe"
@@ -43,7 +44,7 @@ func GetInterrupt() C.ulong {
 	case x := <-py32InteruptChannel:
 		return C.ulong(x)
 	default:
-		return 65536
+		return C.ulong(math.MaxUint32)
 	}
 
 }

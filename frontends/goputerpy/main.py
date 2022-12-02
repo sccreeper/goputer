@@ -11,5 +11,14 @@ goputerpy.Init(list(f_bytes))
 goputerpy.Run()
 
 while True:
-    print(str(goputerpy.GetBuffer(c.Register.RVideoText)))
-    continue
+
+    match goputerpy.GetInterrupt():
+        case c.Interrupt.IntVideoText:
+            #Decode string
+            s = ""
+            text = goputerpy.GetBuffer(c.Register.RVideoText)
+            
+            for b in text:
+                s += b.decode()
+            
+            print(s)

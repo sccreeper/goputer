@@ -34,6 +34,9 @@ _set_register = _lib.SetRegister
 _set_register.argtypes = [ctypes.c_ulong]
 _set_register.restype = ctypes.c_void_p
 
+_free = _lib.free
+_free.argtypes = [ctypes.c_void_p]
+
 print("SO loaded!")
 
 _vm_inited = False
@@ -61,7 +64,12 @@ def Run() -> None:
 
 #Pops the last inerrupt off of the interupt array.
 def GetInterrupt() -> constants.Interrupt:
-    return constants.Interrupt(_get_interrupt())
+    x = int(_get_interrupt())
+
+    if x > constants.Interrupt.IntKeyboardDown:
+        return None
+    else:
+        return constants.Interrupt(x)
 
 def SendInterrupt(interrupt: constants.Interrupt):
     if type(interrupt) != constants.Interrupt:
@@ -76,6 +84,7 @@ def GetBuffer(b: constants.Register) -> list:
         a = _get_buffer(ctypes.c_ulong(b))
 
         l = [x for x in a.contents]
+        _free(a)
 
         return l
     else:
