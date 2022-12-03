@@ -111,8 +111,6 @@ func (m *VM) Run() {
 				m.Cycle()
 			}
 
-			m.RegisterSync.Unlock()
-
 		}
 
 	} else {
