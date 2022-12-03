@@ -149,3 +149,7 @@ Instructions = {
 
 	"clr": 29,
 }
+
+class SoundWave(IntEnum):
+    SWSquare = 0
+    SWSine = 1

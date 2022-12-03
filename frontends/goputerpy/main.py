@@ -3,6 +3,13 @@ from goputerpy import goputerpy as gppy
 from goputerpy import constants as c
 from goputerpy import util
 import pygame as pg
+from pygame.mixer import get_init, pre_init
+from goputerpy.sound import SoundManager
+
+#Sound init
+
+pre_init(44100, -16, 1, 1024)
+sound_manager = SoundManager()
 
 #pygame init
 pg.init()
@@ -28,6 +35,7 @@ while True:
     for event in pg.event.get():
         if event.type == pg.QUIT: sys.exit()
 
+    #Handle called interrupts
 
     match gppy.GetInterrupt():
         case c.Interrupt.IntVideoText:
@@ -43,7 +51,7 @@ while True:
                 txt_img = font.render(
                     video_text.replace("\x00", ""), 
                     True, 
-                    util.ConvertColour(gppy.GetRegister(c.Register.RVideoColour))
+                    util.ConvertColour(gppy.GetRegister(c.Register.RVideoColour)),
                     )
                 
                 screen.blit(txt_img, (0, 0))
@@ -59,7 +67,7 @@ while True:
                 gppy.GetRegister(c.Register.RVideoX0),
                 gppy.GetRegister(c.Register.RVideoY0),
                 gppy.GetRegister(c.Register.RVideoX1),
-                gppy.GetRegister(c.Register.RVideoY1)
+                gppy.GetRegister(c.Register.RVideoY1),
             )
             )
         
@@ -69,7 +77,7 @@ while True:
                 util.ConvertColour(gppy.GetRegister(c.Register.RVideoColour)),
                 pg.Vector2(
                     x=gppy.GetRegister(c.Register.RVideoX0),
-                    y=gppy.GetRegister(c.Register.RVideoY0)
+                    y=gppy.GetRegister(c.Register.RVideoY0),
                     ),
                 pg.Vector2(
                     x=gppy.GetRegister(c.Register.RVideoX1),
@@ -80,9 +88,15 @@ while True:
             screen.set_at(
                 (gppy.GetRegister(c.Register.RVideoX0),
                 gppy.GetRegister(c.Register.RVideoY0)),
-                util.ConvertColour(gppy.GetRegister(c.Register.RVideoColour))
+                util.ConvertColour(gppy.GetRegister(c.Register.RVideoColour)),
                 )
+        case c.Interrupt.IntSoundFlush:
+            sound_manager.play(
+                gppy.GetRegister(c.Register.RSoundTone),
+                gppy.GetRegister(c.Register.RSoundVolume) / 255,
+                c.SoundWave(gppy.GetRegister(c.Register.RSoundWave)),
+            )
+        case c.Interrupt.IntSoundStop:
+            sound_manager.stop()
         
-        
-
     pg.display.update()
