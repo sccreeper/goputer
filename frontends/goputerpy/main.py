@@ -35,6 +35,8 @@ prev_mouse_pos = (0, 0)
 
 clock = pg.time.Clock()
 
+clock.tick(60)
+
 gppy.Step()
 
 while True:
@@ -70,8 +72,8 @@ while True:
             pg.Rect(
                 gppy.GetRegister(c.Register.RVideoX0),
                 gppy.GetRegister(c.Register.RVideoY0),
-                gppy.GetRegister(c.Register.RVideoX1),
-                gppy.GetRegister(c.Register.RVideoY1),
+                gppy.GetRegister(c.Register.RVideoX1) - gppy.GetRegister(c.Register.RVideoX0),
+                gppy.GetRegister(c.Register.RVideoY1) - gppy.GetRegister(c.Register.RVideoY0),
             )
             )
         
@@ -120,10 +122,10 @@ while True:
             pass
 
     if gppy.IsFinished():
-        pg.display.update()
+        pg.display.flip()
         break
     
-    pg.display.update()
+    pg.display.flip()
 
     gppy.Step()
 
