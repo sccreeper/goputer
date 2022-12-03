@@ -17,6 +17,10 @@ func Run(program []byte, args []string) {
 	err = os.WriteFile(tmp_file.Name(), program, os.ModePerm)
 	util.CheckError(err)
 
-	exec.Command("python3", "py32.py", tmp_file.Name())
+	cmd := exec.Command("python3", "./frontends/goputerpy/main.py", tmp_file.Name())
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+	cmd.Stderr = os.Stderr
+	cmd.Run()
 
 }
