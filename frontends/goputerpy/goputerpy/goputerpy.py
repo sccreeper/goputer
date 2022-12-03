@@ -20,23 +20,33 @@ _run = _lib.Run
 _run.restype = ctypes.c_void_p
 
 _get_interrupt = _lib.GetInterrupt
-_get_interrupt.restype = ctypes.c_ulong
+_get_interrupt.restype = ctypes.c_uint32
 
 _send_interrupt = _lib.SendInterrupt
-_send_interrupt.argtypes = [ctypes.c_ulong]
+_send_interrupt.argtypes = [ctypes.c_uint32]
 _send_interrupt.restype = ctypes.c_void_p
 
+_is_subscribed = _lib.IsSubscribed
+_is_subscribed.argtypes = [ctypes.c_uint32]
+_is_subscribed.restype = ctypes.c_uint32
+
 _get_buffer = _lib.GetBuffer
-_get_buffer.argtypes = [ctypes.c_ulong]
+_get_buffer.argtypes = [ctypes.c_uint32]
 _get_buffer.restype = ctypes.POINTER(ctypes.c_char * 128)
 
 _set_register = _lib.SetRegister
-_set_register.argtypes = [ctypes.c_ulong]
+_set_register.argtypes = [ctypes.c_uint32]
 _set_register.restype = ctypes.c_void_p
 
 _get_register = _lib.GetRegister
-_get_register.argtypes = [ctypes.c_ulong]
+_get_register.argtypes = [ctypes.c_uint32]
 _get_register.restype = ctypes.c_void_p
+
+_is_finished = _lib.IsFinished
+_is_finished.restype = ctypes.c_uint32
+
+_step = _lib.Step
+_step.restype = ctypes.c_void_p
 
 _free = _lib.free
 _free.argtypes = [ctypes.c_void_p]
@@ -78,11 +88,17 @@ def SendInterrupt(interrupt: constants.Interrupt):
     elif not(interrupt > 0 and interrupt < constants.Interrupt.IntKeyboardDown):
         raise ValueError("Not valid interrupt")
     
-    _send_interrupt(ctypes.c_ulong(interrupt))
+    _send_interrupt(ctypes.c_uint32(interrupt))
+
+def IsSubscribed(i: constants.Interrupt) -> bool:
+
+    subscribed = int(_is_subscribed(ctypes.c_uint32(i)))
+
+    return True if subscribed == 1 else False
 
 def GetBuffer(b: constants.Register) -> list:
     if b == constants.Register.RVideoText or b == constants.Register.RData:
-        a = _get_buffer(ctypes.c_ulong(b))
+        a = _get_buffer(ctypes.c_uint32(b))
 
         l = [x for x in a.contents]
         _free(a)
@@ -92,12 +108,20 @@ def GetBuffer(b: constants.Register) -> list:
         raise ValueError("Not a buffer!")
 
 def SetRegister(r: constants.Register, v: int) -> None:
-    _set_register(ctypes.c_ulong(r), ctypes.c_ulong(v))
+    _set_register(ctypes.c_uint32(r), ctypes.c_uint32(v))
 
 def GetRegister(r: constants.Register) -> int:
-    x = _get_register(ctypes.c_ulong(r))
+    x = _get_register(ctypes.c_uint32(r))
 
     if x == None:
         x = 0
 
     return int(x)
+
+def IsFinished() -> bool:
+    finished = int(_is_finished())
+
+    return True if finished == 1 else False
+
+def Step() -> None:
+    _step()

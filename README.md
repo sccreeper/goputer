@@ -16,6 +16,7 @@ A computer emulator/virtual machine intended to demonstrate how computers work a
 - [Project layout](#project-layout)
 - [Credits](#credits)
   - [GP32 Frontend](#gp32-frontend)
+  - [goputerpy Frontend](#goputerpy-frontend)
   - [CLI tool](#cli-tool)
   - [GUI launcher](#gui-launcher)
     - [Other](#other)
@@ -72,6 +73,15 @@ See the [project wiki](https://github.com/sccreeper/goputer/wiki).
 - TOML - [BurntSushi/toml](https://github.com/BurntSushi/toml)
   - Configuration format used by frontends.
   - See also: TOML - [toml-lang/toml](https://github.com/toml-lang/toml)
+
+#### goputerpy Frontend
+
+- pygame - [pygame/pygame](https://github.com/pygame/pygame)
+  - Used for rendering & sound output.
+- numpy - [numpy/numpy](https://github.com/numpy/numpy)
+  - Used partially for sound generation
+- poetry - [python-poetry/poetry](https://github.com/python-poetry/poetry)
+  - Very useful for Python dependency management.
 
 #### CLI tool
 

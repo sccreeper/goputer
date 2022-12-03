@@ -43,10 +43,13 @@ type VM struct {
 
 	HandlingInterrupt bool
 	InterruptQueue    []uint32
+
+	ShouldStep      bool
+	ExecInstruction bool
 }
 
 // Initialize VM and registers, load code into "memory" etc.
-func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt, subbed_interrupt_channel chan c.Interrupt) error {
+func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt, subbed_interrupt_channel chan c.Interrupt, ShouldStep bool) error {
 
 	if len(vm_program) > int(_MemSize) {
 		return errors.New("program too large")
@@ -70,6 +73,8 @@ func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt, 
 
 	machine.Registers[c.RStackZeroPointer] = 0
 	machine.Registers[c.RStackPointer] = 0
+
+	machine.ShouldStep = ShouldStep
 
 	machine.HandlingInterrupt = false
 	machine.InterruptQueue = []uint32{}
@@ -95,6 +100,40 @@ func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt, 
 }
 
 func (m *VM) Run() {
+
+	if !m.ShouldStep {
+
+		for {
+
+			if m.Finished {
+				break
+			} else {
+				m.Cycle()
+			}
+
+			m.RegisterSync.Unlock()
+
+		}
+
+	} else {
+
+		for {
+			if m.Finished {
+				break
+			} else if m.ExecInstruction {
+				m.Cycle()
+				m.ExecInstruction = false
+			}
+		}
+	}
+
+	m.RegisterSync.Unlock()
+	close(m.InterruptChannel)
+	close(m.SubbedInterruptChannel)
+
+}
+
+func (m *VM) Cycle() {
 
 	var temp_call_stack int
 
@@ -307,8 +346,14 @@ func (m *VM) Run() {
 
 	}
 
-	m.RegisterSync.Unlock()
-	close(m.InterruptChannel)
-	close(m.SubbedInterruptChannel)
+}
+
+func (m *VM) Step() {
+
+	if !m.ShouldStep {
+		panic("Shouldn't be stepping!")
+	} else {
+		m.ExecInstruction = true
+	}
 
 }

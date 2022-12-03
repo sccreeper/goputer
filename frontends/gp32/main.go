@@ -87,7 +87,7 @@ func Run(program []byte, args []string) {
 		Button: 69,
 	}
 
-	vm.InitVM(&gp32, program, gp32_chan, gp32_subbed_chan)
+	vm.InitVM(&gp32, program, gp32_chan, gp32_subbed_chan, false)
 
 	go gp32.Run()
 

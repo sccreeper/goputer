@@ -23,6 +23,7 @@ func Init(program_bytes *C.char, code_length C.int) {
 		C.GoBytes(unsafe.Pointer(program_bytes), code_length),
 		py32InteruptChannel,
 		py32SubbedInterruptChannel,
+		true,
 	)
 
 	log.Println("VM Created")
@@ -35,19 +36,19 @@ func Run() {
 }
 
 //export GetInterrupt
-func GetInterrupt() C.ulong {
+func GetInterrupt() C.uint {
 
 	select {
 	case x := <-py32InteruptChannel:
-		return C.ulong(x)
+		return C.uint(x)
 	default:
-		return C.ulong(math.MaxUint32)
+		return C.uint(math.MaxUint32)
 	}
 
 }
 
 //export SendInterrupt
-func SendInterrupt(i C.ulong) {
+func SendInterrupt(i C.uint) {
 
 	if py32.Subscribed(constants.Interrupt(i)) {
 		py32SubbedInterruptChannel <- constants.Interrupt(i)
@@ -56,14 +57,14 @@ func SendInterrupt(i C.ulong) {
 }
 
 //export GetRegister
-func GetRegister(r C.ulong) C.ulong {
+func GetRegister(r C.uint) C.uint {
 
-	return C.ulong(py32.Registers[r])
+	return C.uint(py32.Registers[r])
 
 }
 
 //export GetBuffer
-func GetBuffer(b C.ulong) *C.char {
+func GetBuffer(b C.uint) *C.char {
 
 	//Convert to C.char array
 
@@ -84,10 +85,41 @@ func GetBuffer(b C.ulong) *C.char {
 }
 
 //export SetRegister
-func SetRegister(r C.ulong, v C.ulong) {
+func SetRegister(r C.uint, v C.uint) {
 
-	py32.RegisterSync.Lock()
 	py32.Registers[r] = uint32(v)
-	py32.RegisterSync.Unlock()
+
+}
+
+//export IsSubscribed
+func IsSubscribed(i C.uint) C.uint {
+
+	x := py32.Subscribed(constants.Interrupt(i))
+
+	if x {
+		return 1
+	} else {
+		return 0
+	}
+
+}
+
+//export IsFinished
+func IsFinished() C.uint {
+
+	x := py32.Finished
+
+	if x {
+		return 1
+	} else {
+		return 0
+	}
+
+}
+
+//export Step
+func Step() {
+
+	py32.Step()
 
 }

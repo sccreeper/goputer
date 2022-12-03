@@ -3,13 +3,12 @@ from goputerpy import goputerpy as gppy
 from goputerpy import constants as c
 from goputerpy import util
 import pygame as pg
-from pygame.mixer import get_init, pre_init
+from pygame.mixer import pre_init
 from goputerpy.sound import SoundManager
 
 #Sound init
 
 pre_init(44100, -16, 1, 1024)
-sound_manager = SoundManager()
 
 #pygame init
 pg.init()
@@ -24,16 +23,21 @@ f_name = sys.argv[1]
 f_bytes = open(f_name, "rb")
 f_bytes = f_bytes.read()
 
+sound_manager = SoundManager()
+
 #goputer init
 gppy.Init(list(f_bytes))
 gppy.Run()
 
 video_text = ""
 
-while True:
+prev_mouse_pos = (0, 0)
 
-    for event in pg.event.get():
-        if event.type == pg.QUIT: sys.exit()
+clock = pg.time.Clock()
+
+gppy.Step()
+
+while True:
 
     #Handle called interrupts
 
@@ -98,5 +102,33 @@ while True:
             )
         case c.Interrupt.IntSoundStop:
             sound_manager.stop()
+
+    for event in pg.event.get():
+        if event.type == pg.QUIT: 
+            sys.exit()
+        elif event.type == pg.MOUSEMOTION:
+            if pg.mouse.get_pos()[0] != prev_mouse_pos[0] or pg.mouse.get_pos()[1] != prev_mouse_pos[1]:
+                gppy.SetRegister(c.Register.RMouseX, pg.mouse.get_pos()[0])
+                gppy.SetRegister(c.Register.RMouseY, pg.mouse.get_pos()[1])
+
+                prev_mouse_pos = pg.mouse.get_pos()
+
+                if gppy.IsSubscribed(c.Interrupt.IntMouseMove):
+                    gppy.SendInterrupt(c.Interrupt.IntMouseMove)
         
+        elif event.type == pg.MOUSEBUTTONDOWN:
+            pass
+
+    if gppy.IsFinished():
+        pg.display.update()
+        break
+    
     pg.display.update()
+
+    gppy.Step()
+
+#Hang once finished executing code
+while True:
+    for event in pg.event.get():
+        if event.type == pg.QUIT: 
+            sys.exit()

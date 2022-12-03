@@ -56,6 +56,13 @@ class SoundManager():
     def __init__(self) -> None:
         self._is_playing = False
 
+        self.wave_type = c.SoundWave.SWSine
+        
+        self._frequency = 1
+        self._volume = 0.0
+
+        self._current_wave = SineWave(self._frequency, self._volume)
+
     def play(self, freq: int, vol: float, wave_type: c.SoundWave):
         if self._is_playing:
             self._current_wave.stop()
