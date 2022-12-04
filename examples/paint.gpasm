@@ -3,7 +3,7 @@
 def background 0xFFFFFFFF
 def pen 0x000000FF
 def size 8
-def stop 1
+//def stop 1
 
 :handle_mouse_move
 
@@ -31,9 +31,9 @@ mov d0 vc
 int vc
 
 //Hack so Python frontend can catch up (it is *too* slow)
-lda @stop
-mov d0 r00
-hlt r00
+//lda @stop
+//mov d0 r00
+//hlt r00
 
 lda @pen
 mov d0 vc

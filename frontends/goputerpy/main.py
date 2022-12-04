@@ -33,11 +33,6 @@ video_text = ""
 
 prev_mouse_pos = (0, 0)
 
-clock = pg.time.Clock()
-
-clock.tick(60)
-
-gppy.Step()
 
 while True:
 

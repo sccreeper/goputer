@@ -12,6 +12,7 @@ import (
 var py32 vm.VM
 var py32InteruptChannel chan constants.Interrupt = make(chan constants.Interrupt)
 var py32SubbedInterruptChannel chan constants.Interrupt = make(chan constants.Interrupt)
+var py32StepChannel chan bool = make(chan bool)
 
 func main() {}
 
@@ -24,6 +25,7 @@ func Init(program_bytes *C.char, code_length C.int) {
 		py32InteruptChannel,
 		py32SubbedInterruptChannel,
 		true,
+		py32StepChannel,
 	)
 
 	log.Println("VM Created")
@@ -59,7 +61,11 @@ func SendInterrupt(i C.uint) {
 //export GetRegister
 func GetRegister(r C.uint) C.uint {
 
-	return C.uint(py32.Registers[r])
+	py32.RegisterSync.Lock()
+	x := C.uint(py32.Registers[r])
+	py32.RegisterSync.Unlock()
+
+	return x
 
 }
 
@@ -87,7 +93,9 @@ func GetBuffer(b C.uint) *C.char {
 //export SetRegister
 func SetRegister(r C.uint, v C.uint) {
 
+	py32.RegisterSync.Lock()
 	py32.Registers[r] = uint32(v)
+	py32.RegisterSync.Unlock()
 
 }
 
@@ -120,6 +128,6 @@ func IsFinished() C.uint {
 //export Step
 func Step() {
 
-	py32.Step()
+	py32StepChannel <- true
 
 }

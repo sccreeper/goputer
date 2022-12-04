@@ -44,12 +44,12 @@ type VM struct {
 	HandlingInterrupt bool
 	InterruptQueue    []uint32
 
-	ShouldStep      bool
-	ExecInstruction bool
+	ShouldStep  bool
+	StepChannel chan bool
 }
 
 // Initialize VM and registers, load code into "memory" etc.
-func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt, subbed_interrupt_channel chan c.Interrupt, ShouldStep bool) error {
+func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt, subbed_interrupt_channel chan c.Interrupt, should_step bool, step_channel chan bool) error {
 
 	if len(vm_program) > int(_MemSize) {
 		return errors.New("program too large")
@@ -74,7 +74,8 @@ func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt, 
 	machine.Registers[c.RStackZeroPointer] = 0
 	machine.Registers[c.RStackPointer] = 0
 
-	machine.ShouldStep = ShouldStep
+	machine.ShouldStep = should_step
+	machine.StepChannel = step_channel
 
 	machine.HandlingInterrupt = false
 	machine.InterruptQueue = []uint32{}
@@ -101,43 +102,15 @@ func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt, 
 
 func (m *VM) Run() {
 
-	if !m.ShouldStep {
-
-		for {
-
-			if m.Finished {
-				break
-			} else {
-				m.Cycle()
-			}
-
-		}
-
-	} else {
-
-		for {
-			if m.Finished {
-				break
-			} else if m.ExecInstruction {
-				m.Cycle()
-				m.ExecInstruction = false
-			}
-		}
-	}
-
-	m.RegisterSync.Unlock()
-	close(m.InterruptChannel)
-	close(m.SubbedInterruptChannel)
-
-}
-
-func (m *VM) Cycle() {
-
 	var temp_call_stack int
 
 	for {
 
 		m.RegisterSync.Lock()
+
+		if m.Finished {
+			break
+		}
 
 		m.CurrentInstruction = m.MemArray[m.Registers[c.RProgramCounter] : m.Registers[c.RProgramCounter]+comp.InstructionLength]
 		m.Opcode = c.Instruction(m.CurrentInstruction[0])
@@ -178,6 +151,18 @@ func (m *VM) Cycle() {
 
 		default:
 
+		}
+
+		if m.ShouldStep {
+			select {
+			case x := <-m.StepChannel:
+				if x {
+					break
+				}
+			default:
+				m.RegisterSync.Unlock()
+				continue
+			}
 		}
 
 		//If it is null itn, could be end of program or end of call block
@@ -344,14 +329,8 @@ func (m *VM) Cycle() {
 
 	}
 
-}
-
-func (m *VM) Step() {
-
-	if !m.ShouldStep {
-		panic("Shouldn't be stepping!")
-	} else {
-		m.ExecInstruction = true
-	}
+	close(m.SubbedInterruptChannel)
+	close(m.InterruptChannel)
+	m.RegisterSync.Unlock()
 
 }
