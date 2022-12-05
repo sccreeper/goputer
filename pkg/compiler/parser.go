@@ -320,6 +320,8 @@ func (p *Parser) parse() (ProgramStructure, error) {
 				},
 			)
 
+			continue
+
 		} else if e[0] == "end" { //Reaching end of jump block
 			if !in_jump_block {
 				p.parsing_error(ErrSyntax, UnexpectedEndStatement)

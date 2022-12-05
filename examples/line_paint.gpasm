@@ -1,0 +1,36 @@
+//Paint but uses lines
+//r00 = mx prev
+//r01 = my prev
+
+def white 0xFFFFFFFF
+def black 0x000000FF
+
+:handle_mouse_move
+
+mov mx vx1
+mov my vy1
+
+mov r00 vx0
+mov r01 vy0
+
+int vl
+
+mov mx r00
+mov my r01
+
+end
+
+sub mm handle_mouse_move
+
+:loop
+jmp loop
+end
+
+lda @white
+mov d0 vc
+int vc
+
+lda @black
+mov d0 vc
+
+jmp loop
