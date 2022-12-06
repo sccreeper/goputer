@@ -11,3 +11,4 @@ rm ./build/goputerpy/bindings.h
 
 find ./goputerpy -name "*.py" -exec cp -prv "{}" "./build/goputerpy" ";"
 cp ./main.py ./build/main.py
+cp -r ./rendering ./build/
