@@ -85,8 +85,8 @@ def GetInterrupt() -> constants.Interrupt:
 def SendInterrupt(interrupt: constants.Interrupt):
     if type(interrupt) != constants.Interrupt:
         raise ValueError("Wrong type")
-    elif not(interrupt > 0 and interrupt < constants.Interrupt.IntKeyboardDown):
-        raise ValueError("Not valid interrupt")
+    elif not(interrupt > 0 and interrupt <= constants.Interrupt.IntKeyboardDown):
+        raise ValueError(f"Not valid interrupt {interrupt}")
     
     _send_interrupt(ctypes.c_uint32(interrupt))
 
@@ -108,6 +108,11 @@ def GetBuffer(b: constants.Register) -> list:
         raise ValueError("Not a buffer!")
 
 def SetRegister(r: constants.Register, v: int) -> None:
+    if type(v) != int:
+        raise TypeError(f"v should of type int (type {type(v)})")
+    elif type(r) != constants.Register:
+        raise TypeError(f"r should be of type Interrupt (type {type(r)})")
+
     _set_register(ctypes.c_uint32(r), ctypes.c_uint32(v))
 
 def GetRegister(r: constants.Register) -> int:

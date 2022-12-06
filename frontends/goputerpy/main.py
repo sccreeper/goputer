@@ -101,20 +101,46 @@ while True:
             sound_manager.stop()
 
     for event in pg.event.get():
-        if event.type == pg.QUIT: 
-            sys.exit()
-        elif event.type == pg.MOUSEMOTION:
-            if pg.mouse.get_pos()[0] != prev_mouse_pos[0] or pg.mouse.get_pos()[1] != prev_mouse_pos[1]:
-                gppy.SetRegister(c.Register.RMouseX, pg.mouse.get_pos()[0])
-                gppy.SetRegister(c.Register.RMouseY, pg.mouse.get_pos()[1])
-
-                prev_mouse_pos = pg.mouse.get_pos()
-
-                if gppy.IsSubscribed(c.Interrupt.IntMouseMove):
-                    gppy.SendInterrupt(c.Interrupt.IntMouseMove)
+        match event.type:
+            case pg.QUIT: 
+                sys.exit()
         
-        elif event.type == pg.MOUSEBUTTONDOWN:
-            pass
+            case pg.MOUSEMOTION:
+                if pg.mouse.get_pos()[0] != prev_mouse_pos[0] or pg.mouse.get_pos()[1] != prev_mouse_pos[1]:
+                    gppy.SetRegister(c.Register.RMouseX, pg.mouse.get_pos()[0])
+                    gppy.SetRegister(c.Register.RMouseY, pg.mouse.get_pos()[1])
+
+                    prev_mouse_pos = pg.mouse.get_pos()
+
+                    if gppy.IsSubscribed(c.Interrupt.IntMouseMove):
+                        gppy.SendInterrupt(c.Interrupt.IntMouseMove)
+            
+            case pg.MOUSEBUTTONDOWN:
+                gppy.SetRegister(c.Register.RMouseButton, event.button)
+
+                if gppy.IsSubscribed(c.Interrupt.IntMouseDown):
+                    gppy.SendInterrupt(c.Interrupt.IntMouseDown)
+            case pg.MOUSEBUTTONUP:
+                gppy.SetRegister(c.Register.RMouseButton, event.button)
+
+                if gppy.IsSubscribed(c.Interrupt.IntMouseUp):
+                    gppy.SendInterrupt(c.Interrupt.IntMouseUp)
+            case pg.KEYDOWN:
+                gppy.SetRegister(c.Register.RKeyboardCurrent, event.key)
+
+                if gppy.IsSubscribed(c.Interrupt.IntKeyboardDown):
+                    gppy.SendInterrupt(c.Interrupt.IntKeyboardDown)
+
+            case pg.KEYUP:
+                gppy.SetRegister(c.Register.RKeyboardPressed, event.key)
+
+                if gppy.IsSubscribed(c.Interrupt.IntKeyboardUp):
+                    gppy.SendInterrupt(c.Interrupt.IntKeyboardDown)
+
+            case _:
+                continue
+
+
 
     if gppy.IsFinished():
         pg.display.flip()
