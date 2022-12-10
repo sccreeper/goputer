@@ -3,3 +3,5 @@ test.json
 test
 build/*
 .venv
+node_modules
+.parcel-cache

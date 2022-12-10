@@ -1,0 +1,12 @@
+[info]
+
+name = "Goputer WASM"
+description = "Graphical frontend implemented in JavaScript using WASM."
+authour = "Oscar Peace (sccreeper)"
+repository = "https://github.com/sccreeper/goputer"
+is_plugin = false
+
+[build]
+
+command = ["sh", "cmd.sh"]
+output_dir = "build"
