@@ -84,7 +84,7 @@ def GetInterrupt() -> constants.Interrupt:
 
 def SendInterrupt(interrupt: constants.Interrupt):
     if type(interrupt) != constants.Interrupt:
-        raise ValueError("Wrong type")
+        raise ValueError(f"Wrong type (type {type(interrupt)})")
     elif not(interrupt > 0 and interrupt <= constants.Interrupt.IntKeyboardDown):
         raise ValueError(f"Not valid interrupt {interrupt}")
     

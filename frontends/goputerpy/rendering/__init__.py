@@ -1,3 +1,5 @@
+import pygame as pg
+
 DEBUG_UI_SIZE = 48
 IO_UI_SIZE = 40
 SEPERATOR_SIZE = 5
@@ -11,3 +13,6 @@ GREY = (128, 128, 128)
 DARK_GREY = (64, 64, 64)
 MIDDLE_GREY = (100, 100, 100)
 LIGHT_ON = (251, 250, 169)
+WHITE = (255, 255, 255)
+
+IO_SWITCH_FONT: pg.font.Font = pg.font.SysFont(None, 16)

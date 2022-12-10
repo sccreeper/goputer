@@ -5,8 +5,9 @@ from goputerpy import util
 import pygame as pg
 from pygame.mixer import pre_init
 from goputerpy.sound import SoundManager
-import rendering as r
-from rendering.io import Switch, Light
+
+def correct_mouse_y(y: int) -> int:
+    return y - r.TOTAL_Y_OFFSET
 
 #Sound init
 
@@ -14,6 +15,9 @@ pre_init(44100, -16, 1, 1024)
 
 #pygame init
 pg.init()
+import rendering as r
+from rendering.io import Switch, Light
+
 size = width, height = 640, r.TOTAL_Y_OFFSET + 480
 
 screen = pg.display.set_mode(size)
@@ -47,7 +51,7 @@ for i in range(8):
 
 for i in range(8):
     io_switches.append(
-        Switch((i + 8) * r.IO_SWITCH_SIZE, i + 8)
+        Switch((i + 8) * r.IO_SWITCH_SIZE, i)
     )
 
 video_text = ""
@@ -131,7 +135,7 @@ while True:
             case pg.MOUSEMOTION:
                 if pg.mouse.get_pos()[0] != prev_mouse_pos[0] or pg.mouse.get_pos()[1] != prev_mouse_pos[1]:
                     gppy.SetRegister(c.Register.RMouseX, pg.mouse.get_pos()[0])
-                    gppy.SetRegister(c.Register.RMouseY, pg.mouse.get_pos()[1])
+                    gppy.SetRegister(c.Register.RMouseY, correct_mouse_y(pg.mouse.get_pos()[1]))
 
                     prev_mouse_pos = pg.mouse.get_pos()
 
@@ -139,15 +143,33 @@ while True:
                         gppy.SendInterrupt(c.Interrupt.IntMouseMove)
             
             case pg.MOUSEBUTTONDOWN:
-                gppy.SetRegister(c.Register.RMouseButton, event.button)
+                #Check if in bounds of rendering area.
+                if pg.mouse.get_pos()[1] > r.TOTAL_Y_OFFSET:
+                    gppy.SetRegister(c.Register.RMouseButton, event.button)
 
-                if gppy.IsSubscribed(c.Interrupt.IntMouseDown):
-                    gppy.SendInterrupt(c.Interrupt.IntMouseDown)
+                    if gppy.IsSubscribed(c.Interrupt.IntMouseDown):
+                        gppy.SendInterrupt(c.Interrupt.IntMouseDown)
+                
             case pg.MOUSEBUTTONUP:
-                gppy.SetRegister(c.Register.RMouseButton, event.button)
+                
+                #IO Switch interrupts
+                if event.button == 1:
+                    for s in io_switches:
+                        x = s.update(pg.mouse.get_pos())
 
-                if gppy.IsSubscribed(c.Interrupt.IntMouseUp):
-                    gppy.SendInterrupt(c.Interrupt.IntMouseUp)
+                        gppy.SetRegister(c.Register((s._id + c.Register.RIO08)), 1 if s.enabled else 0)
+
+                        if x:
+                            if gppy.IsSubscribed(c.Interrupt(s._id + c.Interrupt.IntIO08)):
+                                gppy.SendInterrupt(c.Interrupt(s._id + c.Interrupt.IntIO08))
+                
+                #Check if in bounds of rendering area.
+                elif pg.mouse.get_pos()[1] > r.TOTAL_Y_OFFSET:
+                    gppy.SetRegister(c.Register.RMouseButton, event.button)
+
+                    if gppy.IsSubscribed(c.Interrupt.IntMouseUp):
+                        gppy.SendInterrupt(c.Interrupt.IntMouseUp)
+            
             case pg.KEYDOWN:
                 gppy.SetRegister(c.Register.RKeyboardCurrent, event.key)
 
@@ -165,10 +187,20 @@ while True:
     
     #Draw IO
 
+    #Get IO states
+
+    for i in range(len(io_state)):
+        io_state[i] = True if gppy.GetRegister(c.Register(c.Register.RIO00 + i)) > 0 else False
+
     io_surface.fill(r.GREY)
 
-    for l in io_lights:
-        l.draw(io_surface)
+    for i in range(len(io_lights)):
+        
+        io_lights[i].on = io_state[i]
+        io_lights[i].draw(io_surface)
+
+    for s in io_switches:
+        s.draw(io_surface)
 
     screen.fill(r.BLACK)
     screen.blit(io_surface, (0, r.DEBUG_UI_SIZE + r.SEPERATOR_SIZE))
