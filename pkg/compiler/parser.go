@@ -40,7 +40,7 @@ type Parser struct {
 //
 // imported - are we importing this file from another file
 
-func (p *Parser) parse() (ProgramStructure, error) {
+func (p *Parser) Parse() (ProgramStructure, error) {
 
 	//Remove empty lines
 
@@ -182,7 +182,7 @@ func (p *Parser) parse() (ProgramStructure, error) {
 				Verbose:    false,
 			}
 
-			imported_program_structure, err := import_parser.parse()
+			imported_program_structure, err := import_parser.Parse()
 			util.CheckError(err)
 
 			p.ProgramStructure, err = p.combine(imported_program_structure)

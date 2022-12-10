@@ -41,7 +41,7 @@ func Compile(code_string string, config CompilerConfig) (AssembledProgram, error
 		Imported:   false,
 	}
 
-	program_data, err := p.parse()
+	program_data, err := p.Parse()
 
 	util.CheckError(err)
 
@@ -59,7 +59,7 @@ func Compile(code_string string, config CompilerConfig) (AssembledProgram, error
 		log.Println("Bytecode generation...")
 	}
 
-	program_bytes := generate_bytecode(program_data)
+	program_bytes := GenerateBytecode(program_data)
 
 	//Output start indexes
 

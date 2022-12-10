@@ -6,7 +6,7 @@ import (
 	"sccreeper/goputer/pkg/util"
 )
 
-func generate_bytecode(p ProgramStructure) []byte {
+func GenerateBytecode(p ProgramStructure) []byte {
 
 	byte_index := BlockAddrSize + 4
 	final_bytes := make([]byte, 0)
