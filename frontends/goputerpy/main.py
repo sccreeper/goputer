@@ -1,9 +1,12 @@
 import sys
+import os
+
+import pygame as pg
+from pygame.mixer import pre_init
+
 from goputerpy import goputerpy as gppy
 from goputerpy import constants as c
 from goputerpy import util
-import pygame as pg
-from pygame.mixer import pre_init
 from goputerpy.sound import SoundManager
 
 def correct_mouse_y(y: int) -> int:
@@ -21,6 +24,7 @@ from rendering.io import Switch, Light
 size = width, height = 640, r.TOTAL_Y_OFFSET + 480
 
 screen = pg.display.set_mode(size)
+pg.display.set_caption(f"goputerpy - {os.path.basename(sys.argv[1])}")
 font = pg.font.SysFont(None, 32)
 
 video_surface = pg.surface.Surface((640, 480))
@@ -205,7 +209,7 @@ while True:
 
     #Draw debug UI
 
-    prc_img = font.render(f"Program counter: {gppy.GetRegister(c.Register.RProgramCounter)}", True, r.WHITE)
+    prc_img = font.render(f"Program counter: {util.convert_to_hex(gppy.GetRegister(c.Register.RProgramCounter))}", True, r.WHITE)
     itn_img = font.render(f"Current instruction: {util.generate_instruction_string(gppy.GetInstruction(), gppy.GetLargeArg(), gppy.GetSmallArgs())}", True, r.WHITE)
 
     debug_surface.fill(r.GREY)
