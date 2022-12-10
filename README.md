@@ -19,7 +19,7 @@ A computer emulator/virtual machine intended to demonstrate how computers work a
   - [goputerpy Frontend](#goputerpy-frontend)
   - [CLI tool](#cli-tool)
   - [GUI launcher](#gui-launcher)
-    - [Other](#other)
+  - [Other](#other)
 - [License](#license)
 
 ---
@@ -33,14 +33,14 @@ A computer emulator/virtual machine intended to demonstrate how computers work a
 - Custom assembly language and compiler.
 - Custom runtime.
 - Standalone executables.
+- Frontends to show VM output.
 
 #### Working on
 
-- Frontend that shows output from VM backend.
+- A WASM based frontend to run in a web browser.
 
 #### In the future
 
-- WASM based frontend.
 - High level language.
 - IDE for easy development.
 
@@ -98,7 +98,7 @@ See the [project wiki](https://github.com/sccreeper/goputer/wiki).
 - dialog - [sqweek/dialog](https://github.com/sqweek/dialog)
   - Used for file open dialogs.
 
-##### Other
+#### Other
 - Mage - [magefile/mage](https://github.com/magefile/mage)
   - Build system used for development.
   
