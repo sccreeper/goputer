@@ -1,5 +1,5 @@
 # Constants
-#Copied from pkg/constants/constants.go
+#Copied from goputer/pkg/constants/constants.go
 from enum import IntEnum
 
 class Register(IntEnum):
@@ -100,6 +100,10 @@ class Interrupt(IntEnum):
     IntKeyboardUp    = 20
     IntKeyboardDown  = 21
 
+class SoundWave(IntEnum):
+    SWSquare = 0
+    SWSine = 1
+
 Instructions = {
 
 	"mov": 0, #Move
@@ -150,6 +154,135 @@ Instructions = {
 	"clr": 29,
 }
 
-class SoundWave(IntEnum):
-    SWSquare = 0
-    SWSine = 1
+SingleArgInstructions = [
+	Instructions["jmp"],
+	Instructions["cndjmp"],
+	Instructions["inv"],
+	Instructions["call"],
+	Instructions["lda"],
+	Instructions["sta"],
+	Instructions["incr"],
+	Instructions["decr"],
+	Instructions["hlt"],
+	Instructions["sqrt"],
+	Instructions["call"],
+	Instructions["cndcall"],
+	Instructions["clr"],
+]
+
+InterruptInts = {
+
+	"ss":  0, #Stop sound
+	"sf":  1, #Flush sound registers
+	"va":  2, #Render area
+	"vp":  3, #Render pixel
+	"vt":  4, #Flush video text
+	"vc":  5, #Clear video
+	"vl":  6, #Draw a line from vx0,vy0 -> vx1,vy1
+	"iof": 7, #Flush IO registers to IO
+	"ioc": 8, #Set all IO to 0x0
+
+	#Subscribable interrupts
+
+	"mm":   9,  #Mouse move
+	"mu":   10, #Mouse up
+	"md":   11, #Mouse down
+	"io08": 12, #IO on/off 8-15
+	"io09": 13,
+	"io10": 14,
+	"io11": 15,
+	"io12": 16,
+	"io13": 17,
+	"io14": 18,
+	"io15": 19,
+	"ku":   20, #Key up
+	"kd":   21, #Key down
+}
+
+RegisterInts = {
+
+	"r00": 0, #General purpose registers
+	"r01": 1,
+	"r02": 2,
+	"r03": 3,
+	"r04": 4,
+	"r05": 5,
+	"r06": 6,
+	"r07": 7,
+	"r08": 8,
+	"r09": 9,
+	"r10": 10,
+	"r11": 11,
+	"r12": 12,
+	"r13": 13,
+	"r14": 14,
+	"r15": 15,
+
+	"vx0": 16, #Video X and Y registers
+	"vy0": 17,
+	"vx1": 18,
+	"vy1": 19,
+
+	"vc": 20, #Video colour
+	"vb": 21, #Video brightness
+	"vt": 22, #Video text (Special register, technically a buffer)
+
+	"kc": 23, #Current key being pressed
+	"kp": 24, #Is a key being pressed?
+
+	"mx": 25, #Mouse x and y
+	"my": 26,
+	"mb": 27, #Current mouse button being pressed.
+
+	"st": 28, #Sound tone
+	"sv": 29, #Volume
+
+	"a0": 30, #Accumulator
+	"d0": 31, #Data register (returns from interrupts and lda sta)
+
+	"stk": 32, #Current stack pointer
+	"stz": 33, #Stack "zero" point in memory
+
+	"io00": 34, #IO registers
+	"io01": 35,
+	"io02": 36,
+	"io03": 37,
+	"io04": 38,
+	"io05": 39,
+	"io06": 40,
+	"io07": 41,
+	"io08": 42,
+	"io09": 43,
+	"io10": 44,
+	"io11": 45,
+	"io12": 46,
+	"io13": 47,
+	"io14": 48,
+	"io15": 49,
+
+	"prc": 50, #Program counter /
+
+	"cstk": 51, #Call stack
+	"cstz": 52, #Call stack zero
+
+	"dl": 53, #Data length
+	"dp": 54,
+
+	"sw": 55, #Sound wave type
+}
+
+RegisterStrings = {}
+
+for k in RegisterInts:
+    RegisterStrings[RegisterInts[k]] = k
+
+InterruptStrings = {}
+
+for k in InterruptInts:
+    InterruptStrings[InterruptInts[k]] = k
+
+InstructionStrings = {}
+
+for k in Instructions:
+	InstructionStrings[Instructions[k]] = k
+

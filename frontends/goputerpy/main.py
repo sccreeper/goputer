@@ -25,6 +25,7 @@ font = pg.font.SysFont(None, 32)
 
 video_surface = pg.surface.Surface((640, 480))
 io_surface = pg.surface.Surface((640, r.IO_UI_SIZE))
+debug_surface = pg.surface.Surface((640, r.DEBUG_UI_SIZE))
 
 #Read the code file
 f_name = sys.argv[1]
@@ -79,18 +80,18 @@ while True:
                 txt_img = font.render(
                     video_text.replace("\x00", ""), 
                     True, 
-                    util.ConvertColour(gppy.GetRegister(c.Register.RVideoColour)),
+                    util.convert_colour(gppy.GetRegister(c.Register.RVideoColour)),
                     )
                 
                 video_surface.blit(txt_img, (0, 0))
 
         case c.Interrupt.IntVideoClear:
-            video_surface.fill(util.ConvertColour(gppy.GetRegister(c.Register.RVideoColour)))
+            video_surface.fill(util.convert_colour(gppy.GetRegister(c.Register.RVideoColour)))
 
         case c.Interrupt.IntVideoArea:
             pg.draw.rect(
             video_surface, 
-            util.ConvertColour(gppy.GetRegister(c.Register.RVideoColour)),
+            util.convert_colour(gppy.GetRegister(c.Register.RVideoColour)),
             pg.Rect(
                 gppy.GetRegister(c.Register.RVideoX0),
                 gppy.GetRegister(c.Register.RVideoY0),
@@ -102,7 +103,7 @@ while True:
         case c.Interrupt.IntVideoLine:
             pg.draw.line(
                 video_surface,
-                util.ConvertColour(gppy.GetRegister(c.Register.RVideoColour)),
+                util.convert_colour(gppy.GetRegister(c.Register.RVideoColour)),
                 pg.Vector2(
                     x=gppy.GetRegister(c.Register.RVideoX0),
                     y=gppy.GetRegister(c.Register.RVideoY0),
@@ -116,7 +117,7 @@ while True:
             video_surface.set_at(
                 (gppy.GetRegister(c.Register.RVideoX0),
                 gppy.GetRegister(c.Register.RVideoY0)),
-                util.ConvertColour(gppy.GetRegister(c.Register.RVideoColour)),
+                util.convert_colour(gppy.GetRegister(c.Register.RVideoColour)),
                 )
         case c.Interrupt.IntSoundFlush:
             sound_manager.play(
@@ -202,7 +203,18 @@ while True:
     for s in io_switches:
         s.draw(io_surface)
 
+    #Draw debug UI
+
+    prc_img = font.render(f"Program counter: {gppy.GetRegister(c.Register.RProgramCounter)}", True, r.WHITE)
+    itn_img = font.render(f"Current instruction: {util.generate_instruction_string(gppy.GetInstruction(), gppy.GetLargeArg(), gppy.GetSmallArgs())}", True, r.WHITE)
+
+    debug_surface.fill(r.GREY)
+
+    debug_surface.blit(prc_img, (5, 0))
+    debug_surface.blit(itn_img, (5, 16))
+
     screen.fill(r.BLACK)
+    screen.blit(debug_surface, (0, 0))
     screen.blit(io_surface, (0, r.DEBUG_UI_SIZE + r.SEPERATOR_SIZE))
     screen.blit(video_surface, (0, r.TOTAL_Y_OFFSET))
 

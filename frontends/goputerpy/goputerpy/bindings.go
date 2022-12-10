@@ -131,3 +131,17 @@ func Step() {
 	py32StepChannel <- true
 
 }
+
+//export GetCurrentInstruction
+func GetCurrentInstruction() C.uint {
+
+	return C.uint(py32.Opcode)
+
+}
+
+//export GetArgs
+func GetArgs() C.uint {
+
+	return C.uint(py32.ArgLarge)
+
+}

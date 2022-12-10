@@ -299,6 +299,7 @@ var SingleArgInstructions = []Instruction{
 	ICall,
 	IConditionalCall,
 	IClear,
+	ICallInterrupt,
 }
 
 const (

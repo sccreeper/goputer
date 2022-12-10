@@ -51,6 +51,12 @@ _step.restype = ctypes.c_void_p
 _free = _lib.free
 _free.argtypes = [ctypes.c_void_p]
 
+_get_arg = _lib.GetArgs
+_get_arg.restype = ctypes.c_uint32
+
+_get_current_instruction = _lib.GetCurrentInstruction
+_get_current_instruction.restype = ctypes.c_uint32
+
 print("SO loaded!")
 
 _vm_inited = False
@@ -130,3 +136,21 @@ def IsFinished() -> bool:
 
 def Step() -> None:
     _step()
+
+def GetLargeArg() -> int:
+
+    return int(_get_arg())
+
+def GetSmallArgs() -> tuple[2]:
+
+    x = int(_get_arg())
+
+    x = x.to_bytes(4, byteorder="little")
+
+    return (
+        int.from_bytes(x[0:2], byteorder="little"),
+        int.from_bytes(x[0:2], byteorder="little")
+    )
+
+def GetInstruction() -> int:
+    return int(_get_current_instruction())
