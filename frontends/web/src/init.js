@@ -1,4 +1,6 @@
-console.log("Hello World!")
+import { Compile } from "./app";
+
+export const FPS = 60;
 
 //Init Go WASM
 const go = new Go();
@@ -16,7 +18,7 @@ renderContext.fill();
 
 //Init event listeners.
 document.getElementById("run-code-button").addEventListener("click", function (e) {  
-
-    compileCode(document.getElementById("code-textarea").value)
-
+    Compile();
 })
+
+export {canvas, renderContext}

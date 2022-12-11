@@ -1,6 +1,8 @@
+// WASM "proxy" layer between JS and goputer
 package main
 
 import (
+	"errors"
 	"fmt"
 	"sccreeper/goputer/pkg/compiler"
 	"sccreeper/goputer/pkg/constants"
@@ -16,6 +18,8 @@ var js32SubbedInterruptChannel chan constants.Interrupt = make(chan constants.In
 var js32StepChannel chan bool = make(chan bool)
 
 var program_bytes []byte
+
+//Custom compile and run methods.
 
 func Compile() js.Func {
 
@@ -51,7 +55,7 @@ func Init() js.Func {
 
 		vm.InitVM(&js32, program_bytes, js32.InterruptChannel, js32SubbedInterruptChannel, true, js32StepChannel)
 
-		return ""
+		return js.Null
 
 	})
 
@@ -63,7 +67,7 @@ func Run() js.Func {
 
 		go js32.Run()
 
-		return ""
+		return js.Null
 
 	})
 
@@ -72,47 +76,109 @@ func Run() js.Func {
 
 // Methods for interacting with the VM
 
-func SetRegister() js.Func {
-	var set_register js.Func
-	return set_register
+func SetRegister(this js.Value, args []js.Value) any {
+
+	js32.RegisterSync.Lock()
+	js32.Registers[constants.RegisterInts[args[0].String()]] = uint32(args[1].Int())
+	js32.RegisterSync.Unlock()
+
+	return js.Null
+
 }
 
-func GetRegister() js.Func {
-	var get_register js.Func
-	return get_register
+func GetRegister(this js.Value, args []js.Value) any {
+
+	return js.ValueOf(js32.Registers[constants.RegisterInts[args[0].String()]])
+
 }
 
-func GetBuffer() js.Func {
-	var get_buffer js.Func
-	return get_buffer
+func GetBuffer(this js.Value, args []js.Value) any {
+
+	if args[0].String() == "text" {
+
+		return js.ValueOf(js32.TextBuffer)
+
+	} else if args[0].String() == "video" {
+
+		return js.ValueOf(js32.TextBuffer)
+
+	} else {
+
+		panic(errors.New(fmt.Sprintf("'%s' is not a buffer.", args[0].String())))
+
+	}
+
 }
 
-func SendInterrupt() js.Func {
-	var send_interrupt js.Func
-	return send_interrupt
+func SendInterrupt(this js.Value, args []js.Value) any {
+
+	if js32.Subscribed(constants.Interrupt(constants.InterruptInts[args[0].String()])) {
+
+		js32SubbedInterruptChannel <- constants.Interrupt(constants.InterruptInts[args[0].String()])
+
+		return js.Null
+
+	}
+
+	return js.Null
+
 }
 
-func GetInterrupt() js.Func {
-	var get_interrupt js.Func
-	return get_interrupt
+func GetInterrupt(this js.Value, args []js.Value) any {
+
+	select {
+	case x := <-js32.InterruptChannel:
+		return js.ValueOf(x)
+	default:
+		return js.Null
+
+	}
+
 }
 
-func IsSubscribed() js.Func {
-	var is_subscribed js.Func
-	return is_subscribed
+func IsSubscribed(this js.Value, args []js.Value) any {
+
+	return js.ValueOf(
+		js32.Subscribed(
+			constants.Interrupt(constants.InterruptInts[args[0].String()]),
+		))
+
 }
 
-func IsFinished() js.Func {
-	var is_finished js.Func
-	return is_finished
+func IsFinished(this js.Value, args []js.Value) any {
+
+	return js.ValueOf(js32.Finished)
+
+}
+
+func Step(this js.Value, args []js.Value) any {
+
+	js32StepChannel <- true
+
+	return js.Null
+
 }
 
 func main() {
-	fmt.Println("GO WASM")
+	fmt.Println("JS32 init...")
+
+	// VM init methods
 
 	js.Global().Set("compileCode", Compile())
 	js.Global().Set("initVM", Init())
 	js.Global().Set("runVM", Run())
+
+	//VM interaction methods
+
+	js.Global().Set("setRegister", js.FuncOf(SetRegister))
+	js.Global().Set("getRegister", js.FuncOf(GetRegister))
+	js.Global().Set("getBuffer", js.FuncOf(GetBuffer))
+
+	js.Global().Set("getInterrupt", js.FuncOf(GetInterrupt))
+	js.Global().Set("sendInterrupt", js.FuncOf(SendInterrupt))
+	js.Global().Set("isSubscribed", js.FuncOf(IsSubscribed))
+
+	js.Global().Set("isFinished", js.FuncOf(IsFinished))
 
 	<-make(chan bool)
 
