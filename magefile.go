@@ -114,7 +114,12 @@ func All() {
 
 		os.Chdir(fmt.Sprintf("./frontends/%s/", v.Name()))
 
-		sh.Run(build_config.Build.Command[0], build_config.Build.Command[1:]...)
+		cmd := exec.Command(build_config.Build.Command[0], build_config.Build.Command[1:]...)
+		cmd.Stderr = os.Stderr
+		cmd.Stdout = os.Stdout
+		cmd.Stdin = os.Stdin
+
+		cmd.Run()
 
 		//Escape back to previous directory
 		os.Chdir(previous_dir)
