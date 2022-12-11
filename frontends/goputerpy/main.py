@@ -41,7 +41,6 @@ sound_manager = SoundManager()
 
 #goputer init
 gppy.Init(list(f_bytes))
-gppy.Run()
 
 #io init
 

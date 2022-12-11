@@ -12,7 +12,6 @@ import (
 var py32 vm.VM
 var py32InteruptChannel chan constants.Interrupt = make(chan constants.Interrupt)
 var py32SubbedInterruptChannel chan constants.Interrupt = make(chan constants.Interrupt)
-var py32StepChannel chan bool = make(chan bool)
 
 func main() {}
 
@@ -25,25 +24,21 @@ func Init(program_bytes *C.char, code_length C.int) {
 		py32InteruptChannel,
 		py32SubbedInterruptChannel,
 		true,
-		py32StepChannel,
 	)
 
 	log.Println("VM Created")
 
 }
 
-//export Run
-func Run() {
-	go py32.Run()
-}
-
 //export GetInterrupt
 func GetInterrupt() C.uint {
 
-	select {
-	case x := <-py32InteruptChannel:
+	if len(py32.InterruptArray) > 0 {
+		x := py32.InterruptArray[len(py32.InterruptArray)-1]
+		py32.InterruptArray = py32.InterruptArray[:len(py32.InterruptArray)-1]
+
 		return C.uint(x)
-	default:
+	} else {
 		return C.uint(math.MaxUint32)
 	}
 
@@ -53,7 +48,9 @@ func GetInterrupt() C.uint {
 func SendInterrupt(i C.uint) {
 
 	if py32.Subscribed(constants.Interrupt(i)) {
-		py32SubbedInterruptChannel <- constants.Interrupt(i)
+
+		py32.SubbedInterruptArray = append(py32.SubbedInterruptArray, constants.Interrupt(i))
+
 	}
 
 }
@@ -61,9 +58,7 @@ func SendInterrupt(i C.uint) {
 //export GetRegister
 func GetRegister(r C.uint) C.uint {
 
-	py32.RegisterSync.Lock()
 	x := C.uint(py32.Registers[r])
-	py32.RegisterSync.Unlock()
 
 	return x
 
@@ -93,9 +88,7 @@ func GetBuffer(b C.uint) *C.char {
 //export SetRegister
 func SetRegister(r C.uint, v C.uint) {
 
-	py32.RegisterSync.Lock()
 	py32.Registers[r] = uint32(v)
-	py32.RegisterSync.Unlock()
 
 }
 
@@ -128,7 +121,7 @@ func IsFinished() C.uint {
 //export Step
 func Step() {
 
-	py32StepChannel <- true
+	py32.Step()
 
 }
 

@@ -4,5 +4,6 @@ export default {
     vmIsAlive: false,
     runInterval: null,
     FPS: 60,
+    vmWorker: null,
 
 }

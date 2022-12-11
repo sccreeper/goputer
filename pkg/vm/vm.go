@@ -5,6 +5,7 @@ import (
 	"errors"
 	"math"
 	comp "sccreeper/goputer/pkg/compiler"
+	"sccreeper/goputer/pkg/constants"
 	c "sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/util"
 	"sync"
@@ -41,15 +42,17 @@ type VM struct {
 	SubbedInterruptChannel chan c.Interrupt
 	RegisterSync           sync.Mutex
 
+	InterruptArray       []c.Interrupt
+	SubbedInterruptArray []c.Interrupt
+
 	HandlingInterrupt bool
 	InterruptQueue    []uint32
 
-	ShouldStep  bool
-	StepChannel chan bool
+	ShouldStep bool
 }
 
 // Initialize VM and registers, load code into "memory" etc.
-func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt, subbed_interrupt_channel chan c.Interrupt, should_step bool, step_channel chan bool) error {
+func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt, subbed_interrupt_channel chan c.Interrupt, should_step bool) error {
 
 	if len(vm_program) > int(_MemSize) {
 		return errors.New("program too large")
@@ -75,10 +78,12 @@ func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt, 
 	machine.Registers[c.RStackPointer] = 0
 
 	machine.ShouldStep = should_step
-	machine.StepChannel = step_channel
 
 	machine.HandlingInterrupt = false
 	machine.InterruptQueue = []uint32{}
+
+	machine.InterruptArray = []c.Interrupt{}
+	machine.SubbedInterruptArray = []c.Interrupt{}
 
 	//Interrupt table
 
@@ -102,235 +107,254 @@ func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt, 
 
 func (m *VM) Run() {
 
-	var temp_call_stack int
+	if m.ShouldStep {
+		panic(errors.New("run called when behaivour is step"))
+	} else {
+		go func() {
 
-	for {
+			for {
 
-		m.RegisterSync.Lock()
-
-		if m.Finished {
-			break
-		}
-
-		m.CurrentInstruction = m.MemArray[m.Registers[c.RProgramCounter] : m.Registers[c.RProgramCounter]+comp.InstructionLength]
-		m.Opcode = c.Instruction(m.CurrentInstruction[0])
-
-		m.ArgSmall0 = binary.LittleEndian.Uint16(m.CurrentInstruction[1:3])
-		m.ArgSmall1 = binary.LittleEndian.Uint16(m.CurrentInstruction[3:5])
-		m.ArgLarge = binary.LittleEndian.Uint32(m.CurrentInstruction[1:5])
-
-		//Interrupts
-		select {
-		case x := <-m.SubbedInterruptChannel:
-
-			//Place the interrupts into a "queue"
-			if m.HandlingInterrupt {
-				if m.Subscribed(c.Interrupt(x)) {
-					m.InterruptQueue = append(m.InterruptQueue, uint32(x))
-				}
-			} else {
-
-				var i c.Interrupt
-
-				if len(m.InterruptQueue) == 0 {
-					i = x
-				} else {
-					i = c.Interrupt(m.InterruptQueue[len(m.InterruptQueue)-1])
-					m.InterruptQueue = m.InterruptQueue[:len(m.InterruptQueue)-1]
+				if m.Finished {
+					break
 				}
 
-				if m.Subscribed(i) {
-					m.HandlingInterrupt = true
-					m.subbed_interrupt(i)
-					m.call()
-					//fmt.Printf("Interrupt %d\n", x)
-					m.RegisterSync.Unlock()
-					continue
-				}
+				m.Cycle()
+
 			}
 
+			close(m.SubbedInterruptChannel)
+			close(m.InterruptChannel)
+
+		}()
+	}
+
+}
+
+func (m *VM) Step() {
+	if m.Finished {
+		close(m.SubbedInterruptChannel)
+		close(m.InterruptChannel)
+		return
+	}
+
+	m.Cycle()
+}
+
+func (m *VM) Cycle() {
+
+	var temp_call_stack int
+
+	if m.Finished {
+		return
+	}
+
+	m.CurrentInstruction = m.MemArray[m.Registers[c.RProgramCounter] : m.Registers[c.RProgramCounter]+comp.InstructionLength]
+	m.Opcode = c.Instruction(m.CurrentInstruction[0])
+
+	m.ArgSmall0 = binary.LittleEndian.Uint16(m.CurrentInstruction[1:3])
+	m.ArgSmall1 = binary.LittleEndian.Uint16(m.CurrentInstruction[3:5])
+	m.ArgLarge = binary.LittleEndian.Uint32(m.CurrentInstruction[1:5])
+
+	//Interrupts
+
+	var i uint32 = math.MaxUint32
+
+	if !m.ShouldStep {
+		select {
+		case x := <-m.SubbedInterruptChannel:
+			i = uint32(x)
 		default:
 
 		}
 
-		if m.ShouldStep {
-			select {
-			case x := <-m.StepChannel:
-				if x {
-					break
-				}
-			default:
-				m.RegisterSync.Unlock()
-				continue
+	} else {
+
+		if len(m.SubbedInterruptArray) > 0 {
+			i = uint32(m.SubbedInterruptArray[len(m.SubbedInterruptArray)-1])
+			m.SubbedInterruptArray = m.SubbedInterruptArray[:len(m.SubbedInterruptArray)-1]
+		}
+	}
+
+	if i != math.MaxUint32 {
+		//Place the interrupts into a "queue"
+		if m.HandlingInterrupt {
+			if m.Subscribed(c.Interrupt(i)) {
+				m.InterruptQueue = append(m.InterruptQueue, uint32(i))
+			}
+		} else {
+
+			var interrupt c.Interrupt
+
+			if len(m.InterruptQueue) == 0 {
+				interrupt = constants.Interrupt(i)
+			} else {
+				interrupt = c.Interrupt(m.InterruptQueue[len(m.InterruptQueue)-1])
+				m.InterruptQueue = m.InterruptQueue[:len(m.InterruptQueue)-1]
+			}
+
+			if m.Subscribed(interrupt) {
+				m.HandlingInterrupt = true
+				m.subbed_interrupt(interrupt)
+				m.call()
+				//fmt.Printf("Interrupt %d\n", x)
+				return
 			}
 		}
+	}
 
-		//If it is null itn, could be end of program or end of call block
-		if m.Opcode == 0 && m.ArgLarge == 0 {
+	//If it is null itn, could be end of program or end of call block
+	if m.Opcode == 0 && m.ArgLarge == 0 {
 
-			//If the next opcode and arg is 0 as well we exit
-			//If not we pop from the call stack
+		//If the next opcode and arg is 0 as well we exit
+		//If not we pop from the call stack
 
-			next_instruction := m.MemArray[m.Registers[c.RProgramCounter]+comp.InstructionLength : m.Registers[c.RProgramCounter]+(comp.InstructionLength*2)]
+		next_instruction := m.MemArray[m.Registers[c.RProgramCounter]+comp.InstructionLength : m.Registers[c.RProgramCounter]+(comp.InstructionLength*2)]
 
-			if next_instruction[0] == 0 && util.AllEqualToX(m.CurrentInstruction[1:5], 0) {
-				m.Finished = true
-				break
-			} else {
-				m.pop_call()
+		if next_instruction[0] == 0 && util.AllEqualToX(m.CurrentInstruction[1:5], 0) {
+			m.Finished = true
+			return
+		} else {
+			m.pop_call()
 
-				if m.HandlingInterrupt {
-					m.HandlingInterrupt = false
-				}
-
-				m.RegisterSync.Unlock()
-				continue
+			if m.HandlingInterrupt {
+				m.HandlingInterrupt = false
 			}
 
+			return
 		}
-
-		switch m.Opcode {
-		//Handle push and pop instructions
-		case c.IPush:
-			m.push_stack()
-		case c.IPop:
-			m.pop_stack()
-
-		case c.IMove:
-			m.move()
-
-		case c.ICall:
-			m.call()
-			m.RegisterSync.Unlock()
-			continue
-
-		case c.IConditionalCall:
-			m.conditional_call()
-			m.RegisterSync.Unlock()
-			continue
-
-		case c.IJump:
-			m.jump()
-			m.RegisterSync.Unlock()
-			continue
-
-		case c.IConditionalJump:
-			m.conditional_jump()
-			m.RegisterSync.Unlock()
-			continue
-
-			// Load & store
-		case c.ILoad:
-			m.load()
-
-		case c.IStore:
-			m.store()
-
-		//Math
-		case c.IAdd:
-			m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] + m.Registers[m.ArgSmall1]
-		case c.IMultiply:
-			m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] * m.Registers[m.ArgSmall1]
-		case c.ISubtract:
-			m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] - m.Registers[m.ArgSmall1]
-		case c.IDivide:
-			m.Registers[c.RAccumulator] = uint32(m.Registers[m.ArgSmall0] / m.Registers[m.ArgSmall1])
-		case c.ISquareRoot:
-			m.Registers[c.RAccumulator] = uint32(math.Sqrt(float64(m.Registers[m.ArgSmall0])))
-		case c.IIncrement:
-			m.Registers[m.ArgSmall0]++
-		case c.IDecrement:
-			m.Registers[m.ArgSmall0]--
-		case c.IInvert:
-			m.Registers[m.ArgSmall0] = ^m.Registers[m.ArgSmall0]
-		case c.IPower:
-			if m.Registers[m.ArgSmall0] == 10 {
-				m.Registers[c.RAccumulator] = uint32(math.Pow10(int(m.Registers[m.ArgSmall1])))
-			} else {
-				m.Registers[c.RAccumulator] = uint32(math.Pow(float64(m.Registers[m.ArgSmall0]), float64(m.Registers[m.ArgSmall1])))
-			}
-
-		//Logic
-
-		case c.IGreaterThan:
-			if m.Registers[m.ArgSmall0] > m.Registers[m.ArgSmall1] {
-				m.Registers[c.RAccumulator] = math.MaxUint32
-			} else {
-				m.Registers[c.RAccumulator] = 0
-			}
-		case c.ILessThan:
-			if m.Registers[m.ArgSmall0] > m.Registers[m.ArgSmall1] {
-				m.Registers[c.RAccumulator] = math.MaxUint32
-			} else {
-				m.Registers[c.RAccumulator] = 0
-			}
-
-		case c.IEquals:
-			if m.Registers[m.ArgSmall0] == m.Registers[m.ArgSmall1] {
-				m.Registers[c.RAccumulator] = math.MaxUint32
-			} else {
-				m.Registers[c.RAccumulator] = 0
-			}
-		case c.INotEquals:
-			if m.Registers[m.ArgSmall0] != m.Registers[m.ArgSmall1] {
-				m.Registers[c.RAccumulator] = math.MaxUint32
-			} else {
-				m.Registers[c.RAccumulator] = 0
-			}
-
-		//Bitwise operators
-
-		case c.IAnd:
-			m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] & m.Registers[m.ArgSmall1]
-		case c.IOr:
-			m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] | m.Registers[m.ArgSmall1]
-		case c.IXor:
-			m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] ^ m.Registers[m.ArgSmall1]
-
-		case c.IShiftLeft:
-			m.shift_left()
-		case c.IShiftRight:
-			m.shift_right()
-
-		//Other
-		case c.ICallInterrupt:
-			m.called_interrupt()
-		case c.IHalt:
-			time.Sleep(time.Duration(m.Registers[m.ArgSmall0]) * time.Millisecond)
-		case c.IClear:
-			if m.ArgLarge != uint32(c.RData) && m.ArgLarge != uint32(c.RVideoText) {
-
-				m.Registers[m.ArgLarge] = 0
-
-			} else {
-
-				switch m.ArgLarge {
-				case uint32(c.RData):
-					m.DataBuffer = [128]byte{}
-				case uint32(c.RVideoText):
-					m.TextBuffer = [128]byte{}
-				}
-
-			}
-
-		}
-
-		if m.Registers[c.RCallStackPointer] != uint32(temp_call_stack) {
-
-			temp_call_stack = int(m.Registers[c.RCallStackPointer])
-			//fmt.Printf("Opcode %d\n", m.Opcode)
-			//fmt.Printf("Call stack %d\n", temp_call_stack)
-
-		}
-
-		m.Registers[c.RProgramCounter] += comp.InstructionLength
-
-		m.RegisterSync.Unlock()
 
 	}
 
-	close(m.SubbedInterruptChannel)
-	close(m.InterruptChannel)
-	m.RegisterSync.Unlock()
+	switch m.Opcode {
+	//Handle push and pop instructions
+	case c.IPush:
+		m.push_stack()
+	case c.IPop:
+		m.pop_stack()
+
+	case c.IMove:
+		m.move()
+
+	case c.ICall:
+		m.call()
+		return
+
+	case c.IConditionalCall:
+		m.conditional_call()
+		return
+
+	case c.IJump:
+		m.jump()
+		return
+
+	case c.IConditionalJump:
+		m.conditional_jump()
+		return
+
+		// Load & store
+	case c.ILoad:
+		m.load()
+
+	case c.IStore:
+		m.store()
+
+	//Math
+	case c.IAdd:
+		m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] + m.Registers[m.ArgSmall1]
+	case c.IMultiply:
+		m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] * m.Registers[m.ArgSmall1]
+	case c.ISubtract:
+		m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] - m.Registers[m.ArgSmall1]
+	case c.IDivide:
+		m.Registers[c.RAccumulator] = uint32(m.Registers[m.ArgSmall0] / m.Registers[m.ArgSmall1])
+	case c.ISquareRoot:
+		m.Registers[c.RAccumulator] = uint32(math.Sqrt(float64(m.Registers[m.ArgSmall0])))
+	case c.IIncrement:
+		m.Registers[m.ArgSmall0]++
+	case c.IDecrement:
+		m.Registers[m.ArgSmall0]--
+	case c.IInvert:
+		m.Registers[m.ArgSmall0] = ^m.Registers[m.ArgSmall0]
+	case c.IPower:
+		if m.Registers[m.ArgSmall0] == 10 {
+			m.Registers[c.RAccumulator] = uint32(math.Pow10(int(m.Registers[m.ArgSmall1])))
+		} else {
+			m.Registers[c.RAccumulator] = uint32(math.Pow(float64(m.Registers[m.ArgSmall0]), float64(m.Registers[m.ArgSmall1])))
+		}
+
+	//Logic
+
+	case c.IGreaterThan:
+		if m.Registers[m.ArgSmall0] > m.Registers[m.ArgSmall1] {
+			m.Registers[c.RAccumulator] = math.MaxUint32
+		} else {
+			m.Registers[c.RAccumulator] = 0
+		}
+	case c.ILessThan:
+		if m.Registers[m.ArgSmall0] > m.Registers[m.ArgSmall1] {
+			m.Registers[c.RAccumulator] = math.MaxUint32
+		} else {
+			m.Registers[c.RAccumulator] = 0
+		}
+
+	case c.IEquals:
+		if m.Registers[m.ArgSmall0] == m.Registers[m.ArgSmall1] {
+			m.Registers[c.RAccumulator] = math.MaxUint32
+		} else {
+			m.Registers[c.RAccumulator] = 0
+		}
+	case c.INotEquals:
+		if m.Registers[m.ArgSmall0] != m.Registers[m.ArgSmall1] {
+			m.Registers[c.RAccumulator] = math.MaxUint32
+		} else {
+			m.Registers[c.RAccumulator] = 0
+		}
+
+	//Bitwise operators
+
+	case c.IAnd:
+		m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] & m.Registers[m.ArgSmall1]
+	case c.IOr:
+		m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] | m.Registers[m.ArgSmall1]
+	case c.IXor:
+		m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] ^ m.Registers[m.ArgSmall1]
+
+	case c.IShiftLeft:
+		m.shift_left()
+	case c.IShiftRight:
+		m.shift_right()
+
+	//Other
+	case c.ICallInterrupt:
+		m.called_interrupt()
+	case c.IHalt:
+		time.Sleep(time.Duration(m.Registers[m.ArgSmall0]) * time.Millisecond)
+	case c.IClear:
+		if m.ArgLarge != uint32(c.RData) && m.ArgLarge != uint32(c.RVideoText) {
+
+			m.Registers[m.ArgLarge] = 0
+
+		} else {
+
+			switch m.ArgLarge {
+			case uint32(c.RData):
+				m.DataBuffer = [128]byte{}
+			case uint32(c.RVideoText):
+				m.TextBuffer = [128]byte{}
+			}
+
+		}
+
+	}
+
+	if m.Registers[c.RCallStackPointer] != uint32(temp_call_stack) {
+
+		temp_call_stack = int(m.Registers[c.RCallStackPointer])
+		//fmt.Printf("Opcode %d\n", m.Opcode)
+		//fmt.Printf("Call stack %d\n", temp_call_stack)
+
+	}
+
+	m.Registers[c.RProgramCounter] += comp.InstructionLength
 
 }

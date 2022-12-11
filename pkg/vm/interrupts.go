@@ -38,5 +38,12 @@ func (m *VM) called_interrupt() {
 
 	}
 
-	m.InterruptChannel <- c.Interrupt(m.ArgSmall0)
+	if !m.ShouldStep {
+		m.InterruptChannel <- c.Interrupt(m.ArgSmall0)
+	} else {
+
+		m.InterruptArray = append(m.InterruptArray, c.Interrupt(m.ArgSmall0))
+
+	}
+
 }

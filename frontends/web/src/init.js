@@ -1,10 +1,11 @@
-import { Compile } from "./app";
+import { Compile, Run } from "./app";
+import { clearCanvas } from "./canvas_util";
 
 export const FPS = 60;
 
 //Init Go WASM
 const go = new Go();
-WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
+await WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
     go.run(result.instance);
 });
 
@@ -12,13 +13,16 @@ WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((resu
 const canvas = document.getElementById("render-canvas")
 const renderContext = canvas.getContext('2d');
 
-renderContext.fillStyle = "black"
-renderContext.rect(0, 0, canvas.width, canvas.height);
-renderContext.fill();
+clearCanvas(renderContext, "black");
 
 //Init event listeners.
-document.getElementById("run-code-button").addEventListener("click", function (e) {  
+document.getElementById("compile-code-button").addEventListener("click", function (e) {  
     Compile();
 })
+
+document.getElementById("run-code-button").addEventListener("click", function (e) {  
+    Run();
+})
+
 
 export {canvas, renderContext}

@@ -16,9 +16,6 @@ _init = _lib.Init
 _init.argtypes = [ctypes.Array, ctypes.c_int]
 _init.restype = ctypes.c_void_p
 
-_run = _lib.Run
-_run.restype = ctypes.c_void_p
-
 _get_interrupt = _lib.GetInterrupt
 _get_interrupt.restype = ctypes.c_uint32
 
@@ -68,16 +65,7 @@ def Init(program_bytes: list) -> None:
     _vm_inited = True
 
     _init(a, ctypes.c_int(len(program_bytes)))
-    
 
-def Run() -> None:
-    global _vm_alive
-
-    if _vm_inited:
-        _run()
-        _vm_alive = True
-    else:
-        raise errors.VMNotInitialized("Must call Init() before running VM")
 
 #Pops the last inerrupt off of the interupt array.
 def GetInterrupt() -> constants.Interrupt:

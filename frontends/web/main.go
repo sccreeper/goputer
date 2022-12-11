@@ -2,8 +2,10 @@
 package main
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
+	"math"
 	"sccreeper/goputer/pkg/compiler"
 	"sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/util"
@@ -15,7 +17,6 @@ var js32 vm.VM
 
 var js32InterruptChannel chan constants.Interrupt = make(chan constants.Interrupt)
 var js32SubbedInterruptChannel chan constants.Interrupt = make(chan constants.Interrupt)
-var js32StepChannel chan bool = make(chan bool)
 
 var program_bytes []byte
 
@@ -37,9 +38,9 @@ func Compile() js.Func {
 
 		program_bytes = compiler.GenerateBytecode(program_structure)
 
-		fmt.Println(len(program_bytes))
+		fmt.Printf("Compiled program length: %d\n", len(program_bytes))
 
-		return ""
+		return js.ValueOf(nil)
 
 	})
 
@@ -53,9 +54,9 @@ func Init() js.Func {
 
 		js32 = vm.VM{}
 
-		vm.InitVM(&js32, program_bytes, js32.InterruptChannel, js32SubbedInterruptChannel, true, js32StepChannel)
+		vm.InitVM(&js32, program_bytes, js32.InterruptChannel, js32SubbedInterruptChannel, true)
 
-		return js.Null
+		return js.ValueOf(nil)
 
 	})
 
@@ -67,7 +68,7 @@ func Run() js.Func {
 
 		go js32.Run()
 
-		return js.Null
+		return js.ValueOf(nil)
 
 	})
 
@@ -78,9 +79,7 @@ func Run() js.Func {
 
 func SetRegister(this js.Value, args []js.Value) any {
 
-	js32.RegisterSync.Lock()
-	js32.Registers[constants.RegisterInts[args[0].String()]] = uint32(args[1].Int())
-	js32.RegisterSync.Unlock()
+	js32.Registers[constants.Register(args[0].Int())] = uint32(args[1].Int())
 
 	return js.Null
 
@@ -88,7 +87,7 @@ func SetRegister(this js.Value, args []js.Value) any {
 
 func GetRegister(this js.Value, args []js.Value) any {
 
-	return js.ValueOf(js32.Registers[constants.RegisterInts[args[0].String()]])
+	return js.ValueOf(js32.Registers[constants.Register(args[0].Int())])
 
 }
 
@@ -114,7 +113,7 @@ func SendInterrupt(this js.Value, args []js.Value) any {
 
 	if js32.Subscribed(constants.Interrupt(constants.InterruptInts[args[0].String()])) {
 
-		js32SubbedInterruptChannel <- constants.Interrupt(constants.InterruptInts[args[0].String()])
+		js32.SubbedInterruptArray = append(js32.SubbedInterruptArray, constants.Interrupt(constants.InterruptInts[args[0].String()]))
 
 		return js.Null
 
@@ -126,12 +125,15 @@ func SendInterrupt(this js.Value, args []js.Value) any {
 
 func GetInterrupt(this js.Value, args []js.Value) any {
 
-	select {
-	case x := <-js32.InterruptChannel:
-		return js.ValueOf(x)
-	default:
-		return js.Null
+	if len(js32.InterruptArray) > 0 {
 
+		x := js32.InterruptArray[len(js32.InterruptArray)-1]
+		js32.InterruptArray = js32.InterruptArray[:len(js32.InterruptArray)-1]
+
+		return js.ValueOf(int(x))
+
+	} else {
+		return js.ValueOf(nil)
 	}
 
 }
@@ -153,9 +155,20 @@ func IsFinished(this js.Value, args []js.Value) any {
 
 func Step(this js.Value, args []js.Value) any {
 
-	js32StepChannel <- true
+	js32.Step()
 
-	return js.Null
+	return js.ValueOf(nil)
+
+}
+
+//Other
+
+func ConvertColour(this js.Value, args []js.Value) any {
+
+	b := make([]byte, 4)
+	binary.LittleEndian.PutUint32(b[:], uint32(args[0].Int()))
+
+	return js.ValueOf(fmt.Sprintf("rgba(%d, %d, %d, %f)", b[0], b[1], b[2], math.Round(float64(b[3])/255)))
 
 }
 
@@ -178,7 +191,35 @@ func main() {
 	js.Global().Set("sendInterrupt", js.FuncOf(SendInterrupt))
 	js.Global().Set("isSubscribed", js.FuncOf(IsSubscribed))
 
+	js.Global().Set("stepVM", js.FuncOf(Step))
+
 	js.Global().Set("isFinished", js.FuncOf(IsFinished))
+
+	//Convert constants maps into [string]interface maps
+
+	interrupts_converted := make(map[string]interface{}, 0)
+
+	for k, v := range constants.InterruptInts {
+		interrupts_converted[k] = int(v)
+	}
+
+	instructions_converted := make(map[string]interface{}, 0)
+
+	for k, v := range constants.InstructionInts {
+		instructions_converted[k] = int(v)
+	}
+
+	registers_converted := make(map[string]interface{}, 0)
+
+	for k, v := range constants.RegisterInts {
+		registers_converted[k] = int(v)
+	}
+
+	js.Global().Set("interruptInts", js.ValueOf(interrupts_converted))
+	js.Global().Set("instructionInts", js.ValueOf(instructions_converted))
+	js.Global().Set("registerInts", js.ValueOf(registers_converted))
+
+	js.Global().Set("convertColour", js.FuncOf(ConvertColour))
 
 	<-make(chan bool)
 
