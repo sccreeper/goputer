@@ -3,21 +3,19 @@ export function clearCanvas(ctx, colour) {
     console.log(colour)
 
     ctx.fillStyle = colour;
-    ctx.rect(0, 0, ctx.canvas.clientWidth, ctx.canvas.clientHeight);
-    ctx.fill();
+    ctx.fillRect(0, 0, ctx.canvas.clientWidth, ctx.canvas.clientHeight);
 
 }
 
 export function drawRect(ctx, colour, x0, y0, x1, y1) {
-
+    
     ctx.fillStyle = colour;
-    ctx.rect(
+    ctx.fillRect(
         x0,
         y0,
         x1 - x0,
         y1 - y0,
     )
-    ctx.fill();
 
 }
 

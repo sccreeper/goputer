@@ -1,6 +1,6 @@
 import { renderContext, canvas } from "./init";
 import global from "./globals.js";
-import { clearCanvas, drawRect } from "./canvas_util";
+import { clearCanvas, drawLine, drawRect } from "./canvas_util";
 import globals from "./globals.js";
 
 // Main app logic
@@ -62,6 +62,15 @@ export function Cycle() {
             case interruptInts["vc"]:
                 clearCanvas(renderContext, convertColour(getRegister(registerInts["vc"])))
                 break;
+            case interruptInts["vl"]:
+                drawLine(
+                    renderContext,
+                    convertColour(getRegister(registerInts["vc"])),
+                    getRegister(registerInts["vx0"]),
+                    getRegister(registerInts["vy0"]),
+                    getRegister(registerInts["vx1"]),
+                    getRegister(registerInts["vy1"])
+                )
 
             default:
                 break;
