@@ -95,11 +95,31 @@ func GetBuffer(this js.Value, args []js.Value) any {
 
 	if args[0].String() == "text" {
 
-		return js.ValueOf(js32.TextBuffer)
+		//Convert buffer
 
-	} else if args[0].String() == "video" {
+		converted := make([]interface{}, 0)
 
-		return js.ValueOf(js32.TextBuffer)
+		for _, v := range js32.TextBuffer {
+
+			converted = append(converted, int(v))
+
+		}
+
+		return js.ValueOf(converted)
+
+	} else if args[0].String() == "data" {
+
+		//Convert buffer
+
+		converted := make([]interface{}, 0)
+
+		for _, v := range js32.DataBuffer {
+
+			converted = append(converted, int(v))
+
+		}
+
+		return js.ValueOf(converted)
 
 	} else {
 

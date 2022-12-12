@@ -1,0 +1,12 @@
+//Pixel test
+def white 0xFFFFFFFF
+def pos 50
+
+lda @white
+mov d0 vc
+
+lda @pos
+mov d0 vx0
+mov d0 vy0
+
+int vp

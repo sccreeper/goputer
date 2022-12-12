@@ -1,6 +1,6 @@
 import { renderContext, canvas } from "./init";
 import global from "./globals.js";
-import { clearCanvas, drawLine, drawRect, drawText } from "./canvas_util";
+import { clearCanvas, drawLine, drawRect, drawText, setPixel } from "./canvas_util";
 import globals from "./globals.js";
 
 var video_text = ""
@@ -81,19 +81,50 @@ export function Cycle() {
                     video_text = "";
                 } else {
                     
+                    var t1 = []
+
+                    t.forEach(element => {
+                        
+                        if (element != 0) {
+                            t1.push(element)
+                        }
+
+                    });
+
                     // Convert from array of ints to chars.
-                    video_text += String.fromCharCode(t);
+                    video_text += String.fromCharCode(...t1)
 
                 }
 
 
                 drawText(
                     renderContext,
-                    convertColour(getRegister(registerInts["vl"])),
+                    convertColour(getRegister(registerInts["vc"])),
                     getRegister(registerInts["vx0"]),
                     getRegister(registerInts["vy0"]),
                     video_text
                 )
+            case interruptInts["vp"]:
+                setPixel(
+                    renderContext,
+                    convertColour(getRegister(registerInts["vc"])),
+                    getRegister(registerInts["vx0"]),
+                    getRegister(registerInts["vy0"])
+                )
+            case interruptInts["ss"]:
+                globals.oscillator.frequency.value = 0;
+                globals.audioVolume.gain.value = 0;
+                break;
+            case interruptInts["sf"]:
+                globals.oscillator.type = (getRegister(registerInts["sw"]) == 0) ? "square" : "sine";
+                globals.oscillator.frequency.value = getRegister(registerInts["st"])
+                globals.audioVolume.gain.value = getRegister(registerInts["sv"]) / 255;
+                if (!globals.sound_started) {
+                    globals.oscillator.start()
+                    globals.sound_started = true;
+                }
+
+                break;
 
             default:
                 break;

@@ -5,5 +5,9 @@ export default {
     runInterval: null,
     FPS: 60,
     vmWorker: null,
+    audioContext: null,
+    oscillator: null,
+    audioVolume: null,
+    sound_started: false,
 
 }

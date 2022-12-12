@@ -1,3 +1,4 @@
+// Utility methods for interacting with canvas.
 export function clearCanvas(ctx, colour) {
 
     console.log(colour)
@@ -33,7 +34,29 @@ export function drawLine(ctx, colour, x0, y0, x1, y1) {
 export function drawText(ctx, colour, x0, y0, text) {
 
     ctx.fillStyle = colour;
-    ctx.font = "16px Arial";
-    ctx.fillText(text, x0, y0);
+    ctx.font = "24px Arial";
+    ctx.fillText(text, x0, y0 + 24);
 
+}
+
+export function setPixel(ctx, colour, x0, y0) {
+
+    //Extract colour
+
+
+    colour = colour.substring(5, colour.length-1)
+        .replace(/ /g, '')
+        .split(',');
+
+    
+    var pixel = ctx.createImageData(1, 1);
+    var data  = pixel.data;
+
+    data[0] = parseInt(colour[0])
+    data[1] = parseInt(colour[1])
+    data[2] = parseInt(colour[2])
+    data[3] = parseFloat(colour[3])
+
+    ctx.putImageData(pixel, x0, y0);
+    
 }
