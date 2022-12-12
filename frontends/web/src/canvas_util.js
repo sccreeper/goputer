@@ -29,3 +29,11 @@ export function drawLine(ctx, colour, x0, y0, x1, y1) {
     ctx.stroke();
     
 }
+
+export function drawText(ctx, colour, x0, y0, text) {
+
+    ctx.fillStyle = colour;
+    ctx.font = "16px Arial";
+    ctx.fillText(text, x0, y0);
+
+}

@@ -1,7 +1,9 @@
 import { renderContext, canvas } from "./init";
 import global from "./globals.js";
-import { clearCanvas, drawLine, drawRect } from "./canvas_util";
+import { clearCanvas, drawLine, drawRect, drawText } from "./canvas_util";
 import globals from "./globals.js";
+
+var video_text = ""
 
 // Main app logic
 
@@ -70,6 +72,27 @@ export function Cycle() {
                     getRegister(registerInts["vy0"]),
                     getRegister(registerInts["vx1"]),
                     getRegister(registerInts["vy1"])
+                )
+            case interruptInts["vt"]:
+                
+                var t = getBuffer("text")
+
+                if (t[0] == 0) {
+                    video_text = "";
+                } else {
+                    
+                    // Convert from array of ints to chars.
+                    video_text += String.fromCharCode(t);
+
+                }
+
+
+                drawText(
+                    renderContext,
+                    convertColour(getRegister(registerInts["vl"])),
+                    getRegister(registerInts["vx0"]),
+                    getRegister(registerInts["vy0"]),
+                    video_text
                 )
 
             default:
