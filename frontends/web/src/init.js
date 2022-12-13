@@ -19,13 +19,13 @@ clearCanvas(renderContext, "black");
 
 //Init audio
 
-globals.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-globals.oscillator = globals.audioContext.createOscillator();
-globals.audioVolume = globals.audioContext.createGain();
+globals.audio_context = new (window.AudioContext || window.webkitAudioContext)();
+globals.oscillator = globals.audio_context.createOscillator();
+globals.audio_volume = globals.audio_context.createGain();
 
-globals.audioVolume.gain.value = 0.0;
-globals.oscillator.connect(globals.audioVolume);
-globals.audioVolume.connect(globals.audioContext.destination);
+globals.audio_volume.gain.value = 0.0;
+globals.oscillator.connect(globals.audio_volume);
+globals.audio_volume.connect(globals.audio_context.destination);
 
 //Init event listeners.
 document.getElementById("compile-code-button").addEventListener("click", function (e) {  
@@ -40,12 +40,17 @@ document.getElementById("stop-code-button").addEventListener("click", function (
     clearInterval(globals.runInterval);
 
     globals.oscillator.frequency.value = 0;
-    globals.audioVolume.gain.value = 0;
+    globals.audio_volume.gain.value = 0;
 
-    globals.oscillator.stop();
+    if (globals.sound_started) {
+        globals.oscillator.stop();   
+    }
 
     globals.sound_started = false;
     globals.vmIsAlive = false;
+    globals.video_text = "";
+
+    clearCanvas(renderContext, "black");
 })
 
 canvas.addEventListener("mouseenter", () => {globals.mouse_over_display = true})

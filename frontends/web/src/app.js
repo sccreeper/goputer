@@ -3,8 +3,6 @@ import global from "./globals.js";
 import { clearCanvas, drawLine, drawRect, drawText, setPixel } from "./canvas_util";
 import globals from "./globals.js";
 
-var video_text = ""
-
 var previous_mouse_pos = {
     X: 0,
     Y: 0,
@@ -116,7 +114,7 @@ export function Cycle() {
                 var t = getBuffer("text")
 
                 if (t[0] == 0) {
-                    video_text = "";
+                    globals.video_text = "";
                 } else {
                     
                     var t1 = []
@@ -130,7 +128,7 @@ export function Cycle() {
                     });
 
                     // Convert from array of ints to chars.
-                    video_text += String.fromCharCode(...t1)
+                    globals.video_text += String.fromCharCode(...t1)
 
                 }
 
@@ -140,7 +138,7 @@ export function Cycle() {
                     convertColour(getRegister(registerInts["vc"])),
                     getRegister(registerInts["vx0"]),
                     getRegister(registerInts["vy0"]),
-                    video_text
+                    globals.video_text
                 )
             case interruptInts["vp"]:
                 setPixel(
@@ -151,12 +149,12 @@ export function Cycle() {
                 )
             case interruptInts["ss"]:
                 globals.oscillator.frequency.value = 0;
-                globals.audioVolume.gain.value = 0;
+                globals.audio_volume.gain.value = 0;
                 break;
             case interruptInts["sf"]:
                 globals.oscillator.type = (getRegister(registerInts["sw"]) == 0) ? "square" : "sine";
                 globals.oscillator.frequency.value = getRegister(registerInts["st"])
-                globals.audioVolume.gain.value = getRegister(registerInts["sv"]) / 255;
+                globals.audio_volume.gain.value = getRegister(registerInts["sv"]) / 255;
                 if (!globals.sound_started) {
                     globals.oscillator.start()
                     globals.sound_started = true;
