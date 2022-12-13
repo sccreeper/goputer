@@ -1,9 +1,11 @@
 {
   "devDependencies": {
     "parcel": "^2.8.1",
-    "parcel-reporter-static-files-copy": "^1.4.0"
+    "parcel-reporter-static-files-copy": "^1.4.0",
+    "postcss": "^8.4.20",
+    "tailwindcss": "^3.2.4"
   },
-  "staticFiles" : {
+  "staticFiles": {
     "staticPath": "static"
   }
 }

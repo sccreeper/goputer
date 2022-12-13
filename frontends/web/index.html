@@ -1,25 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script type="module" src="src/main.js" defer></script>
+    <script type="module" src="./src/main.js" defer></script>
     <script src="wasm_exec.js"></script>
+    <link rel="stylesheet" href="./src/index.css" />
 
-    <title>Document</title>
+    <title>goputer</title>
 </head>
-<body>
-    
-    <h3>Program counter:</h3>
-    <h3>Current instruction:</h3>
 
-    <canvas width="640" height="480" id="render-canvas"></canvas>
+<body class="bg-gray-800 font-roboto font-light">
 
-    <textarea id="code-textarea" cols="30" rows="10"></textarea>
-    <button id="compile-code-button">Compile Code</button>
-    <button id="run-code-button">Run Code</button>
-    <button id="stop-code-button">Stop</button>
+    <div class="text-center align-middle h-32">
+        <h1 class="text-blue-500 text-5xl px-0 py-6 font-bold">goputer</h1>
+    </div>
+
+    <div class="grid grid-cols-3 m-2">
+
+        <div class="content-div mr-4 text-white">
+
+            <div class="m-4">
+
+                <h1 class="sub-heading">Hardware information</h1>
+
+                <div class="bg-gray-700 rounded-lg w-full h-full p-2">
+                    <p class="font-light">Program counter: <span class="code-block">1234</span></p>
+                    <p class="font-light mt-3">Current instruction: <span class="code-block">mov r00 r01</span></p>
+                </div>
+
+            </div>
+
+        </div>
+
+        <canvas width="640" height="480" id="render-canvas" class="rounded-md"></canvas>
+
+        <div class="content-div ml-4">
+            <div class="m-4">
+                <h1 class="sub-heading">Program code</h1>
+                    
+                <textarea placeholder="Write your code here..." id="code-textarea" rows="24" class="font-fira font-normal w-full rounded-lg bg-gray-700 text-white resize-none focus:outline-none p-2" spellcheck="none"></textarea>
+                <div class="mt-4 flex justify-around">
+                    <button class="button-main" id="compile-code-button">Compile Code <i class="bi bi-box-arrow-down"></i></button>
+                    <button class="button-main" id="run-code-button">Run Code <i class="bi bi-play-fill"></i></button>
+                    <button class="button-main bg-red-500" id="stop-code-button">Stop <i class="bi bi-stop-fill"></i></button>
+                </div>
+            </div>
+        </div>
+
+    </div>
 
 </body>
+
 </html>
