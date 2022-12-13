@@ -1,4 +1,4 @@
-// Test oasm file
+// Test gpasm file
 // Moves a single char to text register before looping
 
 def test_string "Hello world, this is a test of strings."
@@ -25,6 +25,10 @@ mov d0 vx1
 mov d0 vy1
 
 int va
+
+clr vx0
+clr vy0
+
 int vt
 
 end

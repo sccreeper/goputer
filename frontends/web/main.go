@@ -81,7 +81,7 @@ func SetRegister(this js.Value, args []js.Value) any {
 
 	js32.Registers[constants.Register(args[0].Int())] = uint32(args[1].Int())
 
-	return js.Null
+	return js.ValueOf(nil)
 
 }
 
@@ -131,15 +131,15 @@ func GetBuffer(this js.Value, args []js.Value) any {
 
 func SendInterrupt(this js.Value, args []js.Value) any {
 
-	if js32.Subscribed(constants.Interrupt(constants.InterruptInts[args[0].String()])) {
+	if js32.Subscribed(constants.Interrupt(args[0].Int())) {
 
-		js32.SubbedInterruptArray = append(js32.SubbedInterruptArray, constants.Interrupt(constants.InterruptInts[args[0].String()]))
+		js32.SubbedInterruptArray = append(js32.SubbedInterruptArray, constants.Interrupt(args[0].Int()))
 
-		return js.Null
+		return js.ValueOf(nil)
 
 	}
 
-	return js.Null
+	return js.ValueOf(nil)
 
 }
 
@@ -162,7 +162,7 @@ func IsSubscribed(this js.Value, args []js.Value) any {
 
 	return js.ValueOf(
 		js32.Subscribed(
-			constants.Interrupt(constants.InterruptInts[args[0].String()]),
+			constants.Interrupt(args[0].Int()),
 		))
 
 }

@@ -5,6 +5,15 @@ import globals from "./globals.js";
 
 var video_text = ""
 
+var previous_mouse_pos = {
+    X: 0,
+    Y: 0,
+}
+var current_mouse_pos = {
+    X: 0,
+    Y: 0,
+}
+
 // Main app logic
 
 export function Compile() {  
@@ -31,6 +40,33 @@ export function Run() {
 
 }
 
+export function handleMouseMove(e) {
+
+    if (globals.vmIsAlive) {
+        if (globals.mouse_over_display) {
+            current_mouse_pos.X = Math.round(e.clientX -  canvas.getBoundingClientRect().left);
+            current_mouse_pos.Y = Math.round(e.clientY -  canvas.getBoundingClientRect().top);        
+        }
+    }
+
+}
+
+export function handleKeyDown(e) {
+    
+    if (globals.vmIsAlive) {
+        globals.keys_down.push(e.keyCode)
+    }
+
+}
+
+export function handleKeyUp(e) {
+    
+    if (globals.vmIsAlive) {
+        globals.keys_up.push(e.keyCode)
+    }
+
+}
+
 //Performs one cycle of the VM & Updates UI
 export function Cycle() {
     
@@ -46,6 +82,8 @@ export function Cycle() {
         console.error("VM isn't alive therefore can't run code.");
 
     } else {
+
+        //Handle called interrupts.
 
         var x = getInterrupt()
 
@@ -129,6 +167,49 @@ export function Cycle() {
             default:
                 break;
         }
+
+        // Handle subscribed interrupts
+
+        //Mouse
+
+        if ((previous_mouse_pos.X != current_mouse_pos.X) || (previous_mouse_pos.Y != current_mouse_pos.Y)) {
+            
+            setRegister(registerInts["mx"], previous_mouse_pos.X);
+            setRegister(registerInts["my"], previous_mouse_pos.Y);
+
+            previous_mouse_pos.X = current_mouse_pos.X;
+            previous_mouse_pos.Y = current_mouse_pos.Y
+        
+            if (isSubscribed(interruptInts["mm"])) {
+
+                sendInterrupt(interruptInts["mm"]);
+            }
+
+        }
+
+        //Keyboard
+
+        if (globals.keys_down.length > 0 ) {
+            
+            setRegister(registerInts["kc"], globals.keys_down.pop())
+
+            if (isSubscribed(interruptInts["kd"])) {
+                sendInterrupt(interruptInts["kd"])
+            }
+
+        }
+
+        if (globals.keys_up.length > 0) {
+            
+            setRegister(registerInts["kp"], globals.keys_up.pop())
+
+            if (isSubscribed(interruptInts["ku"])) {
+                sendInterrupt(interruptInts["ku"])
+            }
+
+        }
+
+        //Finally cycle VM.
 
         stepVM();
 

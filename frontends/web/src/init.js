@@ -1,8 +1,9 @@
-import { Compile, Run } from "./app";
+import { Compile, handleKeyDown, handleKeyUp, handleMouseMove, Run } from "./app";
 import { clearCanvas } from "./canvas_util";
 import globals from "./globals";
 
-export const FPS = 60;
+//Cycles per second
+export const CPS = 240;
 
 //Init Go WASM
 const go = new Go();
@@ -44,7 +45,14 @@ document.getElementById("stop-code-button").addEventListener("click", function (
     globals.oscillator.stop();
 
     globals.sound_started = false;
+    globals.vmIsAlive = false;
 })
 
+canvas.addEventListener("mouseenter", () => {globals.mouse_over_display = true})
+canvas.addEventListener("mouseleave", () => {globals.mouse_over_display = false})
+canvas.addEventListener("mousemove", handleMouseMove)
+
+document.addEventListener("keydown", handleKeyDown)
+document.addEventListener("keyup", handleKeyUp)
 
 export {canvas, renderContext}

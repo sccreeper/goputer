@@ -139,7 +139,7 @@ func Run(program []byte, args []string) {
 					str_temp := string(gp32.TextBuffer[:])
 					str_temp = strings.ReplaceAll(str_temp, "\x00", "")
 					text_string += strings.ReplaceAll(str_temp, `\n`, "\n")
-					rl.DrawText(text_string, 0, 0, 16, colour.ConvertColour(gp32.Registers[c.RVideoColour]))
+					rl.DrawText(text_string, int32(gp32.Registers[c.RVideoX0]), int32(gp32.Registers[c.RVideoY0]), 16, colour.ConvertColour(gp32.Registers[c.RVideoColour]))
 				}
 
 			case c.IntVideoClear:

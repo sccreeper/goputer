@@ -86,7 +86,7 @@ while True:
                     util.convert_colour(gppy.GetRegister(c.Register.RVideoColour)),
                     )
                 
-                video_surface.blit(txt_img, (0, 0))
+                video_surface.blit(txt_img, (gppy.GetRegister(c.Register.RVideoX0), gppy.GetRegister(c.Register.RVideoY0)))
 
         case c.Interrupt.IntVideoClear:
             video_surface.fill(util.convert_colour(gppy.GetRegister(c.Register.RVideoColour)))
