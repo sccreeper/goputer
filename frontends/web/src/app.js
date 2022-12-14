@@ -1,4 +1,4 @@
-import { renderContext, canvas } from "./init";
+import { renderContext, canvas, currentInstructionHTML, programCounterHTML } from "./init";
 import global from "./globals.js";
 import { clearCanvas, drawLine, drawRect, drawText, setPixel } from "./canvas_util";
 import globals from "./globals.js";
@@ -206,6 +206,11 @@ export function Cycle() {
             }
 
         }
+
+        //Update hardware info
+
+        currentInstructionHTML.innerHTML = String(currentItn());
+        programCounterHTML.innerHTML = getRegister(registerInts["prc"])
 
         //Finally cycle VM.
 

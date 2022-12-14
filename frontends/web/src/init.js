@@ -11,6 +11,10 @@ await WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then
     go.run(result.instance);
 });
 
+//Debug UI
+const programCounterHTML = document.getElementById("program-counter");
+const currentInstructionHTML = document.getElementById("current-instruction");
+
 //Init Canvas
 const canvas = document.getElementById("render-canvas")
 const renderContext = canvas.getContext('2d');
@@ -60,4 +64,4 @@ canvas.addEventListener("mousemove", handleMouseMove)
 document.addEventListener("keydown", handleKeyDown)
 document.addEventListener("keyup", handleKeyUp)
 
-export {canvas, renderContext}
+export {canvas, renderContext, programCounterHTML, currentInstructionHTML}

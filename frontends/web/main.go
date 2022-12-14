@@ -20,6 +20,10 @@ var js32SubbedInterruptChannel chan constants.Interrupt = make(chan constants.In
 
 var program_bytes []byte
 
+var itn_map map[uint32]string
+var register_map map[uint32]string
+var interrupt_map map[constants.Interrupt]string
+
 //Custom compile and run methods.
 
 func Compile() js.Func {
@@ -181,6 +185,29 @@ func Step(this js.Value, args []js.Value) any {
 
 }
 
+func ItnStr(this js.Value, args []js.Value) any {
+
+	//Generate current instruction string
+
+	var arg_text string = ""
+
+	switch js32.Opcode {
+	case constants.IJump, constants.ICall, constants.IConditionalJump, constants.IConditionalCall:
+		arg_text = util.ConvertHex(js32.ArgLarge)
+	default:
+		if util.SliceContains(constants.SingleArgInstructions, js32.Opcode) && js32.Opcode != constants.ICallInterrupt {
+			arg_text = register_map[js32.ArgLarge]
+		} else if js32.Opcode == constants.ICallInterrupt {
+			arg_text = interrupt_map[constants.Interrupt(js32.ArgLarge)]
+		} else {
+			arg_text = fmt.Sprintf("%s %s", register_map[uint32(js32.ArgSmall0)], register_map[uint32(js32.ArgSmall1)])
+		}
+	}
+
+	return js.ValueOf(fmt.Sprintf("%s %s", itn_map[uint32(js32.Opcode)], arg_text))
+
+}
+
 //Other
 
 func ConvertColour(this js.Value, args []js.Value) any {
@@ -194,6 +221,26 @@ func ConvertColour(this js.Value, args []js.Value) any {
 
 func main() {
 	fmt.Println("JS32 init...")
+
+	// Reversed maps
+
+	itn_map = make(map[uint32]string)
+
+	for k, v := range constants.InstructionInts {
+		itn_map[v] = k
+	}
+
+	register_map = make(map[uint32]string)
+
+	for k, v := range constants.RegisterInts {
+		register_map[v] = k
+	}
+
+	interrupt_map = make(map[constants.Interrupt]string)
+
+	for k, v := range constants.InterruptInts {
+		interrupt_map[v] = k
+	}
 
 	// VM init methods
 
@@ -210,6 +257,8 @@ func main() {
 	js.Global().Set("getInterrupt", js.FuncOf(GetInterrupt))
 	js.Global().Set("sendInterrupt", js.FuncOf(SendInterrupt))
 	js.Global().Set("isSubscribed", js.FuncOf(IsSubscribed))
+
+	js.Global().Set("currentItn", js.FuncOf(ItnStr))
 
 	js.Global().Set("stepVM", js.FuncOf(Step))
 

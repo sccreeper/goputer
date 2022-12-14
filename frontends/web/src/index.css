@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fira+Mono&family=Roboto+Condensed:wght@300;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&family=Heebo:wght@400;700&display=swap');
 @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.2/font/bootstrap-icons.css");
 
 @tailwind base;
@@ -11,34 +11,43 @@
     .button-main {
 
         @apply bg-blue-700;
+        @apply border-blue-300;
         @apply rounded-lg;
         @apply text-white;
         @apply font-bold;
         @apply p-3;
+        @apply border;
+        @apply transition-all;
 
+
+    }
+
+    .button-main:hover {
+
+        @apply bg-blue-600;
 
     }
 
     .content-div {
-        @apply bg-gray-600;
+        @apply bg-gray-700;
         @apply rounded-xl;
+        @apply shadow-xl;
     }
 
-    .font-roboto {
-        font-family: 'Roboto Condensed', sans-serif;
+    .font-heebo {
+        font-family: 'Heebo', sans-serif;
     }
 
     .font-fira {
         font-family: 'Fira Mono', monospace;
     }
 
-    .code-block {
-        @apply bg-gray-800;
+    .table-code {
+        @apply bg-gray-900;
         @apply text-gray-400; 
         @apply font-fira;
-        @apply rounded-md;
-        @apply ml-1;
         @apply p-1;
+        @apply rounded-md;
     }
 
     .sub-heading {
