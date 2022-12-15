@@ -56,4 +56,8 @@
         @apply font-bold;
         @apply mb-3;
     }
+
+    .md-grid-rows {
+        grid-template-rows: auto 16em;
+    }
 }
