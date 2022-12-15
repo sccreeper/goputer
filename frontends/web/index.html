@@ -12,37 +12,41 @@
     <title>goputer</title>
 </head>
 
-<body class="bg-gray-800 font-heebo font-normal">
+<body class="bg-gray-800 font-heebo font-normal text-white">
 
-    <div class="text-center align-middle h-32 font-fira md:h-16">
-        <h1 class="text-blue-500 text-5xl px-0 py-6 font-bold md:text-2xl">goputer</h1>
+    <div class="text-center align-middle h-16 font-fira">
+        <h1 class="text-blue-500 px-0 py-6 font-bold text-2xl">goputer<sub>beta</sub></h1>
     </div>
 
-    <div class="grid grid-cols-3 m-2 md:grid-cols-2 md:md-grid-rows md:mr-0">
+    <div class="grid m-2 grid-cols-2 md-grid-rows mr-0">
 
-        <div class="content-div mr-4 md:row-span-2">
+        <div class="content-div mr-4 row-span-2">
             <div class="m-4">
                 <h1 class="sub-heading">Program code</h1>
-                    
-                <textarea placeholder="Write your code here..." id="code-textarea" rows="24" class="font-fira font-normal w-full rounded-lg bg-gray-800 text-white resize-none focus:outline-none p-2" spellcheck="false"></textarea>
+
+                <textarea placeholder="Write your code here..." id="code-textarea" rows="24"
+                    class="font-fira font-normal w-full rounded-lg bg-gray-800 text-white resize-none focus:outline-none p-3"
+                    spellcheck="false"></textarea>
                 <div class="mt-4 flex justify-around">
-                    <button class="button-main" id="compile-code-button">Compile Code <i class="bi bi-box-arrow-down"></i></button>
+                    <button class="button-main" id="compile-code-button">Compile Code <i
+                            class="bi bi-box-arrow-down"></i></button>
                     <button class="button-main" id="run-code-button">Run Code <i class="bi bi-play-fill"></i></button>
-                    <button class="button-main bg-red-700 border-red-400 hover:bg-red-600" id="stop-code-button">Reset <i class="bi bi-stop-fill"></i></button>
+                    <button class="button-main bg-red-700 border-red-400 hover:bg-red-600" id="stop-code-button">Reset
+                        <i class="bi bi-stop-fill"></i></button>
                 </div>
             </div>
         </div>
 
         <canvas width="640" height="480" id="render-canvas" class="rounded-md shadow-xl"></canvas>
-        
-        <div class="content-div ml-4 text-white md:mt-4 md:ml-0 md:mr-8">
+
+        <div class="content-div mt-4 ml-0 mr-8">
 
             <div class="m-4">
 
                 <h1 class="sub-heading">Hardware</h1>
 
                 <div class="bg-gray-800 rounded-lg w-full h-1/2 p-2">
-                    
+
                     <grid class="grid grid-cols-2 grid-rows-1">
 
                         <grid class="grid grid-cols-8 grid-rows-1" id="bulb-container">
@@ -67,7 +71,7 @@
                             <div reg="io15" on="false" class="switch"></div>
                         </grid>
                     </grid>
-                    
+
                 </div>
 
 
@@ -88,6 +92,37 @@
 
         </div>
 
+    </div>
+
+    <div class="content-div mt-4 mr-8 m-2 p-2">
+
+        <div class="m-4">
+            <h1 class="sub-heading">Info</h1>
+
+            <div class="bg-gray-800 rounded-lg w-full p-3">
+
+                <p>goputer is a computer emulator/virtual machine intended to demonstrate how computers work at a low
+                    level.</p>
+
+                <br>
+
+                <strong>Helpful links:</strong>
+
+                <ul class="list-disc ml-4">
+                    <li><i class="bi bi-book"></i><a target="_blank" class="in-para" href="https://github.com/sccreeper/goputer/wiki">
+                        Documentation</a></li>
+                    <li><i class="bi bi-git"></i><a target="_blank" class="in-para" href="https://github.com/sccreeper/goputer">
+                        Repo</a></li>
+                    
+                </ul>
+
+            </div>
+        </div>
+
+    </div>
+
+    <div class="text-center align-middle h-4 m-4 font-fira">
+        <h1 class="text-gray-400 text-xs">Made by <a target="_blank" href="https://github.com/sccreeper">Oscar Peace.</a></h1>
     </div>
 
 </body>

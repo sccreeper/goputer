@@ -95,4 +95,13 @@
         @apply border-green-400;
     }
 
+    a.in-para {
+        @apply text-blue-500;
+        @apply transition-all;
+    }
+
+    a:hover {
+        @apply text-blue-300;
+    }
+
 }
