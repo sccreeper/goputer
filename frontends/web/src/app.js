@@ -12,6 +12,29 @@ var current_mouse_pos = {
     Y: 0,
 }
 
+//Other app logic
+
+export function IOToggle(e) {
+
+    if (!globals.vmIsAlive) {
+        return
+    }
+
+    if (e.target.getAttribute("on") == "false") {
+        e.target.setAttribute("on", "true")
+    } else {
+        e.target.setAttribute("on", "false")
+    }
+
+    globals.switch_queue.push(
+        {
+            register: e.target.getAttribute("reg"),
+            enabled: (e.target.getAttribute("on") == "true") ? true : false,
+        }
+        
+    )
+}
+
 // Main app logic
 
 export function Compile() {  
@@ -204,6 +227,31 @@ export function Cycle() {
             if (isSubscribed(interruptInts["ku"])) {
                 sendInterrupt(interruptInts["ku"])
             }
+
+        }
+
+        //IO Switches
+
+        globals.switch_queue.forEach(element => {
+        
+            setRegister(registerInts[element.register], (element.enabled) ? 1 : 0)
+
+            if (isSubscribed(interruptInts[element.register])) {
+                sendInterrupt(interruptInts[element.register])
+            }
+
+        });
+
+        globals.switch_queue = [];
+
+        //IO bulbs
+
+        for (let i = 0; i < globals.io_bulb_names.length; i++) {
+            
+            globals.io_bulbs[globals.io_bulb_names[i]].setAttribute(
+                "on",
+                (getRegister(registerInts[globals.io_bulb_names[i]]) > 0) ? "true" : "false"
+            )
 
         }
 

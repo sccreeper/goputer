@@ -24,7 +24,7 @@
             <div class="m-4">
                 <h1 class="sub-heading">Program code</h1>
                     
-                <textarea placeholder="Write your code here..." id="code-textarea" rows="24" class="font-fira font-normal w-full rounded-lg bg-gray-800 text-white resize-none focus:outline-none p-2" spellcheck="none"></textarea>
+                <textarea placeholder="Write your code here..." id="code-textarea" rows="24" class="font-fira font-normal w-full rounded-lg bg-gray-800 text-white resize-none focus:outline-none p-2" spellcheck="false"></textarea>
                 <div class="mt-4 flex justify-around">
                     <button class="button-main" id="compile-code-button">Compile Code <i class="bi bi-box-arrow-down"></i></button>
                     <button class="button-main" id="run-code-button">Run Code <i class="bi bi-play-fill"></i></button>
@@ -39,9 +39,39 @@
 
             <div class="m-4">
 
-                <h1 class="sub-heading">Hardware information</h1>
+                <h1 class="sub-heading">Hardware</h1>
 
-                <div class="bg-gray-800 rounded-lg w-full h-full p-2">
+                <div class="bg-gray-800 rounded-lg w-full h-1/2 p-2">
+                    
+                    <grid class="grid grid-cols-2 grid-rows-1">
+
+                        <grid class="grid grid-cols-8 grid-rows-1" id="bulb-container">
+                            <div reg="io00" on="false" class="bulb"></div>
+                            <div reg="io01" on="false" class="bulb"></div>
+                            <div reg="io02" on="false" class="bulb"></div>
+                            <div reg="io03" on="false" class="bulb"></div>
+                            <div reg="io04" on="false" class="bulb"></div>
+                            <div reg="io05" on="false" class="bulb"></div>
+                            <div reg="io06" on="false" class="bulb"></div>
+                            <div reg="io07" on="false" class="bulb"></div>
+                        </grid>
+
+                        <grid class="grid grid-cols-8 grid-rows-1" id="switch-container">
+                            <div reg="io08" on="false" class="switch"></div>
+                            <div reg="io09" on="false" class="switch"></div>
+                            <div reg="io10" on="false" class="switch"></div>
+                            <div reg="io11" on="false" class="switch"></div>
+                            <div reg="io12" on="false" class="switch"></div>
+                            <div reg="io13" on="false" class="switch"></div>
+                            <div reg="io14" on="false" class="switch"></div>
+                            <div reg="io15" on="false" class="switch"></div>
+                        </grid>
+                    </grid>
+                    
+                </div>
+
+
+                <div class="bg-gray-800 rounded-lg w-full h-1/2 p-2 mt-4">
                     <table class="w-full border-spacing-2 border-separate table-fixed">
                         <tr>
                             <td>Program counter</td>

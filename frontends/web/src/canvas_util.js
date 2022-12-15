@@ -34,7 +34,7 @@ export function drawLine(ctx, colour, x0, y0, x1, y1) {
 export function drawText(ctx, colour, x0, y0, text) {
 
     ctx.fillStyle = colour;
-    ctx.font = "24px Arial";
+    ctx.font = "24px Fira Mono";
     ctx.fillText(text, x0, y0 + 24);
 
 }

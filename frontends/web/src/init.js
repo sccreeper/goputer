@@ -1,4 +1,4 @@
-import { Compile, handleKeyDown, handleKeyUp, handleMouseMove, Run } from "./app";
+import { Compile, handleKeyDown, handleKeyUp, handleMouseMove, IOToggle, Run } from "./app";
 import { clearCanvas } from "./canvas_util";
 import globals from "./globals";
 
@@ -56,6 +56,16 @@ document.getElementById("stop-code-button").addEventListener("click", function (
 
     clearCanvas(renderContext, "black");
 })
+
+//Init IO elements
+
+for (let i = 0; i < document.getElementById("bulb-container").children.length; i++) {
+    globals.io_bulbs[document.getElementById("bulb-container").children[i].getAttribute("reg")] = document.getElementById("bulb-container").children[i]
+}
+
+for (let i = 0; i < document.getElementById("switch-container").children.length; i++) {
+    document.getElementById("switch-container").children[i].addEventListener("click", IOToggle)
+}
 
 canvas.addEventListener("mouseenter", () => {globals.mouse_over_display = true})
 canvas.addEventListener("mouseleave", () => {globals.mouse_over_display = false})
