@@ -11,6 +11,17 @@ await WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then
     go.run(result.instance);
 });
 
+//Set the version
+
+fetch("/ver")
+.then((response) => response.text())
+.then((data) => {
+
+    document.getElementById("version").innerHTML = data.substring(0, 10);
+    document.getElementById("version").setAttribute("href", `https://github.com/sccreeper/goputer/commit/${data}`)
+
+})
+
 //Debug UI
 const programCounterHTML = document.getElementById("program-counter");
 const currentInstructionHTML = document.getElementById("current-instruction");
