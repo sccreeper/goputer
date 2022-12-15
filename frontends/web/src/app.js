@@ -56,6 +56,8 @@ export function Run() {
 
         global.vmIsAlive = true;
         global.runInterval = setInterval(Cycle, Math.round(1000 / global.FPS));
+
+        canvas.setAttribute("running", "true");
         
     }
 
@@ -94,6 +96,7 @@ export function Cycle() {
     if (isFinished()) {
         
         clearInterval(global.runInterval);
+        canvas.setAttribute("running", "false");
         return;
 
     }

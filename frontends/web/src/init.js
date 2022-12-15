@@ -66,6 +66,7 @@ document.getElementById("stop-code-button").addEventListener("click", function (
     globals.video_text = "";
 
     clearCanvas(renderContext, "black");
+    canvas.setAttribute("running", "false");
 })
 
 //Init IO elements

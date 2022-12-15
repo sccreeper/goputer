@@ -104,4 +104,18 @@
         @apply text-blue-300;
     }
 
+    #render-canvas {
+        @apply transition-shadow
+    }
+
+    #render-canvas[running=false] {
+        @apply border;
+        @apply border-gray-500;
+    }
+
+    #render-canvas[running=true] {
+        @apply border;
+        @apply border-blue-500;
+    }
+
 }
