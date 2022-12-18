@@ -30,6 +30,8 @@ type Parser struct {
 	Imported bool
 
 	Verbose bool
+
+	ErrorHandler func(error_type ErrorType, error_text string)
 }
 
 // Takes a string and returns a program structure
@@ -176,10 +178,11 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 			}
 
 			import_parser := Parser{
-				CodeString: string(imported_file),
-				FileName:   p.FileName,
-				Imported:   true,
-				Verbose:    false,
+				CodeString:   string(imported_file),
+				FileName:     p.FileName,
+				Imported:     true,
+				Verbose:      false,
+				ErrorHandler: p.ErrorHandler,
 			}
 
 			imported_program_structure, err := import_parser.Parse()

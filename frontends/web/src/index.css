@@ -118,4 +118,20 @@
         @apply border-blue-500;
     }
 
+    .good-error {
+
+        @apply text-lg;
+        @apply text-green-400;
+        @apply font-bold;
+
+    }
+
+    .bad-error {
+
+        @apply text-lg;
+        @apply text-red-600;
+        @apply font-bold;
+
+    }
+
 }

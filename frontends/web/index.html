@@ -24,7 +24,7 @@
             <div class="m-4">
                 <h1 class="sub-heading">Program code</h1>
 
-                <textarea placeholder="Write your code here..." id="code-textarea" rows="24"
+                <textarea placeholder="Write your code here..." id="code-textarea" rows="16"
                     class="font-fira font-normal w-full rounded-lg bg-gray-800 text-white resize-none focus:outline-none p-3"
                     spellcheck="false"></textarea>
                 <div class="mt-4 flex justify-around">
@@ -33,6 +33,18 @@
                     <button class="button-main" id="run-code-button">Run Code <i class="bi bi-play-fill"></i></button>
                     <button class="button-main bg-red-700 border-red-400 hover:bg-red-600" id="stop-code-button">Reset
                         <i class="bi bi-stop-fill"></i></button>
+                </div>
+
+                <h1 class="sub-heading">Info</h1>
+
+                <div class="bg-gray-800 rounded-lg w-full h-36 p-2 overflow-y-auto">
+                    
+                    <button class="sticky top-0 z-10 float-right button-main" id="error-clear-button">Clear <i class="bi bi-trash-fill"></i></button>
+
+                    <div id="error-div">
+                        <p class="text-center w-full">No errors.</p>
+                    </div>
+                    
                 </div>
             </div>
         </div>

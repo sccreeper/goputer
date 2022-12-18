@@ -86,4 +86,18 @@ canvas.addEventListener("mousemove", handleMouseMove)
 document.addEventListener("keydown", handleKeyDown)
 document.addEventListener("keyup", handleKeyUp)
 
+globals.error_div = document.getElementById("error-div")
+
+document.getElementById("error-clear-button").addEventListener("click", (e) => {
+
+    let p = document.createElement("p")
+    p.textContent = "No errors."
+    p.classList.add("text-center", "w-full");
+
+    globals.error_count = 0;
+
+    globals.error_div.replaceChildren(p);
+
+})
+
 export {canvas, renderContext, programCounterHTML, currentInstructionHTML}

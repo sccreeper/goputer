@@ -31,10 +31,11 @@ func Compile() js.Func {
 	compile_func := js.FuncOf(func(this js.Value, args []js.Value) any {
 
 		p := compiler.Parser{
-			CodeString: args[0].String(),
-			FileName:   "",
-			Verbose:    false,
-			Imported:   false,
+			CodeString:   args[0].String(),
+			FileName:     "",
+			Verbose:      false,
+			Imported:     false,
+			ErrorHandler: HandleError,
 		}
 
 		program_structure, err := p.Parse()
@@ -49,6 +50,12 @@ func Compile() js.Func {
 	})
 
 	return compile_func
+
+}
+
+func HandleError(error_type compiler.ErrorType, error_text string) {
+
+	js.Global().Call("showError", 1, js.ValueOf(error_text))
 
 }
 

@@ -77,7 +77,7 @@ func _compiler(ctx *cli.Context) error {
 
 	//Assemble program & write to disk
 
-	assembled_program, err := compiler.Compile(string(data), compiler_config)
+	assembled_program, err := compiler.Compile(string(data), compiler_config, error_handler)
 	util.CheckError(err)
 
 	//If standlone write to disk differently
@@ -180,4 +180,11 @@ func _standalone(program []byte) []byte {
 	)
 
 	return final_code.Bytes()
+}
+
+func error_handler(error_type compiler.ErrorType, error_text string) {
+
+	fmt.Println(error_text)
+	os.Exit(1)
+
 }

@@ -5,7 +5,6 @@ package compiler
 import (
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/fatih/color"
@@ -38,37 +37,32 @@ var ItalicCode color.Color = *color.New(color.Italic)
 // Handles a parsing error
 func (p *Parser) parsing_error(e error, error_type ErrorType) {
 
-	fmt.Println()
+	var error_text string
 
-	RedError.Println("Error")
+	error_text += "Error\n"
 
 	if p.LineIndex != -1 {
-		fmt.Printf("In file '%s' on line %d\n", p.FileName, p.LineIndex+1)
+		error_text += fmt.Sprintf("In file '%s' on line %d\n", p.FileName, p.LineIndex+1)
 	} else {
-		fmt.Printf("In file '%s'\n", p.FileName)
+		error_text += fmt.Sprintf("In file '%s'\n", p.FileName)
 	}
 
-	fmt.Println()
-	fmt.Println(format_line(p.CurrentLine))
-	fmt.Println()
+	error_text += format_line(p.CurrentLine) + "\n"
 
 	switch e {
 	case ErrSyntax:
-		fmt.Printf("%s %s\n", RedError.Sprint("Syntax error:"), error_type)
-		os.Exit(1)
+		error_text += fmt.Sprintf("%s %s\n", RedError.Sprint("Syntax error:"), error_type)
 	case ErrSymbol:
-		fmt.Printf("%s %s\n", RedError.Sprint("Symbol error:"), error_type)
-		os.Exit(1)
+		error_text += fmt.Sprintf("%s %s\n", RedError.Sprint("Symbol error:"), error_type)
 	case ErrDoesNotExist:
-		fmt.Printf("%s %s\n", RedError.Sprint("Does not exist:"), error_type)
-		os.Exit(1)
+		error_text += fmt.Sprintf("%s %s\n", RedError.Sprint("Does not exist:"), error_type)
 	case ErrInvalidArgument:
-		fmt.Printf("%s %s\n", RedError.Sprint("Invalid argument:"), error_type)
-		os.Exit(1)
+		error_text += fmt.Sprintf("%s %s\n", RedError.Sprint("Invalid argument:"), error_type)
 	case ErrImport:
-		fmt.Printf("%s %s\n", RedError.Sprint("Import error:"), error_type)
-		os.Exit(1)
+		error_text += fmt.Sprintf("%s %s\n", RedError.Sprint("Import error:"), error_type)
 	}
+
+	p.ErrorHandler(error_type, error_text)
 
 }
 

@@ -1,7 +1,7 @@
 import { renderContext, canvas, currentInstructionHTML, programCounterHTML } from "./init";
-import global from "./globals.js";
+import globals from "./globals.js"
 import { clearCanvas, drawLine, drawRect, drawText, setPixel } from "./canvas_util";
-import globals from "./globals.js";
+import { ShowError, ErrorTypes } from "./error";
 
 var previous_mouse_pos = {
     X: 0,
@@ -37,16 +37,23 @@ export function IOToggle(e) {
 
 // Main app logic
 
-export function Compile() {  
+export function Compile() {
 
+    globals.compile_failed = false;
     compileCode(document.getElementById("code-textarea").value)
-    global.codeHasBeenCompiled = true;
+    globals.codeHasBeenCompiled = true;
+
+    if(!globals.compile_failed) {
+
+        ShowError(ErrorTypes.Success, "Code compiled successfully!");
+
+    }
 
 }
 
 export function Run() { 
 
-    if (!global.codeHasBeenCompiled) {
+    if (!globals.codeHasBeenCompiled) {
 
         console.error("No code has been compiled!");
 
@@ -54,8 +61,8 @@ export function Run() {
 
         initVM();
 
-        global.vmIsAlive = true;
-        global.runInterval = setInterval(Cycle, Math.round(1000 / global.FPS));
+        globals.vmIsAlive = true;
+        globals.runInterval = setInterval(Cycle, Math.round(1000 / globals.FPS));
 
         canvas.setAttribute("running", "true");
         
@@ -95,13 +102,13 @@ export function Cycle() {
     
     if (isFinished()) {
         
-        clearInterval(global.runInterval);
+        clearInterval(globals.runInterval);
         canvas.setAttribute("running", "false");
         return;
 
     }
 
-    if (!global.vmIsAlive) {
+    if (!globals.vmIsAlive) {
         
         console.error("VM isn't alive therefore can't run code.");
 

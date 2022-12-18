@@ -7,5 +7,9 @@ module.exports = {
   theme: {
     extend: {},
   },
+  safelist : [
+    "good-error",
+    "bad-error",
+  ],
   plugins: [],
 }
