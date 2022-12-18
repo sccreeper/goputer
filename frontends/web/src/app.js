@@ -39,6 +39,8 @@ export function IOToggle(e) {
 
 export function Compile() {
 
+    globals.error_div.replaceChildren();
+
     globals.compile_failed = false;
     compileCode(document.getElementById("code-textarea").value)
     globals.codeHasBeenCompiled = true;

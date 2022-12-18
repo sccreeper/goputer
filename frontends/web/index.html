@@ -28,23 +28,32 @@
                     class="font-fira font-normal w-full rounded-lg bg-gray-800 text-white resize-none focus:outline-none p-3"
                     spellcheck="false"></textarea>
                 <div class="mt-4 flex justify-around">
-                    <button class="button-main" id="compile-code-button">Compile Code <i
-                            class="bi bi-box-arrow-down"></i></button>
-                    <button class="button-main" id="run-code-button">Run Code <i class="bi bi-play-fill"></i></button>
-                    <button class="button-main bg-red-700 border-red-400 hover:bg-red-600" id="stop-code-button">Reset
+
+                    <button class="button-main" id="compile-code-button"
+                        aria-label="Compile your code before running it." data-microtip-position="top"
+                        role="tooltip">Compile Code <i class="bi bi-box-arrow-down"></i></button>
+
+                    <button class="button-main" id="run-code-button" aria-label="Run your compiled code in goputer."
+                        data-microtip-position="top" role="tooltip">Run Code <i class="bi bi-play-fill"></i></button>
+
+                    <button class="button-main bg-red-700 border-red-400 hover:bg-red-600" id="stop-code-button"
+                        aria-label="Reset and stop goputer." data-microtip-position="top" role="tooltip">Reset
                         <i class="bi bi-stop-fill"></i></button>
+
                 </div>
 
                 <h1 class="sub-heading">Info</h1>
 
                 <div class="bg-gray-800 rounded-lg w-full h-36 p-2 overflow-y-auto">
-                    
-                    <button class="sticky top-0 z-10 float-right button-main" id="error-clear-button">Clear <i class="bi bi-trash-fill"></i></button>
+
+                    <button class="sticky top-0 z-10 float-right button-main" id="error-clear-button"
+                        aria-label="Clear errors" data-microtip-position="top" role="tooltip">Clear <i
+                            class="bi bi-trash-fill"></i></button>
 
                     <div id="error-div">
                         <p class="text-center w-full">No errors.</p>
                     </div>
-                    
+
                 </div>
             </div>
         </div>
@@ -121,11 +130,13 @@
                 <strong>Helpful links:</strong>
 
                 <ul class="list-disc ml-4">
-                    <li><i class="bi bi-book"></i><a target="_blank" class="in-para" href="https://github.com/sccreeper/goputer/wiki">
-                        Documentation</a></li>
-                    <li><i class="bi bi-git"></i><a target="_blank" class="in-para" href="https://github.com/sccreeper/goputer">
-                        Repo</a></li>
-                    
+                    <li><i class="bi bi-book"></i><a target="_blank" class="in-para"
+                            href="https://github.com/sccreeper/goputer/wiki">
+                            Documentation</a></li>
+                    <li><i class="bi bi-git"></i><a target="_blank" class="in-para"
+                            href="https://github.com/sccreeper/goputer">
+                            Repo</a></li>
+
                 </ul>
 
             </div>
@@ -134,7 +145,8 @@
     </div>
 
     <div class="text-center align-middle h-4 m-4 font-fira">
-        <h1 class="text-gray-400 text-xs">goputer version <a id="version" target="_blank"></a>. Made by <a target="_blank" href="https://github.com/sccreeper">Oscar Peace</a>.</h1>
+        <h1 class="text-gray-400 text-xs">goputer version <a id="version" target="_blank"></a>. Made by <a
+                target="_blank" href="https://github.com/sccreeper">Oscar Peace</a>.</h1>
     </div>
 
 </body>
