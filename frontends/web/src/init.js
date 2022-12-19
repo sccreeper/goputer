@@ -3,6 +3,10 @@ import { clearCanvas } from "./canvas_util";
 import globals from "./globals";
 import { GetSharedCode, ShareCode } from "./sharing";
 
+//Get shared code from URL
+
+window.addEventListener("DOMContentLoaded", GetSharedCode);
+
 //Cycles per second
 export const CPS = 240;
 
@@ -102,9 +106,5 @@ document.getElementById("error-clear-button").addEventListener("click", (e) => {
 })
 
 document.getElementById("share-code-button").addEventListener("click", ShareCode)
-
-//Get shared code from URL
-
-window.addEventListener("DOMContentLoaded", GetSharedCode);
 
 export {canvas, renderContext, programCounterHTML, currentInstructionHTML}
