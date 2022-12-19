@@ -35,7 +35,12 @@ export function drawText(ctx, colour, x0, y0, text) {
 
     ctx.fillStyle = colour;
     ctx.font = "24px Fira Mono";
-    ctx.fillText(text, x0, y0 + 24);
+
+    let lines = text.split('\n');
+
+    for (let i = 0; i < lines.length; i++) {
+        ctx.fillText(lines[i], x0, (y0 + 24) + (i * 24));
+    }
 
 }
 

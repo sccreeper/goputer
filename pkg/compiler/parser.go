@@ -266,6 +266,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 				//Remove speech marks
 
 				e[2] = strings.Trim(e[2], "\"")
+				e[2] = strings.Replace(e[2], `\n`, "\n", -1)
 
 				data_array = []byte(e[2])
 

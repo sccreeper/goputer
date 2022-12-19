@@ -57,7 +57,7 @@ export function Run() {
 
     if (!globals.codeHasBeenCompiled) {
 
-        console.error("No code has been compiled!");
+        ShowError(ErrorTypes.Error, "No code has been compiled!")
 
     } else {
 

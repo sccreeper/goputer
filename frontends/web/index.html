@@ -9,13 +9,17 @@
     <script src="wasm_exec.js"></script>
     <link rel="stylesheet" href="./src/index.css" />
 
+    <meta property="og:title" content="goputer"/>
+    <meta property="og:description" content="The goputer playground & website"/>
+    <meta property="og:image" content="logo.png"/>
+
     <title>goputer</title>
 </head>
 
 <body class="bg-gray-800 font-heebo font-normal text-white">
 
-    <div class="text-center align-middle h-16 font-fira">
-        <h1 class="text-blue-500 px-0 py-6 font-bold text-2xl">goputer<sub>beta</sub></h1>
+    <div class="flex justify-center h-16 font-fira">
+        <img src="logo.png?height=64" alt="goputer logo"/>
     </div>
 
     <div class="grid m-2 grid-cols-2 md-grid-rows mr-0">
@@ -62,7 +66,9 @@
             </div>
         </div>
 
-        <canvas width="640" height="480" id="render-canvas" running="false" class="rounded-md"></canvas>
+        <div class="text-center">
+            <canvas width="640" height="480" id="render-canvas" running="false" class="rounded-md inline"></canvas>
+        </div>
 
         <div class="content-div mt-4 ml-0 mr-8">
 
