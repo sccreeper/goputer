@@ -1,6 +1,11 @@
 import { Compile, handleKeyDown, handleKeyUp, handleMouseMove, IOToggle, Run } from "./app";
 import { clearCanvas } from "./canvas_util";
 import globals from "./globals";
+import { GetSharedCode, ShareCode } from "./sharing";
+
+//Get shared code from URL
+
+window.addEventListener("DOMContentLoaded", GetSharedCode);
 
 //Cycles per second
 export const CPS = 240;
@@ -91,7 +96,7 @@ globals.error_div = document.getElementById("error-div")
 document.getElementById("error-clear-button").addEventListener("click", (e) => {
 
     let p = document.createElement("p")
-    p.textContent = "No errors."
+    p.textContent = "No notifications."
     p.classList.add("text-center", "w-full");
 
     globals.error_count = 0;
@@ -99,5 +104,7 @@ document.getElementById("error-clear-button").addEventListener("click", (e) => {
     globals.error_div.replaceChildren(p);
 
 })
+
+document.getElementById("share-code-button").addEventListener("click", ShareCode)
 
 export {canvas, renderContext, programCounterHTML, currentInstructionHTML}
