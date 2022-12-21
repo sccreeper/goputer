@@ -1,4 +1,4 @@
-![goputer logo](./.github/logo.png)
+![goputer logo](./.github/logo-readme.png)
 
 <sup>`Go + Computer = goputer`</sup>
 
