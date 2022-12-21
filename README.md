@@ -1,4 +1,5 @@
-# goputer <!-- omit in toc -->
+![goputer logo](./.github/logo.png)
+
 <sup>`Go + Computer = goputer`</sup>
 
 ---
@@ -17,6 +18,7 @@ A computer emulator/virtual machine intended to demonstrate how computers work a
 - [Credits](#credits)
   - [GP32 Frontend](#gp32-frontend)
   - [goputerpy Frontend](#goputerpy-frontend)
+  - [Web playground/frontend.](#web-playgroundfrontend)
   - [CLI tool](#cli-tool)
   - [GUI launcher](#gui-launcher)
   - [Other](#other)
@@ -48,7 +50,7 @@ A computer emulator/virtual machine intended to demonstrate how computers work a
 
 ### Documentation & getting started.
 
-See the [project wiki](https://github.com/sccreeper/goputer/wiki).
+See the [project wiki](https://github.com/sccreeper/goputer/wiki) or try the playground at [goputer.oscarcp.net](https://goputer.oscarcp.net).
 
 ---
 
@@ -82,6 +84,18 @@ See the [project wiki](https://github.com/sccreeper/goputer/wiki).
   - Used partially for sound generation
 - poetry - [python-poetry/poetry](https://github.com/python-poetry/poetry)
   - Very useful for Python dependency management.
+
+#### Web playground/frontend.
+- Tailwind CSS - [tailwindlabs/tailwindcss](https://github.com/tailwindlabs/tailwindcss)
+  - CSS library used to build the UI.
+- Parcel - [parcel-bundler/parcel](https://github.com/parcel-bundler/parcel)
+  - Module bundler.
+- Parcel Static Files Copy - [elwin013/parcel-reporter-static-files-copy](https://github.com/elwin013/parcel-reporter-static-files-copy)
+  - Used for copying static files into the final dist directory.
+- Bootstrap Icons - [twbs/icons](https://github.com/twbs/icons)
+  - Icons used heavily by the UI.
+- Microtip - [ghosh/microtip](https://github.com/ghosh/microtip)
+  - Tooltip library used in UI.
 
 #### CLI tool
 
