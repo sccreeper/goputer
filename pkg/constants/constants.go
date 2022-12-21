@@ -300,6 +300,8 @@ var SingleArgInstructions = []Instruction{
 	IConditionalCall,
 	IClear,
 	ICallInterrupt,
+	IPush,
+	IPop,
 }
 
 const (
