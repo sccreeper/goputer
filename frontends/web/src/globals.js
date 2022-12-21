@@ -4,6 +4,7 @@ export default {
 
     codeHasBeenCompiled: false,
     vmIsAlive: false,
+    vmInited: false,
     runInterval: null,
     FPS: 60,
     vmWorker: null,
@@ -21,6 +22,7 @@ export default {
     compile_failed: false,
     error_div: null,
     error_count: 0,
+    register_peek_value: null,
 
 }
 

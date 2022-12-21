@@ -1,4 +1,4 @@
-import { renderContext, canvas, currentInstructionHTML, programCounterHTML } from "./init";
+import { renderContext, canvas, currentInstructionHTML, programCounterHTML, peekRegHTML, peekRegInput } from "./init";
 import globals from "./globals.js"
 import { clearCanvas, drawLine, drawRect, drawText, setPixel } from "./canvas_util";
 import { ShowError, ErrorTypes } from "./error";
@@ -35,6 +35,21 @@ export function IOToggle(e) {
     )
 }
 
+export function PeekRegister() {
+    if (peekRegInput.value == "" || !globals.vmInited) {
+        return;
+    } else {
+        if (registerInts[peekRegInput.value] != undefined) {
+            globals.register_peek_value = peekRegInput.value;
+            peekRegHTML.textContent = getRegister(registerInts[globals.register_peek_value]) 
+            peekRegInput.setAttribute("valid-reg", "true");
+        } else {
+            peekRegInput.setAttribute("valid-reg", "false");
+        }
+    
+    }
+}
+
 // Main app logic
 
 export function Compile() {
@@ -65,6 +80,7 @@ export function Run() {
 
         globals.vmIsAlive = true;
         globals.runInterval = setInterval(Cycle, Math.round(1000 / globals.FPS));
+        globals.vmInited = true;
 
         canvas.setAttribute("running", "true");
         
@@ -271,6 +287,10 @@ export function Cycle() {
 
         currentInstructionHTML.innerHTML = String(currentItn());
         programCounterHTML.innerHTML = getRegister(registerInts["prc"])
+
+        if (globals.register_peek_value != null) {
+            peekRegHTML.textContent = getRegister(registerInts[globals.register_peek_value]) 
+        }
 
         //Finally cycle VM.
 

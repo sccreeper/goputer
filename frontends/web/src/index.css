@@ -60,7 +60,7 @@
     }
 
     .md-grid-rows {
-        grid-template-rows: auto 16em;
+        grid-template-rows: auto 18em;
     }
 
     .bulb {
@@ -134,6 +134,22 @@
         @apply text-red-600;
         @apply font-bold;
 
+    }
+
+    .datalist-default {
+        @apply bg-gray-800;
+        @apply border-b;
+        @apply border-gray-400;
+        @apply focus:outline-none;
+
+    }
+
+    .datalist-default[valid-reg=true] {
+        @apply text-white;
+    }
+
+    .datalist-default[valid-reg=false] {
+        @apply text-red-600;
     }
 
 }

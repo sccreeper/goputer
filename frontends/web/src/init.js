@@ -1,4 +1,4 @@
-import { Compile, handleKeyDown, handleKeyUp, handleMouseMove, IOToggle, Run } from "./app";
+import { Compile, handleKeyDown, handleKeyUp, handleMouseMove, IOToggle, PeekRegister, Run } from "./app";
 import { clearCanvas } from "./canvas_util";
 import globals from "./globals";
 import { GetSharedCode, ShareCode } from "./sharing";
@@ -105,6 +105,24 @@ document.getElementById("error-clear-button").addEventListener("click", (e) => {
 
 })
 
+// Populate register keys
+
+var peek_reg_datalist = document.getElementById("peek-reg-datalist");
+
+const peekRegHTML = document.getElementById("peek-reg-value");
+
+Object.keys(registerInts).forEach(element => {
+    
+    let el = document.createElement("option")
+    el.value = element;
+    peek_reg_datalist.appendChild(el);
+
+});
+
+const peekRegInput = document.getElementById("peek-reg");
+peekRegInput.value = "";
+peekRegInput.addEventListener("input", PeekRegister);
+
 document.getElementById("share-code-button").addEventListener("click", ShareCode)
 
-export {canvas, renderContext, programCounterHTML, currentInstructionHTML}
+export {canvas, renderContext, programCounterHTML, currentInstructionHTML, peekRegHTML, peekRegInput}

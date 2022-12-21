@@ -22,7 +22,7 @@
         <img src="logo.png?height=64" alt="goputer logo"/>
     </div>
 
-    <div class="grid m-2 grid-cols-2 md-grid-rows mr-0">
+    <div class="grid m-2 grid-cols-2 md-grid-rows mr-0 pb-3">
 
         <div class="content-div mr-4 row-span-2">
             <div class="m-4">
@@ -106,7 +106,7 @@
                 </div>
 
 
-                <div class="bg-gray-800 rounded-lg w-full h-1/2 p-2 mt-4">
+                <div class="bg-gray-800 rounded-lg w-full h-1/2 overflow-auto p-2 mt-4">
                     <table class="w-full border-spacing-2 border-separate table-fixed">
                         <tr>
                             <td>Program counter</td>
@@ -115,6 +115,13 @@
                         <tr>
                             <td>Current instruction</td>
                             <td class="table-code" id="current-instruction">Empty</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input list="peek-reg-datalist" placeholder="Peek register" id="peek-reg" class="datalist-default" valid-reg="true"/>
+                                <datalist id="peek-reg-datalist"></datalist>
+                            </td>
+                            <td class="table-code" id="peek-reg-value">Empty</td>
                         </tr>
                     </table>
                 </div>
