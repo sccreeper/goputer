@@ -41,13 +41,61 @@ export function PeekRegister() {
     } else {
         if (registerInts[peekRegInput.value] != undefined) {
             globals.register_peek_value = peekRegInput.value;
-            peekRegHTML.textContent = getRegister(registerInts[globals.register_peek_value]) 
+            peekRegHTML.textContent = GetRegisterText(registerInts[globals.register_peek_value]) 
             peekRegInput.setAttribute("valid-reg", "true");
         } else {
             peekRegInput.setAttribute("valid-reg", "false");
         }
     
     }
+}
+
+// Used in conjunction with PeekRegister
+export function GetRegisterText(reg_int) {
+
+    if (reg_int == registerInts["d0"]) {
+        
+        let data = getBuffer("data");
+        let data_string = "";
+
+        let last_val_zero = true;
+
+        data.forEach(element => {
+
+            if (element != 0) {
+                last_val_zero = false;
+                data_string += element.toString() + " ";
+            } else if (element == 0 && !last_val_zero) {
+                last_val_zero = true;
+                data_string += ".. "
+            }
+
+        });
+
+        return data_string;
+
+
+    } else if (reg_int == registerInts["vt"]) {
+        
+        let t_buff = getBuffer("text");
+        
+        var t_codes = []
+
+        t_buff.forEach(element => {
+            
+            if (element != 0) {
+                t_codes.push(element)
+            }
+
+        });
+
+        // Convert from array of ints to chars.
+        return String.fromCharCode(...t_codes)
+
+    } else {
+        return `0x${getRegister(registerInts[globals.register_peek_value]).toString(16).toUpperCase().padEnd(8, "0")} (${getRegister(registerInts[globals.register_peek_value])})`;
+    }
+    
 }
 
 // Main app logic
@@ -289,7 +337,7 @@ export function Cycle() {
         programCounterHTML.innerHTML = getRegister(registerInts["prc"])
 
         if (globals.register_peek_value != null) {
-            peekRegHTML.textContent = getRegister(registerInts[globals.register_peek_value]) 
+            peekRegHTML.textContent = GetRegisterText(registerInts[globals.register_peek_value]) 
         }
 
         //Finally cycle VM.
