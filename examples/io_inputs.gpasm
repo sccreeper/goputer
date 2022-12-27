@@ -11,6 +11,8 @@ mov io13 io05
 mov io14 io06
 mov io15 io07
 
+int iof
+
 end
 
 sub io08 handle_io

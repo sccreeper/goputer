@@ -3,8 +3,10 @@ def t 250
 
 :loop
 incr io00
+int iof
 hlt r00
 decr io00
+int iof
 hlt r00
 jmp loop
 end

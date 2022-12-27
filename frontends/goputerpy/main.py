@@ -28,6 +28,7 @@ pg.display.set_caption(f"goputerpy - {os.path.basename(sys.argv[1])}")
 font = pg.font.SysFont(None, 32)
 
 video_surface = pg.surface.Surface((640, 480))
+brightness_surface = pg.surface.Surface((640, 480))
 io_surface = pg.surface.Surface((640, r.IO_UI_SIZE))
 debug_surface = pg.surface.Surface((640, r.DEBUG_UI_SIZE))
 
@@ -79,14 +80,23 @@ while True:
             else:
                 for b in text:
                     video_text += b.decode()
-                
-                txt_img = font.render(
-                    video_text.replace("\x00", ""), 
-                    True, 
-                    util.convert_colour(gppy.GetRegister(c.Register.RVideoColour)),
-                    )
-                
-                video_surface.blit(txt_img, (gppy.GetRegister(c.Register.RVideoX0), gppy.GetRegister(c.Register.RVideoY0)))
+
+                # Handle newlines
+
+                text_lines = video_text.splitlines()
+
+                line_count = 0
+
+                for l in text_lines:
+                    txt_img = font.render(
+                        l.replace("\x00", ""), 
+                        True, 
+                        util.convert_colour(gppy.GetRegister(c.Register.RVideoColour)),
+                        )
+                    
+                    video_surface.blit(txt_img, (gppy.GetRegister(c.Register.RVideoX0), gppy.GetRegister(c.Register.RVideoY0)  + (line_count * 32)))
+
+                    line_count += 1
 
         case c.Interrupt.IntVideoClear:
             video_surface.fill(util.convert_colour(gppy.GetRegister(c.Register.RVideoColour)))
@@ -130,6 +140,11 @@ while True:
             )
         case c.Interrupt.IntSoundStop:
             sound_manager.stop()
+        case c.Interrupt.IntIOFlush:
+            #Get IO states from registers.
+
+            for i in range(len(io_state)):
+                io_state[i] = True if gppy.GetRegister(c.Register(c.Register.RIO00 + i)) > 0 else False
 
     for event in pg.event.get():
         match event.type:
@@ -189,12 +204,21 @@ while True:
             case _:
                 continue
     
+    #Video brightness
+
+    alpha = 0
+
+    if gppy.GetRegister(c.Register.RVideoBrightness) == 0:
+        alpha = 255
+    else:
+        alpha = round((1 - pow(pow(gppy.GetRegister(c.Register.RVideoBrightness), -1) * 255.0, -1)) * 255)
+
+    brightness_surface.set_alpha(alpha)
+    brightness_surface.fill((0, 0, 0))
+
+    video_surface.blit(brightness_surface, (0, 0))
+
     #Draw IO
-
-    #Get IO states
-
-    for i in range(len(io_state)):
-        io_state[i] = True if gppy.GetRegister(c.Register(c.Register.RIO00 + i)) > 0 else False
 
     io_surface.fill(r.GREY)
 

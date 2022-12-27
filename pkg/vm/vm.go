@@ -5,7 +5,6 @@ import (
 	"errors"
 	"math"
 	comp "sccreeper/goputer/pkg/compiler"
-	"sccreeper/goputer/pkg/constants"
 	c "sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/util"
 	"sync"
@@ -70,6 +69,7 @@ func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt, 
 	machine.SubbedInterruptChannel = subbed_interrupt_channel
 	machine.Finished = false
 	machine.ProgramBounds = comp.StackSize + uint32(len(vm_program[:len(vm_program)-int(comp.PadSize)]))
+	machine.Registers[c.RVideoBrightness] = 255
 
 	machine.Registers[c.RCallStackZeroPointer] = comp.StackSize - comp.CallStackSize
 	machine.Registers[c.RCallStackPointer] = machine.Registers[c.RCallStackZeroPointer]
@@ -186,7 +186,7 @@ func (m *VM) Cycle() {
 			var interrupt c.Interrupt
 
 			if len(m.InterruptQueue) == 0 {
-				interrupt = constants.Interrupt(i)
+				interrupt = c.Interrupt(i)
 			} else {
 				interrupt = c.Interrupt(m.InterruptQueue[len(m.InterruptQueue)-1])
 				m.InterruptQueue = m.InterruptQueue[:len(m.InterruptQueue)-1]

@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
 	"math/rand"
 	"sccreeper/goputer/frontends/gp32/colour"
 	"sccreeper/goputer/frontends/gp32/rendering"
@@ -99,16 +100,6 @@ func Run(program []byte, args []string) {
 
 		//Render IO
 
-		for i := 0; i < 8; i++ {
-
-			if gp32.Registers[i+int(c.RIO00)] != 0 {
-				IO_status[i] = true
-			} else {
-				IO_status[i] = false
-			}
-
-		}
-
 		rl.BeginTextureMode(IOStatusRenderTexture)
 		rendering.RenderIO(IO_status[:], IOToggleSwitches[:])
 		rl.EndTextureMode()
@@ -169,10 +160,43 @@ func Run(program []byte, args []string) {
 				sound.PlaySound(gp32.Registers[c.RSoundWave], gp32.Registers[c.RSoundTone], gp32.Registers[c.RSoundVolume])
 			case c.IntSoundStop:
 				speaker.Clear()
+			case c.IntIOFlush:
+				for i := 0; i < 8; i++ {
+
+					if gp32.Registers[i+int(c.RIO00)] != 0 {
+						IO_status[i] = true
+					} else {
+						IO_status[i] = false
+					}
+
+				}
 
 			}
 		default:
 		}
+
+		// Draw video brightness
+
+		var b float64
+
+		if gp32.Registers[c.RVideoBrightness] == 0 {
+			b = 0xFF
+		} else {
+			b = (1 - math.Pow(math.Pow(float64(gp32.Registers[c.RVideoBrightness]), -1)*255.0, -1)) * 255
+		}
+
+		rl.DrawRectangle(
+			0,
+			0,
+			640,
+			480,
+			rl.Color{
+				0,
+				0,
+				0,
+				uint8(b),
+			},
+		)
 
 		rl.EndTextureMode()
 

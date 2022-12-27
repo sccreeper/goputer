@@ -261,9 +261,36 @@ export function Cycle() {
 
                 break;
 
+            case interruptInts["iof"]:
+                //Set IO states for IO bulbs.
+
+                for (let i = 0; i < globals.io_bulb_names.length; i++) {
+                    
+                    globals.io_bulbs[globals.io_bulb_names[i]].setAttribute(
+                        "on",
+                        (getRegister(registerInts[globals.io_bulb_names[i]]) > 0) ? "true" : "false"
+                    )
+
+                }
+
             default:
                 break;
         }
+
+        // Video brightness
+
+        let col = "";
+
+        // Avoid divide by zero error.
+        if (getRegister(registerInts["vb"]) == 0) {
+            col = "rgba(0, 0, 0, 1)";
+        } else {
+            col = `rgba(0, 0, 0, ${1 - Math.pow((Math.pow(getRegister(registerInts["vb"]), -1)) * 255, -1)})`;
+        }
+
+        console.log(1 - Math.pow((Math.pow(getRegister(registerInts["vb"]), -1)) * 255, -1))
+
+        drawRect(renderContext, col, 0, 0, 640, 480);
 
         // Handle subscribed interrupts
 
@@ -319,17 +346,6 @@ export function Cycle() {
         });
 
         globals.switch_queue = [];
-
-        //IO bulbs
-
-        for (let i = 0; i < globals.io_bulb_names.length; i++) {
-            
-            globals.io_bulbs[globals.io_bulb_names[i]].setAttribute(
-                "on",
-                (getRegister(registerInts[globals.io_bulb_names[i]]) > 0) ? "true" : "false"
-            )
-
-        }
 
         //Update hardware info
 
