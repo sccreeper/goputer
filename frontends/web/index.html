@@ -9,9 +9,9 @@
     <script src="wasm_exec.js"></script>
     <link rel="stylesheet" href="./src/index.css" />
 
-    <meta property="og:title" content="goputer"/>
-    <meta property="og:description" content="The goputer playground & website"/>
-    <meta property="og:image" content="logo.png"/>
+    <meta property="og:title" content="goputer" />
+    <meta property="og:description" content="The goputer playground & website" />
+    <meta property="og:image" content="logo.png" />
 
     <title>goputer</title>
 </head>
@@ -19,7 +19,7 @@
 <body class="bg-gray-800 font-heebo font-normal text-white">
 
     <div class="flex justify-center h-16 font-fira">
-        <img src="logo.png?height=64" alt="goputer logo"/>
+        <img src="logo.png?height=64" alt="goputer logo" />
     </div>
 
     <div class="grid m-2 grid-cols-2 md-grid-rows mr-0 pb-3">
@@ -44,8 +44,8 @@
                         aria-label="Reset and stop goputer." data-microtip-position="top" role="tooltip">Reset
                         <i class="bi bi-stop-fill"></i></button>
 
-                    <button class="button-main" id="share-code-button"
-                        aria-label="Share your program." data-microtip-position="top" role="tooltip">Share
+                    <button class="button-main" id="share-code-button" aria-label="Share your program."
+                        data-microtip-position="top" role="tooltip">Share
                         <i class="bi bi-share-fill"></i></button>
 
                 </div>
@@ -118,10 +118,13 @@
                         </tr>
                         <tr>
                             <td>
-                                <input list="peek-reg-datalist" placeholder="Peek reg/buff" id="peek-reg" class="datalist-default" valid-reg="true"/>
+                                <input list="peek-reg-datalist" placeholder="Peek reg/buff" id="peek-reg"
+                                    class="datalist-default" valid-reg="true" />
                                 <datalist id="peek-reg-datalist"></datalist>
                             </td>
-                            <td><div class="table-code h-8 overflow-y-auto" id="peek-reg-value">Empty</div></td>
+                            <td>
+                                <div class="table-code h-8 overflow-y-auto" id="peek-reg-value">Empty</div>
+                            </td>
                         </tr>
                     </table>
                 </div>
@@ -162,8 +165,9 @@
     </div>
 
     <div class="text-center align-middle h-4 m-4 font-fira">
-        <h1 class="text-gray-400 text-xs">goputer version <a id="version" target="_blank"></a>. Made by <a
-                target="_blank" href="https://github.com/sccreeper">Oscar Peace</a>.</h1>
+        <h1 class="text-gray-400 text-xs">goputer version <a id="version" target="_blank"></a>. Built: <span
+                id="build-date"></span>. Made by <a target="_blank" href="https://github.com/sccreeper">Oscar Peace</a>.
+        </h1>
     </div>
 
 </body>

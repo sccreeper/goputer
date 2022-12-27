@@ -22,8 +22,12 @@ fetch("/ver")
 .then((response) => response.text())
 .then((data) => {
 
-    document.getElementById("version").innerHTML = data.substring(0, 10);
-    document.getElementById("version").setAttribute("href", `https://github.com/sccreeper/goputer/commit/${data}`)
+    let hash = data.split(/\r?\n/)[0];
+    let time = data.split(/\r?\n/)[1];
+
+    document.getElementById("version").textContent = `${hash.substring(0, 10)}`;
+    document.getElementById("version").setAttribute("href", `https://github.com/sccreeper/goputer/commit/${hash}`);
+    document.getElementById("build-date").textContent = time;
 
 })
 
