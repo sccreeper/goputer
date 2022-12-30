@@ -152,4 +152,16 @@
         @apply text-red-600;
     }
 
+    .example-container {
+        @apply mt-1;
+        @apply p-2;
+        @apply border-gray-400;
+        @apply border-b;
+    }
+
+    .example-container h3 {
+        @apply text-sm;
+        @apply font-bold;
+    }
+
 }

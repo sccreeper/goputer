@@ -1,0 +1,7 @@
+examples = [
+    { name="Video Area", description="Draws a white rectangle to the screen", path="area_test"},
+    { name="Hello World", description="Basic hello world example", path="hello_world"},
+    { name="IO Inputs", description="IO Inputs test", path="io_inputs"},
+    { name="Paint", description="Simple paint program", path="line_paint"},
+    { name="Sound", description="Increasing sound frequency", path="sound"}
+]

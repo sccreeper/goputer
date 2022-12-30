@@ -1,14 +1,19 @@
 {
   "devDependencies": {
+    "@parcel/transformer-toml": "^2.8.1",
     "bootstrap-icons": "^1.10.2",
     "microtip": "^0.2.2",
     "parcel": "^2.8.1",
     "parcel-reporter-static-files-copy": "^1.4.0",
     "postcss": "^8.4.20",
+    "process": "^0.11.10",
     "sharp": "^0.31.2",
     "tailwindcss": "^3.2.4"
   },
   "staticFiles": {
     "staticPath": "static"
+  },
+  "dependencies": {
+    "octokit": "^2.0.10"
   }
 }

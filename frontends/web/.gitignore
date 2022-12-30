@@ -4,3 +4,4 @@ main.wasm
 dist
 pages_deploy.sh
 static/*
+.env

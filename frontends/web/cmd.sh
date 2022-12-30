@@ -10,5 +10,4 @@ date >> ./static/ver
 
 cp ./run.sh ./build/
 cp ./pages_deploy.sh ./build/
-
-npx parcel build index.html --dist-dir ./build/dist/
+env $(cat .env) npx parcel build index.html --dist-dir ./build/dist/
