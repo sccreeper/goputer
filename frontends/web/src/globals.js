@@ -23,6 +23,8 @@ export default {
     error_div: null,
     error_count: 0,
     register_peek_value: null,
+    current_reg_peek_value: null,
+    prev_reg_peek_value: null,
 
 }
 

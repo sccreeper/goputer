@@ -93,7 +93,13 @@ export function GetRegisterText(reg_int) {
         return String.fromCharCode(...t_codes)
 
     } else {
-        return `0x${getRegister(registerInts[globals.register_peek_value]).toString(16).toUpperCase().padEnd(8, "0")} (${getRegister(registerInts[globals.register_peek_value])})`;
+        let hex_string = getRegister(registerInts[globals.register_peek_value]).toString(16)
+        hex_string = hex_string.split("")
+
+        hex_string = hex_string.reverse()
+        hex_string = hex_string.join("")
+
+        return `0x${hex_string.toUpperCase().padStart(8, "0")} (${getRegister(registerInts[globals.register_peek_value])})`;
     }
     
 }
@@ -352,8 +358,12 @@ export function Cycle() {
         currentInstructionHTML.innerHTML = String(currentItn());
         programCounterHTML.innerHTML = getRegister(registerInts["prc"])
 
-        if (globals.register_peek_value != null) {
-            peekRegHTML.textContent = GetRegisterText(registerInts[globals.register_peek_value]) 
+        if (globals.register_peek_value != null && GetRegisterText(registerInts[globals.register_peek_value]) != globals.prev_reg_peek_value) {
+
+            globals.current_reg_peek_value = GetRegisterText(registerInts[globals.register_peek_value])
+            peekRegHTML.textContent = globals.current_reg_peek_value
+            globals.prev_reg_peek_value = globals.current_reg_peek_value
+
         }
 
         //Finally cycle VM.
