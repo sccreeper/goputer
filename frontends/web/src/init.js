@@ -2,7 +2,7 @@ import { Compile, handleKeyDown, handleKeyUp, handleMouseMove, IOToggle, PeekReg
 import { clearCanvas } from "./canvas_util";
 import globals from "./globals";
 import { GetSharedCode, ShareCode } from "./sharing";
-import {Octokit, App} from "octokit";
+import {Octokit} from "octokit";
 import { ExamplesInit } from "./examples";
 
 //Get shared code from URL

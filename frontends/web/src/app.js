@@ -116,6 +116,8 @@ export function Compile() {
 
     if(!globals.compile_failed) {
 
+        document.getElementById("run-code-button").disabled = false;
+
         ShowError(ErrorTypes.Success, "Code compiled successfully!");
 
     }

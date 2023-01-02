@@ -30,6 +30,10 @@
 
     }
 
+    .button-main:disabled {
+        @apply bg-blue-800;
+    }
+
     .content-div {
         @apply bg-gray-700;
         @apply rounded-xl;
