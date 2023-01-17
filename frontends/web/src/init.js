@@ -4,11 +4,7 @@ import globals from "./globals";
 import { GetSharedCode, ShareCode } from "./sharing";
 import {Octokit} from "octokit";
 import { ExamplesInit } from "./examples";
-import { NewFile, SwitchFocus } from "./imports";
-
-//Get shared code from URL
-
-window.addEventListener("DOMContentLoaded", GetSharedCode);
+import { NewFileUI, SwitchFocus } from "./imports";
 
 //Cycles per second
 export const CPS = 240;
@@ -24,7 +20,7 @@ document.getElementById("code-textarea").addEventListener("change", (e) => {
 })
 
 export const new_file = document.getElementById("new-file");
-new_file.addEventListener("click", NewFile)
+new_file.addEventListener("click", NewFileUI)
 
 document.getElementById("main-gpasm").addEventListener("click", SwitchFocus)
 
@@ -150,5 +146,7 @@ peekRegInput.value = "";
 peekRegInput.addEventListener("input", PeekRegister);
 
 document.getElementById("share-code-button").addEventListener("click", ShareCode)
+
+GetSharedCode();
 
 export {canvas, renderContext, programCounterHTML, currentInstructionHTML, peekRegHTML, peekRegInput}

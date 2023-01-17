@@ -1,14 +1,21 @@
 import globals from "./globals"
 import { files_container, new_file } from "./init"
 
-// Initializes a new file, asking the user for it's name.
-export function NewFile(e) {
 
+// Creation of a file from the UI.
+export function NewFileUI(e) {
+    
     let file_name = prompt("New file name:", `new_${getFiles().length+1}.gpasm`)
 
     if (file_name == null || file_name == "" || file_name == ".gpasm") {
         file_name = `new_${getFiles().length+1}.gpasm`
     }
+
+    NewFile(file_name)
+}
+
+// Initializes a new file, asking the user for it's name.
+export function NewFile(file_name) {
 
     updateFile(file_name, "")
 

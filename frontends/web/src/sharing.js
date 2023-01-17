@@ -1,4 +1,5 @@
 import { ErrorTypes, ShowError } from "./error";
+import { NewFile } from "./imports";
 
 // Extracts shared code from URL
 export function GetSharedCode() {
@@ -10,8 +11,17 @@ export function GetSharedCode() {
     let base64_string = window.location.search;
     base64_string = base64_string.substring(3, base64_string.length);
 
+    let code_json = JSON.parse(atob(base64_string))
 
-    document.getElementById("code-textarea").value = atob(base64_string);
+    for (const [key, value] of Object.entries(code_json)) {
+
+        if (key != "main.gpasm") {
+            NewFile(key)    
+        }
+        updateFile(key, atob(value))
+        document.getElementById("code-textarea").value = atob(value);
+
+    }
 
     ShowError(ErrorTypes.Success, "Imported code from shared URL");
 
@@ -19,12 +29,22 @@ export function GetSharedCode() {
 
 // Converts text area to base64 and copies shareable URL to clipboard.
 export function ShareCode(e) {
-    
-    let code_text = document.getElementById("code-textarea").value;
 
-    // Compress base64
+    let files = getFiles()
 
-    let base64 = btoa(code_text);
+    var files_object = {}
+
+    files.forEach(element => {
+        
+        files_object[element] = btoa(getFile(element))
+
+    });
+
+    let code_json = JSON.stringify(files_object)
+
+    // Convert to base64
+
+    let base64 = btoa(code_json);
 
     let port = ("" == window.location.port) ? "" : `:${window.location.port}`
 
