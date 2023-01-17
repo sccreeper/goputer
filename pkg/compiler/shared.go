@@ -56,6 +56,15 @@ type ProgramStructure struct {
 	InstructionBlocks   map[string]CodeBlock `json:"instruction_blocks"`
 }
 
+// File used for compilers filesystem.
+type VFSFile struct {
+	RealPath   string
+	FakePath   string
+	Name       string
+	Data       []byte
+	StringData string
+}
+
 //Constants
 
 const (

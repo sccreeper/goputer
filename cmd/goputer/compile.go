@@ -43,9 +43,7 @@ func _compiler(ctx *cli.Context) error {
 
 	fmt.Printf("Compiling %s\n", file_path)
 
-	//Read file
-
-	data, err := os.ReadFile(file_path)
+	prev_dir, err := os.Getwd()
 	util.CheckError(err)
 
 	//Determine output path
@@ -69,16 +67,21 @@ func _compiler(ctx *cli.Context) error {
 	compiler_config := compiler.CompilerConfig{
 
 		OutputPath: OutputPath,
-		FilePath:   file_path,
+		FilePath:   filepath.Base(file_path),
 		OutputJSON: UseJson,
 		JSONPath:   JsonPath,
 		Verbose:    Verbose,
 	}
 
+	os.Chdir(filepath.Dir(file_path))
+
 	//Assemble program & write to disk
 
-	assembled_program, err := compiler.Compile(string(data), compiler_config, error_handler)
+	assembled_program, err := compiler.Compile(compiler_config.FilePath, get_file, compiler_config, error_handler)
+
 	util.CheckError(err)
+
+	os.Chdir(prev_dir)
 
 	//If standlone write to disk differently
 	if IsStandalone {
@@ -186,5 +189,15 @@ func error_handler(error_type compiler.ErrorType, error_text string) {
 
 	fmt.Println(error_text)
 	os.Exit(1)
+
+}
+
+func get_file(path string) []byte {
+
+	f, err := os.ReadFile(path)
+
+	util.CheckError(err)
+
+	return f
 
 }

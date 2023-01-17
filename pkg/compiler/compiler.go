@@ -18,7 +18,7 @@ type AssembledProgram struct {
 }
 
 // Assembler method
-func Compile(code_string string, config CompilerConfig, error_handler func(error_type ErrorType, error_text string)) (AssembledProgram, error) {
+func Compile(root_path string, get_file func(path string) []byte, config CompilerConfig, error_handler func(error_type ErrorType, error_text string)) (AssembledProgram, error) {
 
 	start_time := time.Now().UnixMicro()
 
@@ -35,11 +35,12 @@ func Compile(code_string string, config CompilerConfig, error_handler func(error
 	}
 
 	p := Parser{
-		CodeString:   code_string,
+		CodeString:   string(get_file(root_path)),
 		FileName:     config.FilePath,
 		Verbose:      false,
 		Imported:     false,
 		ErrorHandler: error_handler,
+		FileReader:   get_file,
 	}
 
 	program_data, err := p.Parse()

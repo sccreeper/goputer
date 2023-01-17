@@ -4,6 +4,7 @@ import globals from "./globals";
 import { GetSharedCode, ShareCode } from "./sharing";
 import {Octokit} from "octokit";
 import { ExamplesInit } from "./examples";
+import { NewFile, SwitchFocus } from "./imports";
 
 //Get shared code from URL
 
@@ -17,6 +18,17 @@ const go = new Go();
 await WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
     go.run(result.instance);
 });
+
+document.getElementById("code-textarea").addEventListener("change", (e) => {
+    updateFile(globals.focused_file, document.getElementById("code-textarea").value);
+})
+
+export const new_file = document.getElementById("new-file");
+new_file.addEventListener("click", NewFile)
+
+document.getElementById("main-gpasm").addEventListener("click", SwitchFocus)
+
+export const files_container = document.getElementById("code-names-container");
 
 //Set the version
 

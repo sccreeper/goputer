@@ -1,3 +1,5 @@
+//go:build js
+
 // WASM "proxy" layer between JS and goputer
 package main
 
@@ -24,6 +26,8 @@ var itn_map map[uint32]string
 var register_map map[uint32]string
 var interrupt_map map[constants.Interrupt]string
 
+var file_map map[string]string
+
 //Custom compile and run methods.
 
 func Compile() js.Func {
@@ -32,10 +36,11 @@ func Compile() js.Func {
 
 		p := compiler.Parser{
 			CodeString:   args[0].String(),
-			FileName:     "",
+			FileName:     "main.gpasm",
 			Verbose:      false,
 			Imported:     false,
 			ErrorHandler: HandleError,
+			FileReader:   file_reader,
 		}
 
 		program_structure, err := p.Parse()
@@ -50,6 +55,42 @@ func Compile() js.Func {
 	})
 
 	return compile_func
+
+}
+
+func file_reader(path string) []byte {
+	return []byte(file_map[path])
+}
+
+func UpdateFile(this js.Value, args []js.Value) any {
+	file_map[args[0].String()] = args[1].String()
+
+	return js.ValueOf(nil)
+}
+
+func GetFile(this js.Value, args []js.Value) any {
+
+	return js.ValueOf(file_map[args[0].String()])
+
+}
+
+func RemoveFile(this js.Value, args []js.Value) any {
+
+	delete(file_map, args[0].String())
+
+	return js.ValueOf(nil)
+
+}
+
+func GetFiles(this js.Value, args []js.Value) any {
+
+	keys := make([]interface{}, 0)
+
+	for k, _ := range file_map {
+		keys = append(keys, k)
+	}
+
+	return js.ValueOf(keys)
 
 }
 
@@ -270,6 +311,14 @@ func main() {
 	js.Global().Set("stepVM", js.FuncOf(Step))
 
 	js.Global().Set("isFinished", js.FuncOf(IsFinished))
+
+	js.Global().Set("updateFile", js.FuncOf(UpdateFile))
+	js.Global().Set("removeFile", js.FuncOf(RemoveFile))
+	js.Global().Set("getFile", js.FuncOf(GetFile))
+	js.Global().Set("getFiles", js.FuncOf(GetFiles))
+
+	file_map = make(map[string]string)
+	file_map["main.gpasm"] = ""
 
 	//Convert constants maps into [string]interface maps
 

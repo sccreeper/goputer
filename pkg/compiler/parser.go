@@ -26,12 +26,14 @@ type Parser struct {
 	ProgramStatements [][]string
 	ProgramStructure  ProgramStructure
 
-	FileName string
-	Imported bool
+	FileName     string
+	Imported     bool
+	ImportedFrom string
 
 	Verbose bool
 
 	ErrorHandler func(error_type ErrorType, error_text string)
+	FileReader   func(path string) []byte
 }
 
 // Takes a string and returns a program structure
@@ -148,51 +150,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 	p.ProgramStructure = ProgramStructure{
 		InstructionBlocks: make(map[string]CodeBlock),
-		ImportedFiles:     []string{p.FileName},
-	}
-
-	//--------------------------
-	//Evaluate import statements
-	//--------------------------
-
-	for _, e := range p.ProgramStatements {
-
-		if len(e) < 2 {
-			continue
-		} else if e[0] == "import" {
-
-			//Read other file
-			f_name := strings.Trim(e[1], "\"")
-
-			if util.SliceContains(p.ProgramStructure.ImportedFiles, f_name) {
-				//Already imported
-				continue
-			}
-
-			imported_file, err := os.ReadFile(f_name)
-
-			if err == os.ErrNotExist {
-				p.parsing_error(ErrImport, FileNotFound)
-			} else {
-				util.CheckError(err)
-			}
-
-			import_parser := Parser{
-				CodeString:   string(imported_file),
-				FileName:     p.FileName,
-				Imported:     true,
-				Verbose:      false,
-				ErrorHandler: p.ErrorHandler,
-			}
-
-			imported_program_structure, err := import_parser.Parse()
-			util.CheckError(err)
-
-			p.ProgramStructure, err = p.combine(imported_program_structure)
-			util.CheckError(err)
-
-		}
-
+		ImportedFiles:     []string{},
 	}
 
 	//------------------------
@@ -207,6 +165,10 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 	for index, e := range p.ProgramStatements {
 
+		if index >= len(p.CodeLines) {
+			break
+		}
+
 		p.LineIndex = index
 		p.CurrentLine = p.CodeLines[index]
 
@@ -219,6 +181,42 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 		} else if len(e) == 1 && e[0] == "" {
 			continue
 		} else if e[0] == "import" {
+			//Read other file
+			f_name := strings.Trim(e[1], "\"")
+
+			if util.SliceContains(p.ProgramStructure.ImportedFiles, f_name) {
+				//Already imported
+				continue
+			} else if f_name == p.ImportedFrom {
+
+				p.parsing_error(ErrImport, CircularImport)
+
+			}
+
+			imported_file := p.FileReader(f_name)
+
+			import_parser := Parser{
+				CodeString:   string(imported_file[:]),
+				FileName:     f_name,
+				Imported:     true,
+				ImportedFrom: p.FileName,
+				Verbose:      false,
+				ErrorHandler: p.ErrorHandler,
+				FileReader:   p.FileReader,
+			}
+
+			p.ProgramStructure.ImportedFiles = append(p.ProgramStructure.ImportedFiles, f_name)
+
+			imported_program_structure, err := import_parser.Parse()
+			util.CheckError(err)
+
+			if p.ImportedFrom == f_name {
+				p.parsing_error(ErrImport, CircularImport)
+			}
+
+			p.ProgramStructure, err = p.combine(imported_program_structure)
+			util.CheckError(err)
+
 			continue
 		} else if e[0][:2] == "//" {
 			continue
@@ -460,6 +458,18 @@ func (p *Parser) combine(s1 ProgramStructure) (ProgramStructure, error) {
 
 	var combined ProgramStructure
 
+	//Check for circular imports
+
+	//Combine imports
+
+	combined.ImportedFiles = append(p.ProgramStructure.ImportedFiles[:], s1.ImportedFiles...)
+
+	if util.SliceContains(s1.ImportedFiles, p.FileName) {
+
+		p.parsing_error(ErrImport, CircularImport)
+
+	}
+
 	//Merge splices & check for name conflicts
 
 	for _, v := range p.ProgramStructure.AllNames {
@@ -503,26 +513,6 @@ func (p *Parser) combine(s1 ProgramStructure) (ProgramStructure, error) {
 
 		}
 	}
-
-	//Check for circular imports
-
-	if util.SliceContains(s1.ImportedFiles, p.FileName) {
-
-		p.parsing_error(ErrImport, CircularImport)
-
-	}
-
-	//Combine imports
-
-	for _, v := range s1.ImportedFiles {
-
-		if !util.SliceContains(p.ProgramStructure.ImportedFiles, v) {
-			combined.ImportedFiles = append(combined.ImportedFiles, v)
-		}
-
-	}
-
-	combined.ImportedFiles = append(p.ProgramStructure.ImportedFiles, s1.ImportedFiles...)
 
 	return combined, nil
 

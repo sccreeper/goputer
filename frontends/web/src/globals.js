@@ -25,6 +25,7 @@ export default {
     register_peek_value: null,
     current_reg_peek_value: null,
     prev_reg_peek_value: null,
+    focused_file: "main.gpasm",
 
 }
 
