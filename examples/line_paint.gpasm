@@ -20,7 +20,17 @@ mov my r01
 
 end
 
+:clear_bg
+lda @white
+mov d0 vc
+int vc
+
+lda @black
+mov d0 vc
+end
+
 sub mm handle_mouse_move
+sub kd clear_bg
 
 :loop
 jmp loop
