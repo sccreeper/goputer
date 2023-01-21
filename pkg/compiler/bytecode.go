@@ -210,7 +210,7 @@ func generate_instruction_bytecode(i Instruction, d_block_addr map[string]uint32
 
 			addr = d_block_addr[v[1:]]
 
-		} else if i.Instruction == uint32(constants.IJump) || i.Instruction == uint32(constants.IConditionalJump) { //jump
+		} else if i.Instruction == uint32(constants.IJump) || i.Instruction == uint32(constants.IConditionalJump) || i.Instruction == uint32(constants.ICall) || i.Instruction == uint32(constants.IConditionalCall) { //jump
 
 			addr = uint32(j_blk_addr[v] + StackSize)
 
