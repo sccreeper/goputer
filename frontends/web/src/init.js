@@ -2,7 +2,6 @@ import { Compile, handleKeyDown, handleKeyUp, handleMouseMove, IOToggle, PeekReg
 import { clearCanvas } from "./canvas_util";
 import globals from "./globals";
 import { GetSharedCode, ShareCode } from "./sharing";
-import {Octokit} from "octokit";
 import { ExamplesInit } from "./examples";
 import { NewFileUI, SwitchFocus } from "./imports";
 
@@ -42,10 +41,6 @@ fetch("/ver")
 })
 
 export const examplesDiv = document.getElementById("examples-div");
-
-export const octokit = new Octokit({
-    "auth" : process.env.GH_API
-})
 
 ExamplesInit();
 

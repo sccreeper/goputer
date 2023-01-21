@@ -12,8 +12,5 @@
   },
   "staticFiles": {
     "staticPath": "static"
-  },
-  "dependencies": {
-    "octokit": "^2.0.10"
   }
 }

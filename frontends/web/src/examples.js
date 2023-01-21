@@ -1,9 +1,13 @@
 import ExampleList from "../examples.toml";
 import { examplesDiv, octokit } from "./init";
 
+var examples_obj = {}
+
 export function ExamplesInit() {
     
     ExampleList.examples.forEach(element => {
+
+        examples_obj[element.path] = element.program_text
     
         let example_container = document.createElement("div")
         example_container.classList.add("example-container");
@@ -28,15 +32,7 @@ export function ExamplesInit() {
 async function load_example(e) {
 
     document.getElementById("code-textarea").value = "Loading...";
-    
-    await octokit.rest.repos.getContent({
-        owner: "sccreeper",
-        repo: "goputer",
-        path: `examples/${e.currentTarget.getAttribute("data-path")}.gpasm`
-    }).then((data) => {
 
-        document.getElementById("code-textarea").value = atob(data.data.content);
-
-    })
+    document.getElementById("code-textarea").value = examples_obj[e.currentTarget.getAttribute("data-path")]
 
 }

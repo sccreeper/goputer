@@ -1,7 +1,143 @@
 examples = [
-    { name="Video Area", description="Draws a white rectangle to the screen", path="area_test"},
-    { name="Hello World", description="Basic hello world example", path="hello_world"},
-    { name="IO Inputs", description="IO Inputs test", path="io_inputs"},
-    { name="Paint", description="Simple paint program", path="line_paint"},
-    { name="Sound", description="Increasing sound frequency", path="sound"}
+    { name="Video Area", description="Draws a white rectangle to the screen", path="area_test", program_text="""
+//Draws a rectangle to the screen
+def pos 64
+def size 5
+
+def white 0xFFFFFFFF
+
+lda @white
+mov d0 vc
+
+lda @pos
+mov d0 r00
+lda @size
+mov d0 r01
+
+mul r00 r01
+mov a0 vx1
+mov a0 vy1
+
+mov r00 vx0
+mov r00 vy0
+
+int va
+    
+"""},
+    { name="Hello World", description="Basic hello world example", path="hello_world", program_text="""
+// Simple hello world example
+
+def hw "Hello World"
+def white 0xFFFFFFFF
+
+lda @hw
+mov d0 vt
+
+lda @white
+mov d0 vc
+
+int vt 
+"""},
+    { name="IO Inputs", description="IO Inputs test", path="io_inputs",  program_text="""
+
+// Turning IO outputs on/off with switches.
+
+:handle_io
+
+mov io08 io00
+mov io09 io01
+mov io10 io02
+mov io11 io03
+mov io12 io04
+mov io13 io05
+mov io14 io06
+mov io15 io07
+
+int iof
+
+end
+
+sub io08 handle_io
+sub io09 handle_io
+sub io10 handle_io
+sub io11 handle_io
+sub io12 handle_io
+sub io13 handle_io
+sub io14 handle_io
+sub io15 handle_io
+
+:hang_loop
+jmp hang_loop
+end
+
+jmp hang_loop    
+"""},
+    { name="Paint", description="Simple paint program", path="line_paint", program_text="""
+//Paint program
+
+def background 0xFFFFFFFF
+def pen 0x000000FF
+def size 8
+
+:handle_mouse_move
+
+mov mx vx0
+mov my vy0
+
+add mx r00
+mov a0 vx1
+
+add my r00
+mov a0 vy1
+
+int va
+
+end
+
+sub mm handle_mouse_move
+
+:hang_loop
+jmp hang_loop
+end
+
+lda @background
+mov d0 vc
+int vc
+
+lda @pen
+mov d0 vc
+
+lda @size
+mov d0 r00
+
+jmp hang_loop
+
+"""},
+    { name="Sound", description="Increasing sound frequency", path="sound", program_text="""
+//Outputs a sine wave and increases frequency over time.
+def x 10
+def t 50
+def vol 16
+
+:loop
+add r00 r02
+mov a0 r00
+mov r00 st
+int sf
+hlt r01
+jmp loop
+end
+
+lda @x
+mov d0 r00
+mov d0 r02
+
+lda @t
+mov d0 r01
+
+lda @vol
+mov d0 sv
+
+jmp loop
+"""}
 ]
