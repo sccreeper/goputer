@@ -29,17 +29,20 @@
 
     </div>
 
-    <div class="m-4 flex justify-around h-16">
+    <div class="m-4 flex justify-around h-12">
 
-        <button class="button-main" id="button-upload"><i class="bi bi-upload"></i> Upload compiled
-            file</button>
-        <input type="file" id="file-form" hidden/> 
+        <button class="button-main" id="button-upload" aria-label="Upload a compiled file to disassemble."
+            data-microtip-position="top" role="tooltip"><i class="bi bi-upload"></i> Upload</button>
+        <input type="file" id="file-form" hidden />
 
-        <button class="button-main" id="button-disassemble" disabled><i class="bi bi-hammer"></i>
+        <button class="button-main" id="button-disassemble" aria-label="Disassemble your uploaded file"
+            data-microtip-position="top" role="tooltip" disabled><i class="bi bi-hammer"></i>
             Disassemble</button>
-        <button class="button-main" id="button-download" disabled><i class="bi bi-file-earmark-arrow-down-fill"></i>
-            Download JSON representation</button>
-    
+        <button class="button-main" id="button-download"
+            aria-label="Download the JSON representation of your compiled program" data-microtip-position="top"
+            role="tooltip" disabled><i class="bi bi-file-earmark-arrow-down-fill"></i>
+            Download</button>
+
     </div>
 
     <div class="grid grid-cols-2 m-4">
@@ -69,10 +72,9 @@
 
                     <div class="font-normal w-full h-full rounded-lg bg-gray-800 text-white mt-4 overflow-y-scroll">
 
-                        
-                    <div class="p-2" id="container-jump-blocks">
-                        <p class="m-5 text-center text-gray-400">No code disassembled yet</p>
-                    </div>
+                        <div class="p-2" id="container-jump-blocks">
+                            <p class="m-5 text-center text-gray-400">No code disassembled yet</p>
+                        </div>
 
                     </div>
 
