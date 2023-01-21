@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="module" src="./src/disassembler/main.js" defer></script>
+    <script src="wasm_exec.js"></script>
+    <link rel="stylesheet" href="./src/index.css" />
+
+    <meta property="og:title" content="goputer" />
+    <meta property="og:description" content="The goputer online disassembler" />
+    <meta property="og:image" content="logo.png" />
+
+    <title>goputer</title>
+</head>
+
+<body class="bg-gray-800 font-heebo font-normal text-white">
+
+    <div class="flex justify-center h-16 font-fira">
+        <img src="logo.png?height=64" alt="goputer logo" />
+    </div>
+
+    <div class="m-auto text-center">
+
+        <a href="/" class="sub-heading text-lg mx-4">Playground</a>
+        <a href="./disassembler.html" class="sub-heading text-lg mx-4">Disassembler</a>
+
+    </div>
+
+    <div class="m-4 flex justify-around h-16">
+
+        <button class="button-main" id="button-upload"><i class="bi bi-upload"></i> Upload compiled
+            file</button>
+        <input type="file" id="file-form" hidden/> 
+
+        <button class="button-main" id="button-disassemble" disabled><i class="bi bi-hammer"></i>
+            Disassemble</button>
+        <button class="button-main" id="button-download" disabled><i class="bi bi-file-earmark-arrow-down-fill"></i>
+            Download JSON representation</button>
+    
+    </div>
+
+    <div class="grid grid-cols-2 m-4">
+
+        <div class="content-div mr-4">
+            <div class="m-4">
+
+                <h1 class="sub-heading">Instructions</h1>
+
+                <div class="font-normal w-full h-full rounded-lg bg-gray-800 text-white mt-4 overflow-y-scroll">
+
+                    <div class="p-2" id="container-instructions">
+                        <p class="m-5 text-center text-gray-400">No code disassembled yet</p>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 grid-rows-2">
+
+            <div class="content-div">
+                <div class="m-4">
+
+                    <h1 class="sub-heading">Jump & Call blocks</h1>
+
+                    <div class="font-normal w-full h-full rounded-lg bg-gray-800 text-white mt-4 overflow-y-scroll">
+
+                        
+                    <div class="p-2" id="container-jump-blocks">
+                        <p class="m-5 text-center text-gray-400">No code disassembled yet</p>
+                    </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="content-div mt-4">
+                <div class="m-4">
+                    <h1 class="sub-heading">Interrupt subscriptions</h1>
+
+                    <div class="font-normal w-full h-full rounded-lg bg-gray-800 text-white mt-4 overflow-y-scroll">
+
+                        <div class="p-2" id="container-interrupt-table">
+                            <p class="m-5 text-center text-gray-400">No code disassembled yet</p>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+
+            <div class="content-div mt-4">
+                <div class="m-4">
+                    <h1 class="sub-heading">Definitions</h1>
+
+                    <div class="font-normal w-full h-full rounded-lg bg-gray-800 text-white mt-4 overflow-y-scroll">
+
+                        <div class="p-2" id="container-definitions">
+                            <p class="m-5 text-center text-gray-400">No code disassembled yet</p>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="text-center align-middle h-4 m-4 font-fira">
+        <h1 class="text-gray-400 text-xs">goputer version <a id="version" target="_blank"></a>. Built: <span
+                id="build-date"></span>. Made by <a target="_blank" href="https://github.com/sccreeper">Oscar Peace</a>.
+        </h1>
+    </div>
+
+</body>

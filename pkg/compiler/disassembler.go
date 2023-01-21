@@ -9,11 +9,11 @@ import (
 )
 
 type DisassembledProgram struct {
-	ProgramDefinitions [][]byte
-	InterruptTable     map[constants.Interrupt]uint32
-	JumpBlocks         map[uint32][]Instruction
-	Instructions       []Instruction
-	StartIndexes       []uint32
+	ProgramDefinitions [][]byte                       `json:"program_definitions"`
+	InterruptTable     map[constants.Interrupt]uint32 `json:"interrupt_table"`
+	JumpBlocks         map[uint32][]Instruction       `json:"jump_blocks"`
+	Instructions       []Instruction                  `json:"instructions"`
+	StartIndexes       []uint32                       `json:"start_indexes"`
 }
 
 func decode_instruction(b []byte) Instruction {

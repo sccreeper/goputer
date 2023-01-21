@@ -5,6 +5,7 @@ package main
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -233,7 +234,7 @@ func Step(this js.Value, args []js.Value) any {
 
 }
 
-func ItnStr(this js.Value, args []js.Value) any {
+func ParserItnStr(this js.Value, args []js.Value) any {
 
 	//Generate current instruction string
 
@@ -256,6 +257,26 @@ func ItnStr(this js.Value, args []js.Value) any {
 
 }
 
+func Disassemble(this js.Value, args []js.Value) any {
+
+	program_int_array := make([]byte, 0)
+
+	for i := 0; i < args[0].Length(); i++ {
+
+		program_int_array = append(program_int_array, byte(args[0].Index(i).Int()))
+
+	}
+
+	disassembled_program, err := compiler.Disassemble(program_int_array, false)
+	util.CheckError(err)
+
+	json_string, err := json.Marshal(disassembled_program)
+	util.CheckError(err)
+
+	return js.ValueOf(string(json_string[:]))
+
+}
+
 //Other
 
 func ConvertColour(this js.Value, args []js.Value) any {
@@ -264,6 +285,16 @@ func ConvertColour(this js.Value, args []js.Value) any {
 	binary.LittleEndian.PutUint32(b[:], uint32(args[0].Int()))
 
 	return js.ValueOf(fmt.Sprintf("rgba(%d, %d, %d, %f)", b[0], b[1], b[2], math.Round(float64(b[3])/255)))
+
+}
+
+func ConvertHex(this js.Value, args []js.Value) any {
+
+	if args[1].Bool() {
+		return js.ValueOf(util.ConvertHex(args[0].Int() + int(compiler.StackSize)))
+	} else {
+		return js.ValueOf(util.ConvertHex(args[0].Int()))
+	}
 
 }
 
@@ -306,7 +337,7 @@ func main() {
 	js.Global().Set("sendInterrupt", js.FuncOf(SendInterrupt))
 	js.Global().Set("isSubscribed", js.FuncOf(IsSubscribed))
 
-	js.Global().Set("currentItn", js.FuncOf(ItnStr))
+	js.Global().Set("currentItn", js.FuncOf(ParserItnStr))
 
 	js.Global().Set("stepVM", js.FuncOf(Step))
 
@@ -316,6 +347,8 @@ func main() {
 	js.Global().Set("removeFile", js.FuncOf(RemoveFile))
 	js.Global().Set("getFile", js.FuncOf(GetFile))
 	js.Global().Set("getFiles", js.FuncOf(GetFiles))
+
+	js.Global().Set("disassembleCode", js.FuncOf(Disassemble))
 
 	file_map = make(map[string]string)
 	file_map["main.gpasm"] = ""
@@ -340,11 +373,35 @@ func main() {
 		registers_converted[k] = int(v)
 	}
 
+	// Make an instruction & interrupt array for disassembling
+
+	instructions_array := make([]interface{}, 30)
+
+	for k, v := range constants.InstructionInts {
+
+		instructions_array[v] = k
+
+	}
+
+	interrupt_array := make([]interface{}, 22)
+
+	for k, v := range constants.InterruptInts {
+
+		interrupt_array[v] = k
+
+	}
+
 	js.Global().Set("interruptInts", js.ValueOf(interrupts_converted))
 	js.Global().Set("instructionInts", js.ValueOf(instructions_converted))
 	js.Global().Set("registerInts", js.ValueOf(registers_converted))
 
+	js.Global().Set("instructionArray", js.ValueOf(instructions_array))
+	js.Global().Set("interruptArray", js.ValueOf(interrupt_array))
+
+	js.Global().Set("memOffset", js.ValueOf(int(compiler.StackSize)))
+
 	js.Global().Set("convertColour", js.FuncOf(ConvertColour))
+	js.Global().Set("convertHex", js.FuncOf(ConvertHex))
 
 	<-make(chan bool)
 

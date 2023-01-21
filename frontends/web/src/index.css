@@ -187,4 +187,11 @@
         @apply inline-block;
     }
 
+    .program-definition {
+
+        @apply p-2;
+        font-family: 'Fira Mono', monospace;
+
+    }
+
 }
