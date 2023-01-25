@@ -1,7 +1,7 @@
 import { Compile, handleKeyDown, handleKeyUp, handleMouseMove, IOToggle, PeekRegister, Run } from "./app";
 import { clearCanvas } from "./canvas_util";
 import globals from "./globals";
-import { GetSharedCode, ShareCode } from "./sharing";
+import { DownloadProgram, GetSharedCode, ShareCode } from "./sharing";
 import { ExamplesInit } from "./examples";
 import { NewFileUI, SwitchFocus } from "./imports";
 
@@ -65,13 +65,10 @@ globals.oscillator.connect(globals.audio_volume);
 globals.audio_volume.connect(globals.audio_context.destination);
 
 //Init event listeners.
-document.getElementById("compile-code-button").addEventListener("click", function (e) {  
-    Compile();
-})
-
-document.getElementById("run-code-button").addEventListener("click", function (e) {  
-    Run();
-})
+document.getElementById("compile-code-button").addEventListener("click", Compile)
+document.getElementById("run-code-button").addEventListener("click", Run)
+document.getElementById("download-code-button").addEventListener("click", DownloadProgram)
+document.getElementById("share-code-button").addEventListener("click", ShareCode)
 
 document.getElementById("stop-code-button").addEventListener("click", function (e) {  
     clearInterval(globals.runInterval);
@@ -139,8 +136,6 @@ Object.keys(registerInts).forEach(element => {
 const peekRegInput = document.getElementById("peek-reg");
 peekRegInput.value = "";
 peekRegInput.addEventListener("input", PeekRegister);
-
-document.getElementById("share-code-button").addEventListener("click", ShareCode)
 
 GetSharedCode();
 

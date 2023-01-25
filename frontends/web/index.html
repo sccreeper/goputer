@@ -34,19 +34,21 @@
         <div class="content-div mr-4 row-span-2">
             <div class="m-4">
                 <h1 class="sub-heading">Program code</h1>
-                
+
                 <div class="font-normal w-full rounded-lg bg-gray-800 text-white">
 
                     <div class="p-3 border-b border-gray-400">
                         <div id="code-names-container">
-                            <div class="code-name" id="main-gpasm" data-file-name="main.gpasm" data-selected="true"><p>main.gpasm</p></div>
+                            <div class="code-name" id="main-gpasm" data-file-name="main.gpasm" data-selected="true">
+                                <p>main.gpasm</p>
+                            </div>
                             <i id="new-file" class="bi bi-plus inline-block"></i>
                         </div>
                     </div>
 
                     <textarea placeholder="Write your code here..." id="code-textarea" rows="16"
-                    class="font-fira resize-none bg-gray-800 text-white focus:outline-none p-3 w-full rounded-b-lg"
-                    spellcheck="false"></textarea>
+                        class="font-fira resize-none bg-gray-800 text-white focus:outline-none p-3 w-full rounded-b-lg"
+                        spellcheck="false"></textarea>
                 </div>
 
                 <div class="mt-4 flex justify-around">
@@ -56,11 +58,16 @@
                         role="tooltip">Compile Code <i class="bi bi-box-arrow-down"></i></button>
 
                     <button class="button-main" id="run-code-button" aria-label="Run your compiled code in goputer."
-                        data-microtip-position="top" role="tooltip" disabled>Run Code <i class="bi bi-play-fill"></i></button>
+                        data-microtip-position="top" role="tooltip" disabled>Run Code <i
+                            class="bi bi-play-fill"></i></button>
 
                     <button class="button-main bg-red-700 border-red-400 hover:bg-red-600" id="stop-code-button"
                         aria-label="Reset and stop goputer." data-microtip-position="top" role="tooltip">Reset
                         <i class="bi bi-stop-fill"></i></button>
+
+                    <button class="button-main" id="download-code-button" aria-label="Download your compiled program."
+                        data-microtip-position="top" role="tooltip" disabled>Download
+                        <i class="bi bi-file-earmark-arrow-down"></i></button>
 
                     <button class="button-main" id="share-code-button" aria-label="Share your program."
                         data-microtip-position="top" role="tooltip">Share

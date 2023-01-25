@@ -1,9 +1,10 @@
 import { ErrorTypes, ShowError } from "./error";
+import globals from "./globals";
 import { NewFile } from "./imports";
 
 // Extracts shared code from URL
 export function GetSharedCode() {
-    
+
     if (window.location.search.length == 0) {
         return;
     }
@@ -16,7 +17,7 @@ export function GetSharedCode() {
     for (const [key, value] of Object.entries(code_json)) {
 
         if (key != "main.gpasm") {
-            NewFile(key)    
+            NewFile(key)
         }
         updateFile(key, atob(value))
         document.getElementById("code-textarea").value = atob(value);
@@ -35,9 +36,7 @@ export function ShareCode(e) {
     var files_object = {}
 
     files.forEach(element => {
-        
         files_object[element] = btoa(getFile(element))
-
     });
 
     let code_json = JSON.stringify(files_object)
@@ -53,4 +52,34 @@ export function ShareCode(e) {
     navigator.clipboard.writeText(shareable_url);
 
     ShowError(ErrorTypes.Success, "Code copied to clipboard");
+}
+
+// Download program bytes.
+export function DownloadProgram(e) {
+
+    // Convert method return value to bytes first.
+
+    let program_bytes_array = getProgramBytes()
+
+    let program_bytes = new Uint8Array(program_bytes_array.length)
+
+    for (let i = 0; i < program_bytes_array.length; i++) {
+        program_bytes[i] = program_bytes_array[i]
+    }
+
+    let date = new Date()
+
+    if (!globals.codeHasBeenCompiled) {
+        return
+    }
+
+    let blob = new Blob([program_bytes], { type: "application/octet-stream" })
+    let link = document.createElement("a")
+    link.href = window.URL.createObjectURL(blob)
+
+    let filename = `program_${date.getHours().toString().padStart(2, "0")}${date.getMinutes().toString().padStart(2, "0")}${date.getSeconds().toString().padStart(2, "0")}`
+
+    link.download = filename;
+    link.click();
+
 }

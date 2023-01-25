@@ -106,7 +106,7 @@ export function GetRegisterText(reg_int) {
 
 // Main app logic
 
-export function Compile() {
+export function Compile(e) {
 
     globals.error_div.replaceChildren();
 
@@ -117,6 +117,7 @@ export function Compile() {
     if(!globals.compile_failed) {
 
         document.getElementById("run-code-button").disabled = false;
+        document.getElementById("download-code-button").disabled = false;
 
         ShowError(ErrorTypes.Success, "Code compiled successfully!");
 
@@ -124,7 +125,7 @@ export function Compile() {
 
 }
 
-export function Run() { 
+export function Run(e) { 
 
     if (!globals.codeHasBeenCompiled) {
 
