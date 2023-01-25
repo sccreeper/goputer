@@ -73,44 +73,52 @@ end
 jmp hang_loop    
 """},
     { name="Paint", description="Simple paint program", path="line_paint", program_text="""
-//Paint program
+//Paint but uses lines
+//r00 = mx prev
+//r01 = my prev
 
-def background 0xFFFFFFFF
-def pen 0x000000FF
-def size 8
+def white 0xFFFFFFFF
+def black 0x000000FF
 
 :handle_mouse_move
 
-mov mx vx0
-mov my vy0
+mov mx vx1
+mov my vy1
 
-add mx r00
-mov a0 vx1
+mov r00 vx0
+mov r01 vy0
 
-add my r00
-mov a0 vy1
+int vl
 
-int va
+mov mx r00
+mov my r01
 
 end
 
-sub mm handle_mouse_move
-
-:hang_loop
-jmp hang_loop
-end
-
-lda @background
+:clear_bg
+lda @white
 mov d0 vc
 int vc
 
-lda @pen
+lda @black
+mov d0 vc
+end
+
+sub mm handle_mouse_move
+sub kd clear_bg
+
+:loop
+jmp loop
+end
+
+lda @white
+mov d0 vc
+int vc
+
+lda @black
 mov d0 vc
 
-lda @size
-mov d0 r00
-
-jmp hang_loop
+jmp loop
 
 """},
     { name="Sound", description="Increasing sound frequency", path="sound", program_text="""
