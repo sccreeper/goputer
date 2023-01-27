@@ -15,14 +15,14 @@ int iof
 
 end
 
-sub io08 handle_io
-sub io09 handle_io
-sub io10 handle_io
-sub io11 handle_io
-sub io12 handle_io
-sub io13 handle_io
-sub io14 handle_io
-sub io15 handle_io
+intsub io08 handle_io
+intsub io09 handle_io
+intsub io10 handle_io
+intsub io11 handle_io
+intsub io12 handle_io
+intsub io13 handle_io
+intsub io14 handle_io
+intsub io15 handle_io
 
 :hang_loop
 jmp hang_loop

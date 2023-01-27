@@ -300,7 +300,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 			continue
 
-		} else if e[0] == "sub" { //Interrupt subscription
+		} else if e[0] == "intsub" { //Interrupt subscription
 
 			//Error checking
 

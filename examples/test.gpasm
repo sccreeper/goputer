@@ -33,7 +33,7 @@ int vt
 
 end
 
-sub kd test
+intsub kd test
 
 :loop
 jmp loop

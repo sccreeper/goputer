@@ -20,7 +20,7 @@ int va
 
 end
 
-sub mm handle_mouse_move
+intsub mm handle_mouse_move
 
 :hang_loop
 jmp hang_loop
@@ -29,11 +29,6 @@ end
 lda @background
 mov d0 vc
 int vc
-
-//Hack so Python frontend can catch up (it is *too* slow)
-//lda @stop
-//mov d0 r00
-//hlt r00
 
 lda @pen
 mov d0 vc
