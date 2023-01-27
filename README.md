@@ -4,7 +4,7 @@
 
 ---
 
-A computer emulator/virtual machine intended to demonstrate how computers work at a low level.
+A computer emulator/virtual machine that intends to demonstrate how basic computers work at a low level.
 
 ---
 
@@ -28,7 +28,7 @@ A computer emulator/virtual machine intended to demonstrate how computers work a
 
 ### Features
 
-**Note:** Most of these have not been fully implemented yet.
+**Note:** Now that the core functionality of goputer is finished, most of the new features are focusing on improvements as opposed to large & complicated changes.
 
 #### Complete
 
@@ -36,15 +36,19 @@ A computer emulator/virtual machine intended to demonstrate how computers work a
 - Custom runtime.
 - Standalone executables.
 - Frontends to show VM output.
+- A [WASM based runtime](https://goputer.oscarcp.net) that runs in a web browser.
 
-#### Working on
+### Working on
 
-- A WASM based frontend to run in a web browser.
+- Rewrite of parser.
 
 #### In the future
 
+- A few new arithmetic instructions.
+- Rewrite of compiler.
 - High level language.
 - IDE for easy development.
+- Expansion cards/modules.
 
 ---
 
@@ -57,9 +61,13 @@ See the [project wiki](https://github.com/sccreeper/goputer/wiki) or try the pla
 ### Project layout
 
 - `frontends` Contains source for the frontends.
+ - `frontends/web` The WASM frontend.
+ - `frontends/gp32` The Go frontend.
+ - `frontends/goputerpy` The Python frontend.
 - `examples` A list of example code to get started with.
 - `cmd/goputer` The CLI tool for compiling, running & disassembling code.
-- `pkg` Shared code. Includes the compiler & the VM runtime.
+- `cmd/launcher` The GUI for running code.
+- `pkg` Shared code. Includes the compiler, VM runtime and constants for instructions and registers.
 
 ---
 
