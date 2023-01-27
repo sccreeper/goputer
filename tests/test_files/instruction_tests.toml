@@ -1,0 +1,79 @@
+# Surface level tests for instructions.
+
+tests=[
+{name="move",is_file=false, text="""
+incr r00
+mov r00 r01
+""", check_value=1, check_reg="r01"},
+{name="load_store", is_file=false,text="""
+def x 1
+
+lda @x
+incr r00
+sta @x
+lda @x
+mov d0 r01
+""",check_reg="r00", check_value=1},
+
+{name="push_pop",is_file=false, check_reg="r01", check_value=1,text="""
+incr r00
+push r00
+pop r01
+"""},
+
+{name="add", is_file=false, check_reg="a0", check_value=2, text="""
+incr r00
+incr r01
+add r00 r01
+"""},
+
+{name="multiply", is_file=false, check_reg="a0", check_value=4, text="""
+incr r00
+incr r00
+mul r00 r00
+"""},
+
+{name="divide", is_file=false, check_reg="a0", check_value=2, text="""
+incr r00
+incr r00
+incr r00
+incr r00
+
+incr r01
+incr r01
+
+div r00 r01
+"""},
+{name="subtract", is_file=false, check_reg="a0", check_value=0, text="""
+incr r00
+incr r01
+
+sub r01 r00
+"""},
+{name="increment", is_file=false, check_reg="r00", check_value=1, text="""
+incr r00
+"""},
+{name="decrement", is_file=false, check_reg="r00", check_value=1, text="""
+incr r00
+incr r00
+decr r00
+"""},
+{name="square_root", is_file=false, check_reg="a0", check_value=2, text="""
+incr r00
+incr r00
+incr r00
+incr r00
+
+sqrt r00
+"""},
+{name="power", is_file=false, check_reg="a0", check_value=4, text="""
+incr r00
+incr r00
+
+pow r00 r00
+"""},
+{name="clear", is_file=false, check_reg="r00", check_value=0, text="""
+incr r00
+clr r00
+"""}
+]
