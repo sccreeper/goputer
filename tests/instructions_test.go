@@ -29,6 +29,26 @@ type TestDetails struct {
 	CodeText      string `toml:"text"`
 }
 
+func compile(text string) []byte {
+
+	p := compiler.Parser{
+		CodeString:   text,
+		FileName:     "main.gpasm",
+		Verbose:      false,
+		Imported:     false,
+		ErrorHandler: func(error_type compiler.ErrorType, error_text string) { panic(error_text) },
+		FileReader:   func(path string) []byte { return []byte(text) },
+	}
+
+	program_structure, err := p.Parse()
+	util.CheckError(err)
+
+	program_bytes := compiler.GenerateBytecode(program_structure)
+
+	return program_bytes
+
+}
+
 func TestInstructions(t *testing.T) {
 
 	var test_details TestArray
@@ -46,19 +66,7 @@ func TestInstructions(t *testing.T) {
 
 		// Compile example code
 
-		p := compiler.Parser{
-			CodeString:   v.CodeText,
-			FileName:     "main.gpasm",
-			Verbose:      false,
-			Imported:     false,
-			ErrorHandler: func(error_type compiler.ErrorType, error_text string) { t.Fatalf(error_text) },
-			FileReader:   func(path string) []byte { return []byte(v.CodeText) },
-		}
-
-		program_structure, err := p.Parse()
-		util.CheckError(err)
-
-		program_bytes := compiler.GenerateBytecode(program_structure)
+		program_bytes := compile(v.CodeText)
 
 		// Create VM instance
 		// TODO: make this more time and memory efficient.
@@ -83,7 +91,7 @@ func TestInstructions(t *testing.T) {
 		}
 
 		if test_32.Registers[constants.RegisterInts[v.CheckRegister]] != uint32(v.CheckValue) {
-			t.Errorf("Failed instruction test %s", v.Name)
+			t.Errorf("Failed instruction test %s. Value should be %d but got %d", v.Name, v.CheckValue, test_32.Registers[constants.RegisterInts[v.CheckRegister]])
 		}
 
 	}
@@ -92,57 +100,171 @@ func TestInstructions(t *testing.T) {
 
 // Basic instructions
 
-// func TestJump() {
+func TestJump(t *testing.T) {
 
-// }
+	var test_32 vm.VM
+	var test_32_interrupt_channel chan constants.Interrupt
+	var test_32_subbed_interrupt_channel chan constants.Interrupt
 
-// func TestCall() {
+	test_32_interrupt_channel = make(chan constants.Interrupt)
+	test_32_subbed_interrupt_channel = make(chan constants.Interrupt)
 
-// }
+	program_text, err := test_files.ReadFile("test_files/test_jump.gpasm")
+	if err != nil {
+		panic(err)
+	}
+
+	vm.InitVM(&test_32, compile(string(program_text[:])), test_32_interrupt_channel, test_32_subbed_interrupt_channel, true)
+
+	var in_jump bool = false
+	var jump_addr uint32
+
+	for {
+
+		test_32.Step()
+
+		if test_32.Opcode == constants.IJump && !in_jump {
+			in_jump = true
+			jump_addr = test_32.ArgLarge
+		} else if test_32.Opcode != constants.IJump && in_jump {
+
+			if test_32.Registers[constants.RProgramCounter]-5 != jump_addr {
+				t.Fatalf("Program counter should be %d is %d instead\n", jump_addr, test_32.Registers[constants.RProgramCounter])
+			} else {
+				break
+			}
+
+		}
+
+	}
+
+}
+
+func TestCall(t *testing.T) {
+	var test_32 vm.VM
+	var test_32_interrupt_channel chan constants.Interrupt
+	var test_32_subbed_interrupt_channel chan constants.Interrupt
+
+	test_32_interrupt_channel = make(chan constants.Interrupt)
+	test_32_subbed_interrupt_channel = make(chan constants.Interrupt)
+
+	program_text, err := test_files.ReadFile("test_files/test_jump.gpasm")
+	if err != nil {
+		panic(err)
+	}
+
+	vm.InitVM(&test_32, compile(string(program_text[:])), test_32_interrupt_channel, test_32_subbed_interrupt_channel, true)
+
+	var in_call bool = false
+	var call_addr uint32
+
+	for {
+
+		test_32.Step()
+
+		if test_32.Opcode == constants.IJump && !in_call {
+			in_call = true
+			call_addr = test_32.ArgLarge
+		} else if test_32.Opcode != constants.IJump && in_call {
+
+			if test_32.Registers[constants.RProgramCounter]-5 != call_addr {
+				t.Fatalf("Program counter should be %d is %d instead\n", call_addr, test_32.Registers[constants.RProgramCounter])
+			} else {
+				break
+			}
+
+		}
+
+	}
+
+}
 
 // // Logical instructions
 
-// func TestConditionalJump() {
+// Should jump, if it doesn't test fails
 
-// }
+func TestConditionalJump(t *testing.T) {
+	var test_32 vm.VM
+	var test_32_interrupt_channel chan constants.Interrupt
+	var test_32_subbed_interrupt_channel chan constants.Interrupt
 
-// func TestConditionalCall() {
+	test_32_interrupt_channel = make(chan constants.Interrupt)
+	test_32_subbed_interrupt_channel = make(chan constants.Interrupt)
 
-// }
+	program_text, err := test_files.ReadFile("test_files/test_cndjump.gpasm")
+	if err != nil {
+		panic(err)
+	}
 
-// func TestOr() {
+	vm.InitVM(&test_32, compile(string(program_text[:])), test_32_interrupt_channel, test_32_subbed_interrupt_channel, true)
 
-// }
+	var in_jump bool = false
+	var jump_addr uint32
 
-// func TestXor() {
+	for {
 
-// }
+		test_32.Step()
 
-// func TestAnd() {
+		if test_32.Opcode == constants.IConditionalJump && !in_jump {
+			in_jump = true
+			jump_addr = test_32.ArgLarge
+		} else if test_32.Opcode != constants.IConditionalJump && in_jump {
 
-// }
+			if test_32.Registers[constants.RProgramCounter]-5 != jump_addr {
+				t.Fatalf("Program counter should be %d is %d instead\n", jump_addr, test_32.Registers[constants.RProgramCounter])
+			} else {
+				break
+			}
 
-// func TestInvert() {
+		}
 
-// }
+	}
+
+}
+
+func TestConditionalCall(t *testing.T) {
+	var test_32 vm.VM
+	var test_32_interrupt_channel chan constants.Interrupt
+	var test_32_subbed_interrupt_channel chan constants.Interrupt
+
+	test_32_interrupt_channel = make(chan constants.Interrupt)
+	test_32_subbed_interrupt_channel = make(chan constants.Interrupt)
+
+	program_text, err := test_files.ReadFile("test_files/test_cndcall.gpasm")
+	if err != nil {
+		panic(err)
+	}
+
+	vm.InitVM(&test_32, compile(string(program_text[:])), test_32_interrupt_channel, test_32_subbed_interrupt_channel, true)
+
+	var in_jump bool = false
+	var jump_addr uint32
+
+	for {
+
+		test_32.Step()
+
+		if test_32.Opcode == constants.IConditionalCall && !in_jump {
+			in_jump = true
+			jump_addr = test_32.ArgLarge
+		} else if test_32.Opcode != constants.IConditionalCall && in_jump {
+
+			if test_32.Registers[constants.RProgramCounter]-5 != jump_addr {
+				t.Fatalf("Program counter should be %d is %d instead\n", jump_addr, test_32.Registers[constants.RProgramCounter])
+			} else {
+				break
+			}
+
+		}
+
+	}
+}
 
 // func TestShiftLeft() {
 
 // }
 
 // func TestShiftRight() {
-
-// }
-
-// func TestShiftEqual() {
-
-// }
-
-// func TestGreaterThan() {
-
-// }
-
-// func TestLessThan() {
 
 // }
 
@@ -153,9 +275,5 @@ func TestInstructions(t *testing.T) {
 // }
 
 // func TestInterrupt() {
-
-// }
-
-// func TestClear() {
 
 // }

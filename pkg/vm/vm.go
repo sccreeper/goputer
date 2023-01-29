@@ -291,7 +291,7 @@ func (m *VM) Cycle() {
 			m.Registers[c.RAccumulator] = 0
 		}
 	case c.ILessThan:
-		if m.Registers[m.ArgSmall0] > m.Registers[m.ArgSmall1] {
+		if m.Registers[m.ArgSmall0] < m.Registers[m.ArgSmall1] {
 			m.Registers[c.RAccumulator] = math.MaxUint32
 		} else {
 			m.Registers[c.RAccumulator] = 0

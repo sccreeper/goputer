@@ -75,5 +75,111 @@ pow r00 r00
 {name="clear", is_file=false, check_reg="r00", check_value=0, text="""
 incr r00
 clr r00
+"""},
+{name="sl", is_file=false, check_reg="a0", check_value=8, text="""
+
+incr r00
+incr r00
+incr r00
+incr r00
+
+incr r01
+
+sl r00 r01
+
+"""},
+{name="sr", is_file=false, check_reg="a0", check_value=2, text="""
+
+incr r00
+incr r00
+incr r00
+incr r00
+
+incr r01
+
+sr r00 r01
+
+"""},
+{name="inv", is_file=false, check_reg="r00", check_value=4294967294, text="""
+
+incr r00
+inv r00
+
+"""},
+{name="or", is_file=false, check_reg="a0", check_value=1020, text="""
+def x 1000
+def y 500
+
+lda @x
+mov d0 r00
+
+lda @y
+mov d0 r01
+
+or r00 r01
+"""},
+{name="xor", is_file=false, check_reg="a0", check_value=540, text="""
+def x 1000
+def y 500
+
+lda @x
+mov d0 r00
+
+lda @y
+mov d0 r01
+
+xor r00 r01
+"""},
+{name="and", is_file=false, check_reg="a0", check_value=480, text="""
+def x 1000
+def y 500
+
+lda @x
+mov d0 r00
+
+lda @y
+mov d0 r01
+
+and r00 r01
+"""},
+{name="eq", is_file=false, check_reg="a0", check_value=4294967295, text="""
+def x 1000
+
+lda @x
+mov d0 r00
+mov d0 r01
+
+eq r00 r01
+"""},
+{name="neq", is_file=false, check_reg="a0", check_value=0, text="""
+def x 1000
+
+lda @x
+mov d0 r00
+mov d0 r01
+
+neq r00 r01
+"""},
+{name="gt", is_file=false, check_reg="a0", check_value=4294967295, text="""
+def x 1000
+
+lda @x
+mov d0 r00
+mov d0 r01
+
+incr r00
+
+gt r00 r01
+"""},
+{name="lt", is_file=false, check_reg="a0", check_value=0, text="""
+def x 1000
+
+lda @x
+mov d0 r00
+mov d0 r01
+
+incr r00
+
+lt r00 r01
 """}
 ]

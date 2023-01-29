@@ -1,0 +1,7 @@
+:test
+mov r00 r01
+end
+
+call test
+
+mov r00 r01
