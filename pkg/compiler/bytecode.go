@@ -6,6 +6,9 @@ import (
 	"sccreeper/goputer/pkg/util"
 )
 
+// GenerateBytecode
+//
+// Takes in a ProgramStructure and returns the corresponding compiled bytecode.
 func GenerateBytecode(p ProgramStructure) []byte {
 
 	byte_index := BlockAddrSize + 4
@@ -186,8 +189,9 @@ func GenerateBytecode(p ProgramStructure) []byte {
 
 }
 
-//General purpose instruction for generating instruction bytecode
-
+// Generates individual instruction bytecode.
+//
+// 1 byte for instruction, 4 bytes for arguments.
 func generate_instruction_bytecode(i Instruction, d_block_addr map[string]uint32, j_blk_addr map[string]uint32) []byte {
 
 	//TODO: sign bit

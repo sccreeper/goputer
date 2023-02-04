@@ -16,6 +16,7 @@ type DisassembledProgram struct {
 	StartIndexes       []uint32                       `json:"start_indexes"`
 }
 
+// Decodes individual instructions.
 func decode_instruction(b []byte) Instruction {
 
 	i := Instruction{}
@@ -87,6 +88,7 @@ func decode_instruction(b []byte) Instruction {
 // Main disassemble method.
 //
 // Takes program bytes and returns a DisassembledProgram struct.
+// The disassembled struct is similar to an assembled program struct but it is missing many of the fields that the assembled program struct has.
 func Disassemble(program_bytes []byte, verbose bool) (DisassembledProgram, error) {
 
 	var data_block_start uint32

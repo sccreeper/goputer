@@ -13,12 +13,12 @@ import (
 type ErrorType string
 
 const (
-	UnexpectedEndStatement  ErrorType = "unexpected end statement"
-	NestingError            ErrorType = "cannot nest jump blocks"
-	MinimumNameLength       ErrorType = "minimum length of one"
+	UnexpectedEndStatement  ErrorType = "unexpected end statement" //Error for a end statement outside of a jump block.
+	NestingError            ErrorType = "cannot nest jump blocks"  //Error for nesting jump blocks.
+	MinimumNameLength       ErrorType = "minimum length of one"    //Error for having a def/jump block name which isn't at least 1 character long.
 	NameConflict            ErrorType = "symbol already exists"
 	InstructionDoesNotExist ErrorType = "instruction does not exist"
-	SymbolDoesNotExist      ErrorType = "symbol does not exist"
+	SymbolDoesNotExist      ErrorType = "symbol does not exist" //When a symbol for a definition or a jump block doesn't exist.
 	InvalidArgument         ErrorType = "invalid argument"
 
 	CircularImport ErrorType = "circular import"

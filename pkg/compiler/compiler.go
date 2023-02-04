@@ -17,7 +17,10 @@ type AssembledProgram struct {
 	ProgramJson      string
 }
 
-// Assembler method
+// Compiler method
+//
+// Mainly used by the command line.
+// Designed to work on desktop systems only.
 func Compile(root_path string, get_file func(path string) []byte, config CompilerConfig, error_handler func(error_type ErrorType, error_text string)) (AssembledProgram, error) {
 
 	start_time := time.Now().UnixMicro()

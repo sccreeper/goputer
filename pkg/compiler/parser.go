@@ -14,41 +14,36 @@ import (
 	"strings"
 )
 
+// Parser struct
+// Can parse files with the Parse() method.
 type Parser struct {
-	CodeString string
-	CodeLines  []string
+	CodeString string   //Code of the entrypoint file.
+	CodeLines  []string //Individual lines of code, do not set unless you know what you're doing.
 
-	LineIndex   int
-	CurrentLine string
+	LineIndex   int    //Line index of the parser, do not set unless you know what you're doing.
+	CurrentLine string //Current line of the parser, do not set unless you know what you're doing.
 
-	AllNames []string
+	AllNames []string //All the names in the program, do not set unless you know what you're doing.
 
-	ProgramStatements [][]string
-	ProgramStructure  ProgramStructure
+	ProgramStatements [][]string       //Program lines, do not set unless you know what you're doing.
+	ProgramStructure  ProgramStructure //The returned program structure, do not set unless you know what you're doing.
 
-	FileName     string
-	Imported     bool
-	ImportedFrom string
+	FileName     string //Name of the entrypoint file (all imports are done relative to this.)
+	Imported     bool   //Has this file been imported by another file (do not set this value unless you know what you are doing)
+	ImportedFrom string //Where this file has been imported from (do not set this value unless you know what you are doing)
 
-	Verbose bool
+	Verbose bool //Should there be output when parsing the file.
 
-	ErrorHandler func(error_type ErrorType, error_text string)
-	FileReader   func(path string) []byte
+	ErrorHandler func(error_type ErrorType, error_text string) //The error handler method, required.
+	FileReader   func(path string) []byte                      //The file reader method, required.
 }
 
-// Takes a string and returns a program structure
+// Parser method
 //
-// code_string - code string
+// Needs to be called using a instantiated Parser struct.
 //
-// verbose - wether to output console when parsing
-//
-// imported - are we importing this file from another file
-
+// Returns a ProgramStructure struct.
 func (p *Parser) Parse() (ProgramStructure, error) {
-
-	//Remove empty lines
-
-	//p.CodeString = strings.ReplaceAll(p.CodeString, "\n\n", "\n")
 
 	//Split code into array based on line breaks
 
@@ -86,7 +81,6 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 		}
 
 		line := statement
-		//statement_items := make([]string, 0)
 		current_statement := ""
 
 		//Remove trailing whitespace
@@ -120,9 +114,6 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 			if char == '"' {
 				in_string = true
 			}
-
-			//Add the semi-parsed statement to the statement splice
-			//program_statements = append(program_statements, statement_items)
 
 		}
 
@@ -222,7 +213,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 			continue
 		}
 
-		// Parse for special purpose statements
+		// Parse for special purpose (compiler only) statements
 
 		if e[0] == "def" { //Constant definition
 			p.name_collision(e[1])
@@ -341,7 +332,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 			continue
 
-		} else if e[0][0] == ':' {
+		} else if e[0][0] == ':' { //Jump block definition.
 			//Errors
 			if in_jump_block {
 				p.parsing_error(ErrSyntax, NestingError)
@@ -451,7 +442,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 	return p.ProgramStructure, nil
 }
 
-// Method for combining program structures.
+// Method for combining the parsers program structure with another program structure.
 //
 // Used for imports.
 func (p *Parser) combine(s1 ProgramStructure) (ProgramStructure, error) {
@@ -518,8 +509,9 @@ func (p *Parser) combine(s1 ProgramStructure) (ProgramStructure, error) {
 
 }
 
-//Name collision function
-
+// Name collision function
+//
+// Checks for any name collisions in the parser, and returns error string.
 func (p *Parser) name_collision(s string) string {
 
 	var err string = ""
