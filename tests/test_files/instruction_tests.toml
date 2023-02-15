@@ -181,5 +181,19 @@ mov d0 r01
 incr r00
 
 lt r00 r01
+"""},
+{name="modulo", is_file=false, check_reg="a0", check_value="5", text="""
+
+def x 10
+def y 5
+
+lda @x
+mov d0 r00
+
+lda @y
+mov d0 r01
+
+mod r01 r00
+
 """}
 ]

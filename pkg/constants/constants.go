@@ -83,7 +83,7 @@ var InstructionInts = map[string]uint32{
 
 	"add": 2, //Basic arethmetic operations
 	"mul": 3,
-	"div": 4,
+	"div": 4, //Will floor decimal.
 	"sub": 5,
 
 	"cndjmp": 6, //Conditional jump.
@@ -116,7 +116,7 @@ var InstructionInts = map[string]uint32{
 
 	"hlt": 24, // Halt the CPU for X milliseconds
 
-	"sqrt": 25, //Square root, will round to nearest uint it isn't a float instruction
+	"sqrt": 25, //Square root, will floor decimal.
 
 	"call":    26,
 	"cndcall": 27,
@@ -124,6 +124,8 @@ var InstructionInts = map[string]uint32{
 	"pow": 28,
 
 	"clr": 29,
+
+	"mod": 30, //Mod instruction
 }
 
 var RegisterInts = map[string]uint32{
@@ -281,6 +283,8 @@ const (
 	IPower Instruction = 28
 
 	IClear Instruction = 29
+
+	IModulo Instruction = 30
 )
 
 // Instructions that take a single 32 bit arg, as opposed to 2x16bit args

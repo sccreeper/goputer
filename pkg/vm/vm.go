@@ -266,7 +266,7 @@ func (m *VM) Cycle() {
 	case c.ISubtract:
 		m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] - m.Registers[m.ArgSmall1]
 	case c.IDivide:
-		m.Registers[c.RAccumulator] = uint32(m.Registers[m.ArgSmall0] / m.Registers[m.ArgSmall1])
+		m.Registers[c.RAccumulator] = uint32(math.Floor(float64(m.Registers[m.ArgSmall0]) / float64(m.Registers[m.ArgSmall1])))
 	case c.ISquareRoot:
 		m.Registers[c.RAccumulator] = uint32(math.Sqrt(float64(m.Registers[m.ArgSmall0])))
 	case c.IIncrement:
@@ -281,6 +281,8 @@ func (m *VM) Cycle() {
 		} else {
 			m.Registers[c.RAccumulator] = uint32(math.Pow(float64(m.Registers[m.ArgSmall0]), float64(m.Registers[m.ArgSmall1])))
 		}
+	case c.IModulo:
+		m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] % m.Registers[m.ArgSmall1]
 
 	//Logic
 

@@ -11,7 +11,7 @@ A computer emulator/virtual machine that intends to demonstrate how basic comput
 **Contents**
 - [Features](#features)
   - [Complete](#complete)
-  - [Working on](#working-on)
+- [Working on](#working-on)
   - [In the future](#in-the-future)
 - [Documentation \& getting started.](#documentation--getting-started)
 - [Project layout](#project-layout)
@@ -40,15 +40,13 @@ A computer emulator/virtual machine that intends to demonstrate how basic comput
 
 ### Working on
 
-- Rewrite of parser.
+- Expansion cards/modules.
 
 #### In the future
 
-- A few new arithmetic instructions.
 - Rewrite of compiler.
 - High level language.
 - IDE for easy development.
-- Expansion cards/modules.
 
 ---
 
