@@ -11,10 +11,13 @@ A computer emulator/virtual machine that intends to demonstrate how basic comput
 **Contents**
 - [Features](#features)
   - [Complete](#complete)
-- [Working on](#working-on)
+  - [Working on](#working-on)
   - [In the future](#in-the-future)
 - [Documentation \& getting started.](#documentation--getting-started)
 - [Project layout](#project-layout)
+- [Build instructions](#build-instructions)
+  - [Linux](#linux)
+- [Testing](#testing)
 - [Credits](#credits)
   - [GP32 Frontend](#gp32-frontend)
   - [goputerpy Frontend](#goputerpy-frontend)
@@ -38,7 +41,7 @@ A computer emulator/virtual machine that intends to demonstrate how basic comput
 - Frontends to show VM output.
 - A [WASM based runtime](https://goputer.oscarcp.net) that runs in a web browser.
 
-### Working on
+#### Working on
 
 - Expansion cards/modules.
 
@@ -66,6 +69,115 @@ See the [project wiki](https://github.com/sccreeper/goputer/wiki) or try the pla
 - `cmd/goputer` The CLI tool for compiling, running & disassembling code.
 - `cmd/launcher` The GUI for running code.
 - `pkg` Shared code. Includes the compiler, VM runtime and constants for instructions and registers.
+
+---
+
+### Build instructions
+
+Build instructions for Linux and other platforms (soon TM).
+
+#### Linux
+
+**Perquisites**
+
+- Languages
+  - Python ^3.10
+  - Go ^1.19
+  - NodeJS ^18.X
+
+- Build tools
+  - [Poetry](https://python-poetry.org/)
+  - [Mage](https://magefile.org/)
+
+- Library requirements
+  
+  Requirements for different display servers & audio.
+  
+  ##### Ubuntu <!-- omit in toc -->
+  
+  ###### x11 <!-- omit in toc -->
+  
+  ```
+  libgl1-mesa-dev libxi-dev libxcursor-dev libxrandr-dev libxinerama-dev
+  ```
+
+  ###### Wayland <!-- omit in toc -->
+
+  ```
+  libgl1-mesa-dev libwayland-dev libxkbcommon-dev 
+  ```
+
+  ###### Audio <!-- omit in toc -->
+
+  ```
+  libasound2-dev
+  ```
+
+  ##### Fedora <!-- omit in toc -->
+
+  ###### x11 <!-- omit in toc -->
+
+  ```
+  mesa-libGL-devel libXi-devel libXcursor-devel libXrandr-devel libXinerama-devel
+  ```
+
+  ###### Wayland <!-- omit in toc -->
+
+  ```
+  mesa-libGL-devel wayland-devel libxkbcommon-devel
+  ```
+
+  ###### Audio <!-- omit in toc -->
+  ```
+  alsa-lib-devel
+  ```
+
+**Building**
+
+1. Install the prerequisites that are mentioned above.
+2. Check that everything works.
+   ```
+   $ node --version
+   v18.12.1
+   $ mage --version
+   Mage Build Tool v1.14.0
+   Build Date: 2022-11-09T16:45:13Z
+   Commit: 300bbc8
+   built with: go1.19.3
+   $ poetry --version
+   Poetry version 1.1.13
+   ```
+3. Clone the repository from GitHub
+
+    ```
+    git clone https://github.com/sccreeper/goputer
+    cd goputer
+    ```
+
+4. Build the project. (This step shouldn't take that long depending on your hardware)
+   
+   ```
+   mage dev
+   ```
+    Alternatively you can run `mage all` to *not* build the examples.
+
+5. Go to the build directory and run the `hello_world` example.
+   ```
+   cd build
+   ./goputer run -f gp32 -e ./examples/hello_world
+   ```
+
+---
+
+### Testing
+
+There a small suite of tests written for testing the core of goputer.
+
+To run them use:
+
+```
+go test ./tests -v
+```
 
 ---
 
