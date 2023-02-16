@@ -391,7 +391,7 @@ func main() {
 
 	// Make an instruction & interrupt array for disassembling
 
-	instructions_array := make([]interface{}, 30)
+	instructions_array := make([]interface{}, vm.InstructionCount)
 
 	for k, v := range constants.InstructionInts {
 
@@ -399,7 +399,7 @@ func main() {
 
 	}
 
-	interrupt_array := make([]interface{}, 22)
+	interrupt_array := make([]interface{}, vm.InterruptCount)
 
 	for k, v := range constants.InterruptInts {
 

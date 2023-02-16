@@ -17,6 +17,8 @@ const (
 	_MemSize                uint32 = 65536 // 2 ^ 16
 	_SubscribableInterrupts uint16 = 22
 	RegisterCount           uint16 = 56
+	InstructionCount        uint16 = 31
+	InterruptCount          uint16 = 22
 )
 
 type VM struct {
