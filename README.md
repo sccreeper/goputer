@@ -16,6 +16,7 @@ A computer emulator/virtual machine that intends to demonstrate how basic comput
 - [Documentation \& getting started.](#documentation--getting-started)
 - [Project layout](#project-layout)
 - [Build instructions](#build-instructions)
+  - [Docker](#docker)
   - [Linux](#linux)
 - [Testing](#testing)
 - [Credits](#credits)
@@ -75,6 +76,18 @@ See the [project wiki](https://github.com/sccreeper/goputer/wiki) or try the pla
 ### Build instructions
 
 Build instructions for Linux and other platforms (soon TM).
+
+#### Docker
+
+If you have [Docker](https://www.docker.com/) installed, you can build goputer in Docker without installing additional dependencies by running:
+
+```
+./docker_entrypoint.sh
+```
+
+This will build the container and then run `mage dev` inside the container, outputting to the build directory.
+
+**Note:** This uses a Fedora container, so the output will only work on Linux based systems.
 
 #### Linux
 
