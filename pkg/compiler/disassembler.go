@@ -6,6 +6,8 @@ import (
 	"log"
 	"sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/util"
+
+	"golang.org/x/exp/slices"
 )
 
 type DisassembledProgram struct {
@@ -46,7 +48,7 @@ func decode_instruction(b []byte) Instruction {
 	}
 
 	//Determine if instruction is two args or single arg
-	if util.SliceContains(constants.SingleArgInstructions, itn) {
+	if slices.Contains(constants.SingleArgInstructions, itn) {
 
 		itn_data = append(itn_data, binary.LittleEndian.Uint32(itn_data_bytes))
 

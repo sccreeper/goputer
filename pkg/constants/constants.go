@@ -126,6 +126,8 @@ var InstructionInts = map[string]uint32{
 	"clr": 29,
 
 	"mod": 30, //Mod instruction
+
+	"emi": 31, //Expansion module interact, not an interrupt because it is handled by the core, not frontends.
 }
 
 var RegisterInts = map[string]uint32{
@@ -198,6 +200,8 @@ var RegisterInts = map[string]uint32{
 	"dp": 54,
 
 	"sw": 55, //Sound wave type
+
+	"eml": 56, //Expansion module location on bus, 0 is the system module.
 }
 
 //Constants for use in runtime
@@ -285,6 +289,8 @@ const (
 	IClear Instruction = 29
 
 	IModulo Instruction = 30
+
+	IExpansionModuleInteract Instruction = 31
 )
 
 // Instructions that take a single 32 bit arg, as opposed to 2x16bit args
@@ -377,6 +383,8 @@ const (
 	RDataPointer Register = 54
 
 	RSoundWave Register = 55
+
+	RExpansionModuleLocation Register = 56
 )
 
 const (

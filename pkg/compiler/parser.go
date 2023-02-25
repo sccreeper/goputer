@@ -12,6 +12,8 @@ import (
 	"sccreeper/goputer/pkg/util"
 	"strconv"
 	"strings"
+
+	"golang.org/x/exp/slices"
 )
 
 // Parser struct
@@ -175,7 +177,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 			//Read other file
 			f_name := strings.Trim(e[1], "\"")
 
-			if util.SliceContains(p.ProgramStructure.ImportedFiles, f_name) {
+			if slices.Contains(p.ProgramStructure.ImportedFiles, f_name) {
 				//Already imported
 				continue
 			} else if f_name == p.ImportedFrom {
@@ -299,7 +301,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 				p.parsing_error(ErrSymbol, SymbolDoesNotExist)
 			}
 
-			if !util.SliceContains(p.ProgramStructure.InstructionBlockNames, e[2]) {
+			if !slices.Contains(p.ProgramStructure.InstructionBlockNames, e[2]) {
 				p.parsing_error(ErrSymbol, ErrorType(fmt.Sprintf("unrecognized jump %s", e[2])))
 			}
 
@@ -455,7 +457,7 @@ func (p *Parser) combine(s1 ProgramStructure) (ProgramStructure, error) {
 
 	combined.ImportedFiles = append(p.ProgramStructure.ImportedFiles[:], s1.ImportedFiles...)
 
-	if util.SliceContains(s1.ImportedFiles, p.FileName) {
+	if slices.Contains(s1.ImportedFiles, p.FileName) {
 
 		p.parsing_error(ErrImport, CircularImport)
 
@@ -465,7 +467,7 @@ func (p *Parser) combine(s1 ProgramStructure) (ProgramStructure, error) {
 
 	for _, v := range p.ProgramStructure.AllNames {
 
-		if util.SliceContains(s1.AllNames, v) {
+		if slices.Contains(s1.AllNames, v) {
 			return ProgramStructure{}, ErrSymbol
 		}
 
@@ -526,7 +528,7 @@ func (p *Parser) name_collision(s string) string {
 		err = fmt.Sprintf("name %s shares name with interrupt", s)
 	}
 
-	if util.SliceContains(p.ProgramStructure.AllNames, s) {
+	if slices.Contains(p.ProgramStructure.AllNames, s) {
 		err = fmt.Sprintf("%s collides with %s", s, s)
 	}
 

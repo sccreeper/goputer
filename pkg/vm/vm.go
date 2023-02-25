@@ -16,8 +16,8 @@ import (
 const (
 	_MemSize                uint32 = 65536 // 2 ^ 16
 	_SubscribableInterrupts uint16 = 22
-	RegisterCount           uint16 = 56
-	InstructionCount        uint16 = 31
+	RegisterCount           uint16 = 57
+	InstructionCount        uint16 = 32
 	InterruptCount          uint16 = 22
 )
 

@@ -1,0 +1,23 @@
+[info]
+
+# Authour info
+
+name = "Goputer System Module"
+description = "The system module for goputer"
+authour = "Oscar Peace (sccreeper)"
+repository = "https://github.com/sccreeper/goputer"
+
+# Is the expansion module native or not, non native modules are written in Lua. Also supported platforms if it is native.
+native = true
+supported_platforms = ["linux"]
+
+# ID of the module, used when querying modules. This is also the name of the entrypoint, e.g. goputer.sys.so or goputer.sys.lua
+id = "goputer.sys"
+
+# Attributes that can be set & retrieved by the frontend
+attributes = ["name", "display_width", "display_height", "memory"]
+
+[build]
+
+command = ["sh", "cmd.sh"]
+output_dir = "build"

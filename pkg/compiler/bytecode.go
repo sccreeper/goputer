@@ -3,7 +3,8 @@ package compiler
 import (
 	"encoding/binary"
 	"sccreeper/goputer/pkg/constants"
-	"sccreeper/goputer/pkg/util"
+
+	"golang.org/x/exp/slices"
 )
 
 // GenerateBytecode
@@ -112,7 +113,7 @@ func GenerateBytecode(p ProgramStructure) []byte {
 
 	for _, v := range constants.SubscribableInterrupts {
 
-		if util.SliceContains(included_interrupts, v) {
+		if slices.Contains(included_interrupts, v) {
 			continue
 		} else {
 			i := v
