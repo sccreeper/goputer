@@ -7,12 +7,17 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
+	"runtime"
+	"sccreeper/goputer/pkg/expansions"
 	"sccreeper/goputer/pkg/util"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
+	"golang.org/x/exp/slices"
 )
 
 type FrontendBuildConfig struct {
@@ -33,6 +38,7 @@ const (
 	examples_dir    string = "examples/."
 	goputer_cmd_out string = "./build/goputer"
 	frontend_dir    string = "./frontends"
+	expansions_dir  string = "./expansions/"
 )
 
 // Builds, clears directory beforehand & copies examples
@@ -126,6 +132,54 @@ func All() {
 
 		sh.Run("cp", "-rf", fmt.Sprintf("./frontends/%s/%s", v.Name(), build_config.Build.OutputDir), fmt.Sprintf("./build/frontends/%s", v.Name()))
 		sh.Run("cp", fmt.Sprintf("./frontends/%s/frontend.toml", v.Name()), fmt.Sprintf("./build/frontends/%s/frontend.toml", v.Name()))
+	}
+
+	// Build expansions
+
+	fmt.Println("Building expansions...")
+
+	directories, err = ioutil.ReadDir(expansions_dir)
+	util.CheckError(err)
+
+	for _, v := range directories {
+
+		previous_dir, err = os.Getwd()
+		util.CheckError(err)
+
+		os.Chdir(path.Join("./expansions", v.Name()))
+
+		var exp_config expansions.ExpansionManifest
+		_, err := toml.DecodeFile("./expansion.toml", &exp_config)
+
+		if err != nil {
+			fmt.Printf("Config error with expansion %s:\n", v.Name())
+			fmt.Println(err.Error())
+			continue
+		} else if !slices.Contains(exp_config.Info.SupportedPlatforms, runtime.GOOS) {
+			fmt.Printf("Error cannot build expansion %s (%s) on current platform %s as it only supports platforms %s\n",
+				exp_config.Info.Name,
+				exp_config.Info.ID,
+				runtime.GOOS,
+				strings.Join(exp_config.Info.SupportedPlatforms, ", "))
+		}
+
+		fmt.Printf("Building expansion '%s' (%s)...\n", exp_config.Info.Name, exp_config.Info.ID)
+
+		cmd := exec.Command(exp_config.Build.Command[0], exp_config.Build.Command[1:]...)
+		cmd.Stderr = os.Stderr
+		cmd.Stdout = os.Stdout
+		cmd.Stdin = os.Stdin
+
+		cmd.Run()
+
+		os.Chdir(previous_dir)
+
+		os.Mkdir("./build/expansions/", 0755)
+		os.Mkdir(fmt.Sprintf("./build/expansions/%s", exp_config.Info.ID), 0755)
+
+		sh.Run("cp", fmt.Sprintf("./expansions/%s/expansion.toml", v.Name()), fmt.Sprintf("./build/expansions/%s/expansion.toml", exp_config.Info.ID))
+		sh.Run("cp", "-ra", fmt.Sprintf("./expansions/%s/%s/.", v.Name(), exp_config.Build.OutputDir), fmt.Sprintf("./build/expansions/%s/", exp_config.Info.ID))
+
 	}
 
 }

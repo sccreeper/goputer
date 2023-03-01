@@ -19,5 +19,5 @@ attributes = ["name", "display_width", "display_height", "memory"]
 
 [build]
 
-command = ["sh", "cmd.sh"]
+command = ["sh", "build.sh"]
 output_dir = "build"
