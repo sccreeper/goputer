@@ -7,6 +7,7 @@ import (
 	"sccreeper/goputer/pkg/vm"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
+	"golang.org/x/exp/slices"
 )
 
 var itn_map map[uint32]string
@@ -52,7 +53,7 @@ func RenderVMDebug(m *vm.VM) {
 	case constants.IJump, constants.ICall, constants.IConditionalJump, constants.IConditionalCall:
 		arg_text = util.ConvertHex(m.ArgLarge)
 	default:
-		if util.SliceContains(constants.SingleArgInstructions, m.Opcode) && m.Opcode != constants.ICallInterrupt {
+		if slices.Contains(constants.SingleArgInstructions, m.Opcode) && m.Opcode != constants.ICallInterrupt {
 			arg_text = register_map[m.ArgLarge]
 		} else if m.Opcode == constants.ICallInterrupt {
 			arg_text = interrupt_map[constants.Interrupt(m.ArgLarge)]

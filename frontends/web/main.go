@@ -14,6 +14,8 @@ import (
 	"sccreeper/goputer/pkg/util"
 	"sccreeper/goputer/pkg/vm"
 	"syscall/js"
+
+	"golang.org/x/exp/slices"
 )
 
 var js32 vm.VM
@@ -244,7 +246,7 @@ func ParserItnStr(this js.Value, args []js.Value) any {
 	case constants.IJump, constants.ICall, constants.IConditionalJump, constants.IConditionalCall:
 		arg_text = util.ConvertHex(js32.ArgLarge)
 	default:
-		if util.SliceContains(constants.SingleArgInstructions, js32.Opcode) && js32.Opcode != constants.ICallInterrupt {
+		if slices.Contains(constants.SingleArgInstructions, js32.Opcode) && js32.Opcode != constants.ICallInterrupt {
 			arg_text = register_map[js32.ArgLarge]
 		} else if js32.Opcode == constants.ICallInterrupt {
 			arg_text = interrupt_map[constants.Interrupt(js32.ArgLarge)]

@@ -20,21 +20,6 @@ func SliceRemove[T string | byte](slice []T, s int) []T {
 	return append(slice[:s], slice[s+1:]...)
 }
 
-// Sees if a splice contains a specified X
-// func SliceContains[T string | c.Instruction | c.Interrupt](splice []T, search_value T) bool {
-
-// 	for _, v := range splice {
-
-// 		if v == search_value {
-// 			return true
-// 		}
-
-// 	}
-
-// 	return false
-
-// }
-
 // Splits a slice into chunks
 func SliceChunks[T any](slice []T, chunk_size int) [][]T {
 
