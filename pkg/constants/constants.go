@@ -201,7 +201,6 @@ var RegisterInts = map[string]uint32{
 
 	"sw": 55, //Sound wave type
 
-	"eml": 56, //Expansion module location on bus, 0 is the system module.
 }
 
 //Constants for use in runtime
@@ -312,6 +311,7 @@ var SingleArgInstructions = []Instruction{
 	ICallInterrupt,
 	IPush,
 	IPop,
+	IExpansionModuleInteract,
 }
 
 const (
@@ -383,8 +383,6 @@ const (
 	RDataPointer Register = 54
 
 	RSoundWave Register = 55
-
-	RExpansionModuleLocation Register = 56
 )
 
 const (

@@ -6,6 +6,7 @@ import (
 	"math"
 	comp "sccreeper/goputer/pkg/compiler"
 	c "sccreeper/goputer/pkg/constants"
+	"sccreeper/goputer/pkg/expansions"
 	"sccreeper/goputer/pkg/util"
 	"sync"
 	"time"
@@ -102,6 +103,10 @@ func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt, 
 
 	//Copy program into memory
 	copy(machine.MemArray[comp.StackSize:], vm_program[:len(vm_program)-int(comp.PadSize)])
+
+	// Load expansions
+
+	expansions.LoadExpansions()
 
 	return nil
 
@@ -348,7 +353,14 @@ func (m *VM) Cycle() {
 			}
 
 		}
+	case c.IExpansionModuleInteract:
+		if expansions.ModuleExists(m.Registers[m.ArgLarge]) {
+			data := expansions.Interaction(m.Registers[m.ArgLarge], m.DataBuffer[:])
 
+			m.Registers[c.RDataLength] = uint32(len(data))
+			m.Registers[c.RDataPointer] = 0
+			copy(m.DataBuffer[:], data)
+		}
 	}
 
 	if m.Registers[c.RCallStackPointer] != uint32(temp_call_stack) {

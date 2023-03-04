@@ -1,0 +1,13 @@
+// Interacts with the system module
+
+def white 0xFFFFFFFF
+
+lda @white
+mov d0 vc
+
+clr d0
+
+emi r00
+
+mov d0 vt
+int vt

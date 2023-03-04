@@ -15,7 +15,7 @@ supported_platforms = ["linux"]
 id = "goputer.sys"
 
 # Attributes that can be set & retrieved by the frontend
-attributes = ["name", "display_width", "display_height", "memory"]
+attributes = ["name", "display_width", "display_height", "memory", "expansions"]
 
 [build]
 

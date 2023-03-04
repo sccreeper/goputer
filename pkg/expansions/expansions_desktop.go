@@ -49,6 +49,7 @@ type ExpansionLoaded struct {
 }
 
 var expansions map[string]ExpansionLoaded
+var bus_locations map[uint32]string
 var native_extension string
 
 func init() {
@@ -59,26 +60,21 @@ func init() {
 		native_extension = "so"
 	}
 
+	expansions = make(map[string]ExpansionLoaded)
+	bus_locations = make(map[uint32]string)
+
 }
 
 // Desktop method for loading expansions
 func LoadExpansions() {
 
-	var current_plugin string
 	var broken_plugins []string = make([]string, 0)
 
 	directories, err := os.ReadDir(ExpansionDir)
 	util.CheckError(err)
 
-	defer func() {
-		if recover() != nil {
-			log.Printf("Fatal error loading the entrypoint file for %s\n.", current_plugin)
-			broken_plugins = append(broken_plugins, current_plugin)
-		}
-	}()
-
 	for _, v := range directories {
-		current_plugin = v.Name()
+		log.Printf("Loading %s...\n", v.Name())
 
 		if !v.IsDir() {
 			continue
@@ -133,6 +129,8 @@ func LoadExpansions() {
 					}
 					exp_loaded.SetAttribute = set_attribute_temp.(func(string, interface{}))
 
+					expansions[exp_loaded.Manifest.Info.ID] = exp_loaded
+
 					log.Printf("Loaded expansion %s successfully.", v.Name())
 
 				} else {
@@ -145,6 +143,65 @@ func LoadExpansions() {
 
 	}
 
+	// Assign all expansions to locations on bus, goputer.sys will be 0
+
+	bus_locations = make(map[uint32]string)
+	bus_locations[0] = "goputer.sys"
+
+	var bus_location_index int = 1
+
+	for _, v := range expansions {
+
+		if v.Manifest.Info.ID == "goputer.sys" {
+			continue
+		} else {
+			bus_locations[uint32(bus_location_index)] = v.Manifest.Info.ID
+			bus_location_index++
+		}
+
+	}
+
+	// Log all bus locations
+	log.Println("Bus locations:")
+
+	for k, v := range bus_locations {
+		log.Printf("%d: %s\n", k, v)
+	}
+
+	//Set bus locations for system module
+	for k, v := range bus_locations {
+		expansions["goputer.sys"].GetAttribute("expansions").(map[string]uint32)[v] = k
+	}
+
+}
+
+func Interaction(location uint32, data []byte) []byte {
+
+	if val, ok := bus_locations[location]; ok {
+		return expansions[val].Handler(data)
+	} else {
+		return []byte{0, 0, 0, 0}
+	}
+
+}
+
+// Does a module exist at this location on the bus?
+func ModuleExists(location uint32) bool {
+
+	if _, ok := bus_locations[location]; ok {
+		return true
+	} else {
+		return false
+	}
+
+}
+
+func SetAttribute(id string, attribute string, value interface{}) {
+	expansions[id].SetAttribute(attribute, value)
+}
+
+func GetAttribute(id string, attribute string) interface{} {
+	return expansions[id].GetAttribute(attribute)
 }
 
 func loader_error(e error, expansion_name string) bool {
