@@ -12,6 +12,11 @@ from goputerpy.sound import SoundManager
 def correct_mouse_y(y: int) -> int:
     return y - r.TOTAL_Y_OFFSET
 
+
+if not len(sys.argv) >= 2:
+    print("Pass in a file to run!")
+    exit()
+
 #Sound init
 
 pre_init(44100, -16, 1, 1024)
@@ -35,8 +40,12 @@ debug_surface = pg.surface.Surface((640, r.DEBUG_UI_SIZE))
 #Read the code file
 f_name = sys.argv[1]
 
+print(f"Loading program {f_name}...")
+
 f_bytes = open(f_name, "rb")
 f_bytes = f_bytes.read()
+
+print(f"Program size: {len(list(f_bytes))}")
 
 sound_manager = SoundManager()
 

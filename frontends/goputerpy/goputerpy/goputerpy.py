@@ -8,7 +8,7 @@ print("Loading SO...")
 files = os.listdir(".")
 
 if "goputer" in files:
-    _lib = ctypes.cdll.LoadLibrary("./frontends/goputerpy/goputerpy/bindings.so")
+    _lib = ctypes.cdll.LoadLibrary("./frontends/goputerpy/bindings.so")
 else:
     _lib = ctypes.cdll.LoadLibrary("./bindings.so")
 
