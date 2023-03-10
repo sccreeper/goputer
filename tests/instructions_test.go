@@ -78,7 +78,7 @@ func TestInstructions(t *testing.T) {
 		test_32_interrupt_channel = make(chan constants.Interrupt)
 		test_32_subbed_interrupt_channel = make(chan constants.Interrupt)
 
-		vm.InitVM(&test_32, program_bytes, test_32_interrupt_channel, test_32_subbed_interrupt_channel, false)
+		vm.InitVM(&test_32, program_bytes, test_32_interrupt_channel, test_32_subbed_interrupt_channel, false, false)
 
 		test_32.Run()
 
@@ -114,7 +114,7 @@ func TestJump(t *testing.T) {
 		panic(err)
 	}
 
-	vm.InitVM(&test_32, compile(string(program_text[:])), test_32_interrupt_channel, test_32_subbed_interrupt_channel, true)
+	vm.InitVM(&test_32, compile(string(program_text[:])), test_32_interrupt_channel, test_32_subbed_interrupt_channel, true, false)
 
 	var in_jump bool = false
 	var jump_addr uint32
@@ -153,7 +153,7 @@ func TestCall(t *testing.T) {
 		panic(err)
 	}
 
-	vm.InitVM(&test_32, compile(string(program_text[:])), test_32_interrupt_channel, test_32_subbed_interrupt_channel, true)
+	vm.InitVM(&test_32, compile(string(program_text[:])), test_32_interrupt_channel, test_32_subbed_interrupt_channel, true, false)
 
 	var in_call bool = false
 	var call_addr uint32
@@ -196,7 +196,7 @@ func TestConditionalJump(t *testing.T) {
 		panic(err)
 	}
 
-	vm.InitVM(&test_32, compile(string(program_text[:])), test_32_interrupt_channel, test_32_subbed_interrupt_channel, true)
+	vm.InitVM(&test_32, compile(string(program_text[:])), test_32_interrupt_channel, test_32_subbed_interrupt_channel, true, false)
 
 	var in_jump bool = false
 	var jump_addr uint32
@@ -235,7 +235,7 @@ func TestConditionalCall(t *testing.T) {
 		panic(err)
 	}
 
-	vm.InitVM(&test_32, compile(string(program_text[:])), test_32_interrupt_channel, test_32_subbed_interrupt_channel, true)
+	vm.InitVM(&test_32, compile(string(program_text[:])), test_32_interrupt_channel, test_32_subbed_interrupt_channel, true, false)
 
 	var in_jump bool = false
 	var jump_addr uint32

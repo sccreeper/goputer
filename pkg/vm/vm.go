@@ -3,6 +3,7 @@ package vm
 import (
 	"encoding/binary"
 	"errors"
+	"log"
 	"math"
 	comp "sccreeper/goputer/pkg/compiler"
 	c "sccreeper/goputer/pkg/constants"
@@ -51,10 +52,12 @@ type VM struct {
 	InterruptQueue    []uint32
 
 	ShouldStep bool
+
+	ExpansionsSupported bool
 }
 
 // Initialize VM and registers, load code into "memory" etc.
-func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt, subbed_interrupt_channel chan c.Interrupt, should_step bool) error {
+func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt, subbed_interrupt_channel chan c.Interrupt, should_step bool, expansions_supported bool) error {
 
 	if len(vm_program) > int(_MemSize) {
 		return errors.New("program too large")
@@ -106,7 +109,11 @@ func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt, 
 
 	// Load expansions
 
-	expansions.LoadExpansions()
+	if expansions_supported {
+		expansions.LoadExpansions()
+	} else {
+		log.Println("Expansions are disabled for this frontend")
+	}
 
 	return nil
 
@@ -354,7 +361,7 @@ func (m *VM) Cycle() {
 
 		}
 	case c.IExpansionModuleInteract:
-		if expansions.ModuleExists(m.Registers[m.ArgLarge]) {
+		if expansions.ModuleExists(m.Registers[m.ArgLarge]) && m.ExpansionsSupported {
 			data := expansions.Interaction(m.Registers[m.ArgLarge], m.DataBuffer[:])
 
 			m.Registers[c.RDataLength] = uint32(len(data))

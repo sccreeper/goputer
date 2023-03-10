@@ -1,4 +1,4 @@
-//go:build js
+//go:build js && wasm
 
 // WASM "proxy" layer between JS and goputer
 package main
@@ -109,7 +109,7 @@ func Init() js.Func {
 
 		js32 = vm.VM{}
 
-		vm.InitVM(&js32, program_bytes, js32.InterruptChannel, js32SubbedInterruptChannel, true)
+		vm.InitVM(&js32, program_bytes, js32.InterruptChannel, js32SubbedInterruptChannel, true, true)
 
 		return js.ValueOf(nil)
 

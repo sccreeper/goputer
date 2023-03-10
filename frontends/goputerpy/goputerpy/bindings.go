@@ -24,6 +24,7 @@ func Init(program_bytes *C.char, code_length C.int) {
 		py32InteruptChannel,
 		py32SubbedInterruptChannel,
 		true,
+		false,
 	)
 
 	log.Println("VM Created")
