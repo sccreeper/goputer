@@ -32,8 +32,6 @@ A computer emulator/virtual machine that intends to demonstrate how basic comput
 
 ### Features
 
-**Note:** Now that the core functionality of goputer is finished, most of the new features are focusing on improvements as opposed to large & complicated changes.
-
 #### Complete
 
 - Custom assembly language and compiler.
@@ -41,16 +39,17 @@ A computer emulator/virtual machine that intends to demonstrate how basic comput
 - Standalone executables.
 - Frontends to show VM output.
 - A [WASM based runtime](https://goputer.oscarcp.net) that runs in a web browser.
+- Expansion cards/modules.
 
 #### Working on
 
-- Expansion cards/modules.
+- IDE for easy development.
 
 #### In the future
 
 - Rewrite of compiler.
 - High level language.
-- IDE for easy development.
+- Non-native plugins via Lua.
 
 ---
 
@@ -75,7 +74,7 @@ See the [project wiki](https://github.com/sccreeper/goputer/wiki) or try the pla
 
 ### Build instructions
 
-Build instructions for Linux and other platforms (soon TM).
+Build instructions for Linux, other platforms are not supported at the moment as native plugins do not work at all. See [plugin](https://pkg.go.dev/plugin)
 
 #### Docker
 
