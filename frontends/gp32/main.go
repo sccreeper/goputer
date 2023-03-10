@@ -10,6 +10,7 @@ import (
 	"sccreeper/goputer/frontends/gp32/rendering"
 	"sccreeper/goputer/frontends/gp32/sound"
 	c "sccreeper/goputer/pkg/constants"
+	"sccreeper/goputer/pkg/expansions"
 	"sccreeper/goputer/pkg/vm"
 	"strings"
 	"time"
@@ -89,6 +90,8 @@ func Run(program []byte, args []string) {
 	}
 
 	vm.InitVM(&gp32, program, gp32_chan, gp32_subbed_chan, false, true)
+
+	expansions.SetAttribute("goputer.sys", "name", "gp32")
 
 	go gp32.Run()
 

@@ -76,6 +76,7 @@ func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt, 
 	machine.Finished = false
 	machine.ProgramBounds = comp.StackSize + uint32(len(vm_program[:len(vm_program)-int(comp.PadSize)]))
 	machine.Registers[c.RVideoBrightness] = 255
+	machine.ExpansionsSupported = expansions_supported
 
 	machine.Registers[c.RCallStackZeroPointer] = comp.StackSize - comp.CallStackSize
 	machine.Registers[c.RCallStackPointer] = machine.Registers[c.RCallStackZeroPointer]

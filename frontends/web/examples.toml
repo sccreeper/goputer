@@ -147,5 +147,25 @@ lda @vol
 mov d0 sv
 
 jmp loop
+"""},
+{ name="System Module", description="Grabs the name of the frontend from the system module", path="sys_module", program_text="""
+// Interacts with the system module
+
+def white 0xFFFFFFFF
+def name_string "Name: "
+
+lda @white
+mov d0 vc
+
+clr d0
+
+emi r00
+mov d0 vt
+
+lda @name_string
+sr vt dl
+mov d0 vt
+
+int vt
 """}
 ]
