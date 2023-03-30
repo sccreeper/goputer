@@ -152,6 +152,9 @@ Instructions = {
 	"pow": 28,
 
 	"clr": 29,
+     
+	"mod" : 30,
+    "emi" : 31,
 }
 
 SingleArgInstructions = [
@@ -168,6 +171,7 @@ SingleArgInstructions = [
 	Instructions["call"],
 	Instructions["cndcall"],
 	Instructions["clr"],
+    Instructions["emi"],
 ]
 
 InterruptInts = {
