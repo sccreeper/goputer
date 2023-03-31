@@ -49,9 +49,13 @@ func _compiler(ctx *cli.Context) error {
 	//Determine output path
 
 	if ctx.String("output") == "" {
-		OutputPath = strings.TrimSuffix(file_path, filepath.Ext(file_path))
+		OutputPath = strings.TrimSuffix(file_path, filepath.Ext(file_path)) + ".gp"
 	} else if ctx.String("output") != "" {
-		OutputPath = ctx.String("output")
+		if filepath.Ext(ctx.String("output")) != ".gp" {
+			OutputPath = ctx.String("output") + ".gp"
+		} else {
+			OutputPath = ctx.String("output")
+		}
 	}
 
 	//Determine JSON path

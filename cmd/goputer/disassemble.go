@@ -20,6 +20,11 @@ func _disassemble(ctx *cli.Context) error {
 	data, err := os.ReadFile(file_path)
 	util.CheckError(err)
 
+	if string(data[:4]) != compiler.MagicString {
+		fmt.Println("Error: Invalid file")
+		os.Exit(1)
+	}
+
 	program, err := compiler.Disassemble(data, false)
 
 	//Reverse map

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"plugin"
+	"sccreeper/goputer/pkg/compiler"
 	"sccreeper/goputer/pkg/util"
 
 	"github.com/urfave/cli/v2"
@@ -15,6 +16,11 @@ func _run(ctx *cli.Context) error {
 
 	program_bytes, err := os.ReadFile(GPExec)
 	util.CheckError(err)
+
+	if string(program_bytes[:4]) != compiler.MagicString {
+		fmt.Println("Error: Invalid file")
+		os.Exit(1)
+	}
 
 	p, err := plugin.Open(fmt.Sprintf("./frontends/%s/%s%s", FrontendToUse, FrontendToUse, PluginExt))
 	util.CheckError(err)
