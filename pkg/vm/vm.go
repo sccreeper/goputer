@@ -59,11 +59,13 @@ type VM struct {
 // Initialize VM and registers, load code into "memory" etc.
 func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt, subbed_interrupt_channel chan c.Interrupt, should_step bool, expansions_supported bool) error {
 
-	if len(vm_program) > int(_MemSize) {
+	if len(vm_program)-4 > int(_MemSize) {
 		return errors.New("program too large")
 	}
 
 	//Extract program start index
+
+	vm_program = vm_program[4:]
 
 	program_start_index := binary.LittleEndian.Uint32(vm_program[12:])
 	interrupt_start_index := binary.LittleEndian.Uint32(vm_program[8:12])

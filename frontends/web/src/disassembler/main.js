@@ -62,6 +62,11 @@ ButtonUpload.addEventListener("click", (e) => {
 
 ButtonDisassemble.addEventListener("click", (e) => {
 
+    if (String.fromCharCode(...uploaded_bytes.slice(0, 4)) != "GPTR") {
+        alert("Invalid file!")
+        return
+    }
+
     let code_string = disassembleCode(uploaded_bytes)
     
     DisplayDisassembledCode(code_string)

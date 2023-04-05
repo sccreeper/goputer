@@ -112,8 +112,10 @@ func Disassemble(program_bytes []byte, verbose bool) (DisassembledProgram, error
 	//Extract header and
 
 	if verbose {
-		log.Printf("Got program with %d byte(s)", len(program_bytes))
+		log.Printf("Got program with %d byte(s)", len(program_bytes)-4)
 	}
+
+	program_bytes = program_bytes[4:]
 
 	program.StartIndexes = make([]uint32, 4)
 

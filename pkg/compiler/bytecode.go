@@ -7,6 +7,10 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+const (
+	MagicString string = "GPTR"
+)
+
 // GenerateBytecode
 //
 // Takes in a ProgramStructure and returns the corresponding compiled bytecode.
@@ -154,6 +158,8 @@ func GenerateBytecode(p ProgramStructure) []byte {
 	}
 
 	//Construct final byte array
+
+	final_bytes = append(final_bytes, []byte(MagicString)...)
 
 	b_padding_bytes := []byte{PadValue, PadValue, PadValue, PadValue}
 
