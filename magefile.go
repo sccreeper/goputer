@@ -76,6 +76,7 @@ func All() {
 	launcher_ld_flags := "-s -w"
 
 	previous_dir, err = os.Getwd()
+	util.CheckError(err)
 
 	os.Chdir("./cmd/gplauncher")
 
@@ -84,6 +85,21 @@ func All() {
 	os.Chdir(previous_dir)
 
 	sh.Run("cp", "./cmd/gplauncher/gplauncher", "./build/gplauncher")
+
+	//Build IDE
+
+	fmt.Println("Building IDE...")
+
+	previous_dir, err = os.Getwd()
+	util.CheckError(err)
+
+	os.Chdir("./cmd/ide")
+
+	sh.Run("go", "build", "-ldflags", launcher_ld_flags, "-o", "ide")
+
+	os.Chdir(previous_dir)
+
+	sh.Run("cp", "./cmd/ide/ide", "./build/ide")
 
 	//Copy the examples
 
