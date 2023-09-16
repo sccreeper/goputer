@@ -1,0 +1,12 @@
+[info]
+
+name = "GPC"
+description = "Goputer runtime written in C"
+authour = "Oscar Peace (sccreeper)"
+repository = "https://github.com/sccreeper/goputer"
+is_plugin = false
+
+[build]
+
+command = ["make", "config=release"]
+output_dir = "build"
