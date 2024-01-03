@@ -11,25 +11,48 @@ int vc
 jmp loop
 end
 
-:draw_line
-
-mov mx vx1
-mov my vy1
-
-int vl
+:end_draw
 
 clr a0
 decr io00
 int iof
 
-call loop
+jmp loop
+
+end
+
+:draw_line
+
+int vl
+jmp end_draw
+
+end
+
+:draw_square
+
+int va
+jmp end_draw
+
+end
+
+:draw
+
+mov mx vx1
+mov my vy1
+
+clr a0
+
+eq io08 r00
+cndjmp draw_square
+
+jmp draw_line
 
 end
 
 :onpress
 
 eq a0 r00
-cndjmp draw_line
+cndjmp draw
 
 mov mx vx0
 mov my vy0
