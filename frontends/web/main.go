@@ -307,9 +307,9 @@ func ConvertColour(this js.Value, args []js.Value) any {
 func ConvertHex(this js.Value, args []js.Value) any {
 
 	if args[1].Bool() {
-		return js.ValueOf(util.ConvertHex(args[0].Int() + int(compiler.StackSize)))
+		return js.ValueOf(util.ConvertHex[int](args[0].Int() + int(compiler.StackSize)))
 	} else {
-		return js.ValueOf(util.ConvertHex(args[0].Int()))
+		return js.ValueOf(util.ConvertHex[int](args[0].Int()))
 	}
 
 }

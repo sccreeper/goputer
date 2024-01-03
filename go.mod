@@ -1,18 +1,18 @@
 module sccreeper/goputer
 
-go 1.19
+go 1.21
 
 require (
 	fyne.io/fyne/v2 v2.3.1
-	github.com/BurntSushi/toml v1.2.1
+	github.com/BurntSushi/toml v1.3.2
 	github.com/faiface/beep v1.1.0
 	github.com/fatih/color v1.14.1
 	github.com/gen2brain/raylib-go/raylib v0.0.0-20230213081331-0c9d5a435c64
-	github.com/magefile/mage v1.14.0
+	github.com/magefile/mage v1.15.0
 	github.com/savioxavier/termlink v1.2.1
 	github.com/sqweek/dialog v0.0.0-20220809060634-e981b270ebbf
 	github.com/urfave/cli/v2 v2.24.4
-	golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2
+	golang.org/x/exp v0.0.0-20240103183307-be819d1f06fc
 )
 
 require (

@@ -159,8 +159,6 @@ func (m *VM) Step() {
 
 func (m *VM) Cycle() {
 
-	var temp_call_stack int
-
 	if m.Finished {
 		return
 	}
@@ -232,10 +230,7 @@ func (m *VM) Cycle() {
 			return
 		} else {
 			m.pop_call()
-
-			if m.HandlingInterrupt {
-				m.HandlingInterrupt = false
-			}
+			m.HandlingInterrupt = false
 
 			return
 		}
@@ -257,16 +252,18 @@ func (m *VM) Cycle() {
 		return
 
 	case c.IConditionalCall:
-		m.conditional_call()
-		return
+		if m.conditional_call() {
+			return
+		}
 
 	case c.IJump:
 		m.jump()
 		return
 
 	case c.IConditionalJump:
-		m.conditional_jump()
-		return
+		if m.conditional_jump() {
+			return
+		}
 
 		// Load & store
 	case c.ILoad:
@@ -371,14 +368,6 @@ func (m *VM) Cycle() {
 			m.Registers[c.RDataPointer] = 0
 			copy(m.DataBuffer[:], data)
 		}
-	}
-
-	if m.Registers[c.RCallStackPointer] != uint32(temp_call_stack) {
-
-		temp_call_stack = int(m.Registers[c.RCallStackPointer])
-		//fmt.Printf("Opcode %d\n", m.Opcode)
-		//fmt.Printf("Call stack %d\n", temp_call_stack)
-
 	}
 
 	m.Registers[c.RProgramCounter] += comp.InstructionLength

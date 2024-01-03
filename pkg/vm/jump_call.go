@@ -26,25 +26,35 @@ func (m *VM) call() {
 	m.Registers[c.RProgramCounter] = m.ArgLarge
 }
 
-func (m *VM) conditional_call() {
+func (m *VM) conditional_call() bool {
 	if m.Registers[c.RAccumulator] != 0 {
 		m.Registers[c.RCallStackPointer] += 4
 		binary.LittleEndian.PutUint32(
 			m.MemArray[m.Registers[c.RCallStackPointer]:m.Registers[c.RCallStackPointer]+4],
 			m.Registers[c.RProgramCounter]+compiler.InstructionLength)
 		m.Registers[c.RProgramCounter] = m.ArgLarge
+
+		return true
+	} else {
+		return false
 	}
 }
 
 // Jumps
 func (m *VM) jump() {
+	m.HandlingInterrupt = false
+
 	m.Registers[c.RProgramCounter] = m.ArgLarge
 }
 
-func (m *VM) conditional_jump() {
+func (m *VM) conditional_jump() bool {
 
 	if m.Registers[c.RAccumulator] != 0 {
+		m.HandlingInterrupt = false
 		m.Registers[c.RProgramCounter] = m.ArgLarge
+		return true
+	} else {
+		return false
 	}
 
 }

@@ -167,5 +167,57 @@ sr vt dl
 mov d0 vt
 
 int vt
+"""},
+{name="Paint keyboard", description="Like paint but uses keyboard presses for drawing", path="paint_keyboard_press", program_text="""
+//Paint that uses key presses
+
+def bg 0xffffffff
+def line 0x000000ff
+
+lda @bg
+mov d0 vc
+int vc
+
+:loop
+jmp loop
+end
+
+:draw_line
+
+mov mx vx1
+mov my vy1
+
+int vl
+
+clr a0
+decr io00
+int iof
+
+call loop
+
+end
+
+:onpress
+
+eq a0 r00
+cndjmp draw_line
+
+mov mx vx0
+mov my vy0
+
+incr a0
+incr io00
+int iof
+
+end
+
+intsub kd onpress
+
+lda @line
+mov d0 vc
+
+incr r00
+
+jmp loop
 """}
 ]

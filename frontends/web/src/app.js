@@ -297,8 +297,6 @@ export function Cycle() {
             col = `rgba(0, 0, 0, ${1 - Math.pow((Math.pow(getRegister(registerInts["vb"]), -1)) * 255, -1)})`;
         }
 
-        console.log(1 - Math.pow((Math.pow(getRegister(registerInts["vb"]), -1)) * 255, -1))
-
         drawRect(renderContext, col, 0, 0, 640, 480);
 
         // Handle subscribed interrupts
