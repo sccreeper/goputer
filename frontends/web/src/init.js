@@ -73,14 +73,24 @@ document.getElementById("share-code-button").addEventListener("click", ShareCode
 document.getElementById("stop-code-button").addEventListener("click", function (e) {  
     clearInterval(globals.runInterval);
 
+    // Clear sound
+
     globals.oscillator.frequency.value = 0;
     globals.audio_volume.gain.value = 0;
 
     if (globals.sound_started) {
         globals.oscillator.stop();   
     }
-
     globals.sound_started = false;
+
+    // Clear IO lights
+
+    for(let reg in globals.io_bulbs) {
+        globals.io_bulbs[reg].setAttribute("on", "false")
+    }
+
+    // Clear other data
+
     globals.vmIsAlive = false;
     globals.video_text = "";
 
