@@ -1,3 +1,3 @@
-# Goputer C
+# Goputer C (GPC)
 
-A goputer runtime written in C using SDL.
+A goputer frontend written in C using Raylib.
