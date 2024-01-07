@@ -257,27 +257,40 @@ func Run(program []byte, args []string) {
 
 			if key != 0 {
 
+				log.Println("Interrupt: Key pressed")
+
 				if rl.IsKeyDown(key) {
+
 					gp32.Registers[c.RKeyboardCurrent] = uint32(key)
 					gp32.Registers[c.RKeyboardPressed] = 1
 
 					if gp32.Subscribed(c.IntKeyboardDown) {
+						log.Println("Interrupt: Key down")
+
 						gp32_subbed_chan <- c.IntKeyboardDown
 					}
 				} else if rl.IsKeyUp(key) {
+					log.Println("Interrupt: Bozo")
+
 					gp32.Registers[c.RKeyboardCurrent] = uint32(key)
 					gp32.Registers[c.RKeyboardPressed] = 0
 
 					if gp32.Subscribed(c.IntKeyboardUp) {
+						log.Println("Interrupt: Key up")
+
 						gp32_subbed_chan <- c.IntKeyboardUp
 					}
 				} else {
 
+					log.Println("Interrupt: Triggering ku, kd")
+
 					gp32.Registers[c.RKeyboardCurrent] = uint32(key)
 
-					if gp32.Subscribed(c.IntKeyboardDown) && gp32.Subscribed(c.IntKeyboardUp) {
-
+					if gp32.Subscribed(c.IntKeyboardDown) {
 						gp32_subbed_chan <- c.IntKeyboardDown
+					}
+
+					if gp32.Subscribed(c.IntKeyboardUp) {
 						gp32_subbed_chan <- c.IntKeyboardUp
 					}
 
@@ -313,6 +326,8 @@ func Run(program []byte, args []string) {
 				previous_mouse.Button = uint32(i)
 
 				if gp32.Subscribed(c.IntMouseDown) {
+					log.Println("Interrupt: Mouse down")
+
 					gp32_subbed_chan <- c.IntMouseDown
 				}
 
@@ -320,6 +335,8 @@ func Run(program []byte, args []string) {
 				gp32.Registers[c.RMouseButton] = uint32(i)
 
 				if gp32.Subscribed(c.IntMouseUp) {
+					log.Println("Interrupt: Mouse up")
+
 					gp32_subbed_chan <- c.IntMouseUp
 				}
 

@@ -2,7 +2,7 @@ FROM fedora
 
 # Install dev packages
 
-RUN yum install -y golang golang-misc nodejs python3.10 python3-pip
+RUN yum install -y golang golang-misc nodejs python3.10 python3-pip cmake make
 RUN yum install -y mesa-libGL-devel libXi-devel libXcursor-devel libXrandr-devel libXinerama-devel alsa-lib-devel gtk3-devel libXxf86vm-devel
 
 # Pygame & Python dev packages

@@ -8,5 +8,5 @@ is_plugin = false
 
 [build]
 
-command = ["make", "config=release"]
-output_dir = "build"
+command = ["make"]
+output_dir = "build/bin"
