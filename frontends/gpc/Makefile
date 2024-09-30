@@ -246,6 +246,30 @@ update_mappings/fast:
 	$(MAKE) $(MAKESILENT) -f lib/raylib/raylib/external/glfw/src/CMakeFiles/update_mappings.dir/build.make lib/raylib/raylib/external/glfw/src/CMakeFiles/update_mappings.dir/build
 .PHONY : update_mappings/fast
 
+src/interrupts.o: src/interrupts.c.o
+.PHONY : src/interrupts.o
+
+# target to build an object file
+src/interrupts.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/GPC.dir/build.make CMakeFiles/GPC.dir/src/interrupts.c.o
+.PHONY : src/interrupts.c.o
+
+src/interrupts.i: src/interrupts.c.i
+.PHONY : src/interrupts.i
+
+# target to preprocess a source file
+src/interrupts.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/GPC.dir/build.make CMakeFiles/GPC.dir/src/interrupts.c.i
+.PHONY : src/interrupts.c.i
+
+src/interrupts.s: src/interrupts.c.s
+.PHONY : src/interrupts.s
+
+# target to generate assembly for a file
+src/interrupts.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/GPC.dir/build.make CMakeFiles/GPC.dir/src/interrupts.c.s
+.PHONY : src/interrupts.c.s
+
 src/main.o: src/main.c.o
 .PHONY : src/main.o
 
@@ -270,6 +294,54 @@ src/main.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/GPC.dir/build.make CMakeFiles/GPC.dir/src/main.c.s
 .PHONY : src/main.c.s
 
+src/methods.o: src/methods.c.o
+.PHONY : src/methods.o
+
+# target to build an object file
+src/methods.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/GPC.dir/build.make CMakeFiles/GPC.dir/src/methods.c.o
+.PHONY : src/methods.c.o
+
+src/methods.i: src/methods.c.i
+.PHONY : src/methods.i
+
+# target to preprocess a source file
+src/methods.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/GPC.dir/build.make CMakeFiles/GPC.dir/src/methods.c.i
+.PHONY : src/methods.c.i
+
+src/methods.s: src/methods.c.s
+.PHONY : src/methods.s
+
+# target to generate assembly for a file
+src/methods.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/GPC.dir/build.make CMakeFiles/GPC.dir/src/methods.c.s
+.PHONY : src/methods.c.s
+
+src/util.o: src/util.c.o
+.PHONY : src/util.o
+
+# target to build an object file
+src/util.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/GPC.dir/build.make CMakeFiles/GPC.dir/src/util.c.o
+.PHONY : src/util.c.o
+
+src/util.i: src/util.c.i
+.PHONY : src/util.i
+
+# target to preprocess a source file
+src/util.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/GPC.dir/build.make CMakeFiles/GPC.dir/src/util.c.i
+.PHONY : src/util.c.i
+
+src/util.s: src/util.c.s
+.PHONY : src/util.s
+
+# target to generate assembly for a file
+src/util.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/GPC.dir/build.make CMakeFiles/GPC.dir/src/util.c.s
+.PHONY : src/util.c.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -289,9 +361,18 @@ help:
 	@echo "... GPC"
 	@echo "... glfw"
 	@echo "... raylib"
+	@echo "... src/interrupts.o"
+	@echo "... src/interrupts.i"
+	@echo "... src/interrupts.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... src/methods.o"
+	@echo "... src/methods.i"
+	@echo "... src/methods.s"
+	@echo "... src/util.o"
+	@echo "... src/util.i"
+	@echo "... src/util.s"
 .PHONY : help
 
 

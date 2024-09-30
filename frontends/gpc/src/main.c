@@ -4,9 +4,13 @@
 #include <string.h>
 #include <dlfcn.h>
 #include <stdlib.h>
+#include <constants.h>
+#include <methods.h>
+#include <interrupts.h>
 
 #define FILE_MAGIC "GPTR"
 #define BUFFER_SIZE 128
+#define DEFAULT_CPS 240
 #define LIBRARY_NAME "./bindings.so"
 
 int main(int argc, char *argv[]) {
@@ -19,19 +23,6 @@ int main(int argc, char *argv[]) {
     void *gp_handle;
     char *error;
 
-    // Goputer methods
-    void (*gpInit) (char*, __int32_t);
-    __uint32_t (*gpGetInterrupt) (void);
-    void (*gpSendInterrupt) (__uint32_t);
-    __uint32_t (*gpGetRegister) (__uint32_t);
-    void (*gpSetRegister) (__uint32_t, __uint32_t);
-    char* (*gpGetBuffer) (__uint32_t);
-    __uint32_t (*gpIsSubscribed) (__uint32_t);
-    __uint32_t (*gpIsFinished) (void);
-    void (*gpStep) (void);
-    __uint32_t (*gpGetCurrentInstruction) (void);
-    __uint32_t (*gpGetArgs) (void);
-
     // Load goputer library & symbols
 
     gp_handle = dlopen(LIBRARY_NAME, RTLD_LAZY);
@@ -42,17 +33,7 @@ int main(int argc, char *argv[]) {
 
     }
 
-    gpInit = (void (*)(char*, __int32_t)) dlsym(gp_handle, "Init");
-    gpGetInterrupt = (__uint32_t (*)(void)) dlsym(gp_handle, "GetInterrupt");
-    gpSendInterrupt = (void (*)(__uint32_t)) dlsym(gp_handle, "SendInterrupt");
-    gpGetRegister = (__uint32_t (*)(__uint32_t)) dlsym(gp_handle, "GetRegister");
-    gpSetRegister = (void (*)(__uint32_t, __uint32_t)) dlsym(gp_handle, "SetRegister");
-    gpGetBuffer = (char* (*)(__uint32_t)) dlsym(gp_handle, "GetBuffer");
-    gpIsSubscribed = (__uint32_t (*)(__uint32_t)) dlsym(gp_handle, "IsSubscribed");
-    gpIsFinished = (__uint32_t (*)(void)) dlsym(gp_handle, "IsFinished");
-    gpStep = (void (*)(void)) dlsym(gp_handle, "Step");
-    gpGetCurrentInstruction = (__uint32_t (*)(void)) dlsym(gp_handle, "GetCurrentInstruction");
-    gpGetArgs = (__uint32_t (*)(void)) dlsym(gp_handle, "GetArgs");
+    initMethods(gp_handle);
     
 
     printf("Goputer C \n");
@@ -84,6 +65,12 @@ int main(int argc, char *argv[]) {
     rewind(program_file_ptr);
 
     program_file = malloc(file_size * sizeof(char));
+    if (NULL == program_file)
+    {   
+        printf("File allocation failed\n");
+        return -1;
+    }
+    
     fgets(program_file, file_size, program_file_ptr);
 
     // Start VM and window
@@ -94,16 +81,30 @@ int main(int argc, char *argv[]) {
 
     gpInit(program_file, file_size);
 
+    ClearBackground(BLACK);
+    SetTargetFPS(DEFAULT_CPS);
+
     while (!WindowShouldClose()) {
 
         BeginDrawing();
 
-        ClearBackground(RAYWHITE);
-
-        DrawRectangle(0, 0, 64, 64, YELLOW);
-
+        handleInterrupt(gpGetInterrupt());
+        
         EndDrawing();
+
+        if (gpIsFinished())
+        {
+            break;
+        }
+
+        gpStep();
+        
     }
+
+    while (1)
+    {
+    }
+    
 
     CloseWindow();
 
