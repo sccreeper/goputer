@@ -35,11 +35,11 @@ var env_map map[string]string = map[string]string{
 }
 
 const (
-	build_dir       string = "./build"
-	examples_dir    string = "examples/."
-	goputer_cmd_out string = "./build/goputer"
-	frontend_dir    string = "./frontends"
-	expansionsDir   string = "./expansions/"
+	buildDir      string = "./build"
+	examplesDir   string = "examples/."
+	goputerCmdOut string = "./build/goputer"
+	frontendDir   string = "./frontends"
+	expansionsDir string = "./expansions/"
 )
 
 func copyFile(src string, dest string) error {
@@ -50,11 +50,18 @@ func copyFile(src string, dest string) error {
 	}
 	defer srcFile.Close()
 
+	srcInfo, err := srcFile.Stat()
+	if err != nil {
+		return err
+	}
+
 	destFile, err := os.Create(dest)
 	if err != nil {
 		return err
 	}
 	defer destFile.Close()
+
+	destFile.Chmod(srcInfo.Mode().Perm())
 
 	_, err = io.Copy(destFile, srcFile)
 	if err != nil {
@@ -137,7 +144,7 @@ func All() {
 
 	sh.Run("mkdir", "./build/frontends")
 
-	directories, err := ioutil.ReadDir(frontend_dir)
+	directories, err := ioutil.ReadDir(frontendDir)
 
 	util.CheckError(err)
 
@@ -241,10 +248,10 @@ func All() {
 func Dev() {
 	mg.Deps(All)
 
-	comp_path, err := os.Getwd()
+	compPath, err := os.Getwd()
 	util.CheckError(err)
 
-	comp_path += "/build/goputer"
+	compPath = filepath.Join(compPath, "build", "goputer")
 
 	fmt.Println("Building example programs...")
 
@@ -253,16 +260,16 @@ func Dev() {
 	dir, err := os.Getwd()
 	util.CheckError(err)
 
-	example_list, err := ioutil.ReadDir(dir)
+	exampleList, err := ioutil.ReadDir(dir)
 	util.CheckError(err)
 
-	for _, v := range example_list {
+	for _, v := range exampleList {
 
 		if filepath.Ext(v.Name()) != ".gpasm" {
 			continue
+		} else {
+			sh.Run(compPath, "b", v.Name())
 		}
-
-		sh.Run(comp_path, "b", v.Name())
 
 	}
 
