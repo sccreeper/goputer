@@ -1,3 +1,0 @@
-[submodule "frontends/gpc/lib/raylib"]
-	path = frontends/gpc/lib/raylib
-	url = https://github.com/raysan5/raylib.git
