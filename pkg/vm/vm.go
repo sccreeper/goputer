@@ -51,7 +51,9 @@ type VM struct {
 	HandlingInterrupt bool
 	InterruptQueue    []uint32
 
-	ShouldStep bool
+	ShouldStep         bool
+	ExecutionPaused    bool
+	ExecutionPauseTime int64
 
 	ExpansionsSupported bool
 }
@@ -159,9 +161,27 @@ func (m *VM) Step() {
 
 func (m *VM) Cycle() {
 
+	// If we are in the middle of a halt, pause then continue
+
+	if m.ExecutionPaused {
+
+		if time.Now().UnixMilli()-m.ExecutionPauseTime >= int64(m.Registers[m.ArgSmall0]) {
+			m.ExecutionPaused = false
+			m.Registers[c.RProgramCounter] += comp.InstructionLength
+			return
+		} else {
+			return
+		}
+
+	}
+
+	// Stop if the program has terminated
+
 	if m.Finished {
 		return
 	}
+
+	// Get arguments from memory
 
 	m.CurrentInstruction = m.MemArray[m.Registers[c.RProgramCounter] : m.Registers[c.RProgramCounter]+comp.InstructionLength]
 	m.Opcode = c.Instruction(m.CurrentInstruction[0])
@@ -344,7 +364,11 @@ func (m *VM) Cycle() {
 	case c.ICallInterrupt:
 		m.called_interrupt()
 	case c.IHalt:
-		time.Sleep(time.Duration(m.Registers[m.ArgSmall0]) * time.Millisecond)
+
+		m.ExecutionPaused = true
+		m.ExecutionPauseTime = time.Now().UnixMilli()
+		return
+
 	case c.IClear:
 		if m.ArgLarge != uint32(c.RData) && m.ArgLarge != uint32(c.RVideoText) {
 
