@@ -14,10 +14,10 @@ import (
 // Run the program using a frontend
 func _run(ctx *cli.Context) error {
 
-	program_bytes, err := os.ReadFile(GPExec)
+	programBytes, err := os.ReadFile(GPExec)
 	util.CheckError(err)
 
-	if string(program_bytes[:4]) != compiler.MagicString {
+	if string(programBytes[:4]) != compiler.MagicString {
 		fmt.Println("Error: Invalid file")
 		os.Exit(1)
 	}
@@ -25,10 +25,10 @@ func _run(ctx *cli.Context) error {
 	p, err := plugin.Open(fmt.Sprintf("./frontends/%s/%s%s", FrontendToUse, FrontendToUse, PluginExt))
 	util.CheckError(err)
 
-	run_func, err := p.Lookup("Run")
+	runFunc, err := p.Lookup("Run")
 	util.CheckError(err)
 
-	run_func.(func([]byte, []string))(program_bytes, []string{filepath.Base(GPExec)})
+	runFunc.(func([]byte, []string))(programBytes, []string{filepath.Base(GPExec)})
 
 	return nil
 

@@ -15,9 +15,9 @@ import (
 
 func _disassemble(ctx *cli.Context) error {
 
-	file_path := ctx.Args().Get(0)
+	filePath := ctx.Args().Get(0)
 
-	data, err := os.ReadFile(file_path)
+	data, err := os.ReadFile(filePath)
 	util.CheckError(err)
 
 	if string(data[:4]) != compiler.MagicString {
@@ -29,11 +29,11 @@ func _disassemble(ctx *cli.Context) error {
 
 	//Reverse map
 
-	itn_map := make(map[constants.Instruction]string)
+	itnMap := make(map[constants.Instruction]string)
 
 	for k, v := range constants.InstructionInts {
 
-		itn_map[constants.Instruction(v)] = k
+		itnMap[constants.Instruction(v)] = k
 
 	}
 
@@ -54,22 +54,20 @@ func _disassemble(ctx *cli.Context) error {
 	Underline.Println("Definitions:")
 	fmt.Println()
 
-	defintion_byte_index := compiler.BlockAddrSize + compiler.PadSize
+	definitionByteIndex := compiler.BlockAddrSize + compiler.PadSize
 
 	for _, v := range program.ProgramDefinitions {
 
-		// real_byte_index := ""
-
 		fmt.Printf(
 			"F: %s M: %s = %s\n",
-			Bold.Sprintf(util.ConvertHex(int(defintion_byte_index))),
-			Bold.Sprintf(util.ConvertHex(int(defintion_byte_index+compiler.StackSize))),
+			Bold.Sprintf(util.ConvertHex(int(definitionByteIndex))),
+			Bold.Sprintf(util.ConvertHex(int(definitionByteIndex+compiler.StackSize))),
 			strings.ReplaceAll(string(v), "\n", ""),
 		)
 
 		//Calculate memory address and index in file
 
-		defintion_byte_index += uint32(len(v) + 4)
+		definitionByteIndex += uint32(len(v) + 4)
 
 	}
 
@@ -97,7 +95,7 @@ func _disassemble(ctx *cli.Context) error {
 
 		for _, v1 := range v {
 
-			fmt.Println(format_instruction(itn_map[constants.Instruction(v1.Instruction)], v1.Data))
+			fmt.Println(format_instruction(itnMap[constants.Instruction(v1.Instruction)], v1.Data))
 
 		}
 
@@ -109,7 +107,7 @@ func _disassemble(ctx *cli.Context) error {
 
 	for _, v := range program.Instructions {
 
-		fmt.Println(format_instruction(itn_map[constants.Instruction(v.Instruction)], v.Data))
+		fmt.Println(format_instruction(itnMap[constants.Instruction(v.Instruction)], v.Data))
 
 	}
 

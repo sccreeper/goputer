@@ -16,11 +16,11 @@ var py32SubbedInterruptChannel chan constants.Interrupt = make(chan constants.In
 func main() {}
 
 //export Init
-func Init(program_bytes *C.char, code_length C.int) {
+func Init(programBytes *C.char, codeLength C.int) {
 
 	vm.InitVM(
 		&py32,
-		C.GoBytes(unsafe.Pointer(program_bytes), code_length),
+		C.GoBytes(unsafe.Pointer(programBytes), codeLength),
 		py32InteruptChannel,
 		py32SubbedInterruptChannel,
 		true,
@@ -70,19 +70,19 @@ func GetBuffer(b C.uint) *C.char {
 
 	//Convert to C.char array
 
-	char_array := []rune{}
+	charArray := []rune{}
 
 	for i := 0; i < 128; i++ {
 
 		if constants.Register(b) == constants.RVideoText {
-			char_array = append(char_array, rune(py32.TextBuffer[i]))
+			charArray = append(charArray, rune(py32.TextBuffer[i]))
 		} else {
-			char_array = append(char_array, rune(py32.DataBuffer[i]))
+			charArray = append(charArray, rune(py32.DataBuffer[i]))
 		}
 
 	}
 
-	return C.CString(string(char_array))
+	return C.CString(string(charArray))
 
 }
 

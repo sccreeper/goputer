@@ -59,28 +59,28 @@ type VM struct {
 }
 
 // Initialize VM and registers, load code into "memory" etc.
-func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt, subbed_interrupt_channel chan c.Interrupt, should_step bool, expansions_supported bool) error {
+func InitVM(machine *VM, vmProgram []byte, interruptChannel chan c.Interrupt, subbedInterruptChannel chan c.Interrupt, shouldStep bool, expansionsSupported bool) error {
 
-	if len(vm_program)-4 > int(_MemSize) {
+	if len(vmProgram)-4 > int(_MemSize) {
 		return errors.New("program too large")
 	}
 
 	//Extract program start index
 
-	vm_program = vm_program[4:]
+	vmProgram = vmProgram[4:]
 
-	program_start_index := binary.LittleEndian.Uint32(vm_program[12:])
-	interrupt_start_index := binary.LittleEndian.Uint32(vm_program[8:12])
+	program_start_index := binary.LittleEndian.Uint32(vmProgram[12:])
+	interrupt_start_index := binary.LittleEndian.Uint32(vmProgram[8:12])
 
 	//Init vars + registers
 	machine.Registers[c.RProgramCounter] = program_start_index + comp.StackSize
-	machine.CurrentInstruction = vm_program[program_start_index : program_start_index+comp.InstructionLength]
-	machine.InterruptChannel = interrupt_channel
-	machine.SubbedInterruptChannel = subbed_interrupt_channel
+	machine.CurrentInstruction = vmProgram[program_start_index : program_start_index+comp.InstructionLength]
+	machine.InterruptChannel = interruptChannel
+	machine.SubbedInterruptChannel = subbedInterruptChannel
 	machine.Finished = false
-	machine.ProgramBounds = comp.StackSize + uint32(len(vm_program[:len(vm_program)-int(comp.PadSize)]))
+	machine.ProgramBounds = comp.StackSize + uint32(len(vmProgram[:len(vmProgram)-int(comp.PadSize)]))
 	machine.Registers[c.RVideoBrightness] = 255
-	machine.ExpansionsSupported = expansions_supported
+	machine.ExpansionsSupported = expansionsSupported
 
 	machine.Registers[c.RCallStackZeroPointer] = comp.StackSize - comp.CallStackSize
 	machine.Registers[c.RCallStackPointer] = machine.Registers[c.RCallStackZeroPointer]
@@ -88,7 +88,7 @@ func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt, 
 	machine.Registers[c.RStackZeroPointer] = 0
 	machine.Registers[c.RStackPointer] = 0
 
-	machine.ShouldStep = should_step
+	machine.ShouldStep = shouldStep
 
 	machine.HandlingInterrupt = false
 	machine.InterruptQueue = []uint32{}
@@ -98,7 +98,7 @@ func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt, 
 
 	//Interrupt table
 
-	for _, v := range util.SliceChunks(vm_program[interrupt_start_index:program_start_index-comp.PadSize], 6) {
+	for _, v := range util.SliceChunks(vmProgram[interrupt_start_index:program_start_index-comp.PadSize], 6) {
 
 		//log.Println(current_bytes)
 
@@ -110,11 +110,11 @@ func InitVM(machine *VM, vm_program []byte, interrupt_channel chan c.Interrupt, 
 	}
 
 	//Copy program into memory
-	copy(machine.MemArray[comp.StackSize:], vm_program[:len(vm_program)-int(comp.PadSize)])
+	copy(machine.MemArray[comp.StackSize:], vmProgram[:len(vmProgram)-int(comp.PadSize)])
 
 	// Load expansions
 
-	if expansions_supported {
+	if expansionsSupported {
 		expansions.LoadExpansions()
 	} else {
 		log.Println("Expansions are disabled for this frontend")
@@ -229,7 +229,7 @@ func (m *VM) Cycle() {
 
 			if m.Subscribed(interrupt) {
 				m.HandlingInterrupt = true
-				m.subbed_interrupt(interrupt)
+				m.subbedInterrupt(interrupt)
 				m.call()
 				//fmt.Printf("Interrupt %d\n", x)
 				return
@@ -249,7 +249,7 @@ func (m *VM) Cycle() {
 			m.Finished = true
 			return
 		} else {
-			m.pop_call()
+			m.popCall()
 			m.HandlingInterrupt = false
 
 			return
@@ -260,9 +260,9 @@ func (m *VM) Cycle() {
 	switch m.Opcode {
 	//Handle push and pop instructions
 	case c.IPush:
-		m.push_stack()
+		m.pushStack()
 	case c.IPop:
-		m.pop_stack()
+		m.popStack()
 
 	case c.IMove:
 		m.move()
@@ -272,7 +272,7 @@ func (m *VM) Cycle() {
 		return
 
 	case c.IConditionalCall:
-		if m.conditional_call() {
+		if m.conditionalCall() {
 			return
 		}
 
@@ -281,7 +281,7 @@ func (m *VM) Cycle() {
 		return
 
 	case c.IConditionalJump:
-		if m.conditional_jump() {
+		if m.conditionalJump() {
 			return
 		}
 
@@ -356,13 +356,13 @@ func (m *VM) Cycle() {
 		m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] ^ m.Registers[m.ArgSmall1]
 
 	case c.IShiftLeft:
-		m.shift_left()
+		m.shiftLeft()
 	case c.IShiftRight:
-		m.shift_right()
+		m.shiftRight()
 
 	//Other
 	case c.ICallInterrupt:
-		m.called_interrupt()
+		m.calledInterrupt()
 	case c.IHalt:
 
 		m.ExecutionPaused = true

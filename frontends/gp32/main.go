@@ -45,16 +45,16 @@ func Run(program []byte, args []string) {
 	rl.SetTargetFPS(128)
 
 	var gp32 vm.VM
-	var gp32_chan chan c.Interrupt = make(chan c.Interrupt)
-	var gp32_subbed_chan chan c.Interrupt = make(chan c.Interrupt)
-	var text_string string = ""
+	var gp32Chan chan c.Interrupt = make(chan c.Interrupt)
+	var gp32SubbedChan chan c.Interrupt = make(chan c.Interrupt)
+	var textString string = ""
 
-	var IO_status [16]bool = [16]bool{}
-	var IOToggleSwitches [8]rendering.IOSwitch = [8]rendering.IOSwitch{}
+	var ioStatus [16]bool = [16]bool{}
+	var ioToggleSwitches [8]rendering.IOSwitch = [8]rendering.IOSwitch{}
 
-	for index := range IOToggleSwitches {
+	for index := range ioToggleSwitches {
 
-		IOToggleSwitches[index] = rendering.IOSwitch{
+		ioToggleSwitches[index] = rendering.IOSwitch{
 			Toggled: false,
 			ID:      uint32(index) + 8,
 			X:       float32((index * rendering.IOUISize) + (8 * rendering.IOUISize)),
@@ -85,11 +85,11 @@ func Run(program []byte, args []string) {
 
 	//Set mouse to arbitrary number so inputs register
 
-	var previous_mouse PreviousMousePos = PreviousMousePos{
-		Button: 69,
+	var previousMouse PreviousMousePos = PreviousMousePos{
+		Button: 64,
 	}
 
-	vm.InitVM(&gp32, program, gp32_chan, gp32_subbed_chan, false, true)
+	vm.InitVM(&gp32, program, gp32Chan, gp32SubbedChan, false, true)
 
 	expansions.SetAttribute("goputer.sys", "name", "gp32")
 
@@ -104,7 +104,7 @@ func Run(program []byte, args []string) {
 		//Render IO
 
 		rl.BeginTextureMode(IOStatusRenderTexture)
-		rendering.RenderIO(IO_status[:], IOToggleSwitches[:])
+		rendering.RenderIO(ioStatus[:], ioToggleSwitches[:])
 		rl.EndTextureMode()
 
 		rl.BeginTextureMode(VMStatusRenderTexture)
@@ -122,18 +122,18 @@ func Run(program []byte, args []string) {
 		rl.BeginTextureMode(VideoRenderTexture)
 
 		select {
-		case x := <-gp32_chan:
+		case x := <-gp32Chan:
 			switch x {
 			//Video interrupts
 			//TODO: Change colour to use colour in vc register
 			case c.IntVideoText:
 				if gp32.TextBuffer[0] == 0 {
-					text_string = ""
+					textString = ""
 				} else {
-					str_temp := string(gp32.TextBuffer[:])
-					str_temp = strings.ReplaceAll(str_temp, "\x00", "")
-					text_string += strings.ReplaceAll(str_temp, `\n`, "\n")
-					rl.DrawText(text_string, int32(gp32.Registers[c.RVideoX0]), int32(gp32.Registers[c.RVideoY0]), 16, colour.ConvertColour(gp32.Registers[c.RVideoColour]))
+					strTemp := string(gp32.TextBuffer[:])
+					strTemp = strings.ReplaceAll(strTemp, "\x00", "")
+					textString += strings.ReplaceAll(strTemp, `\n`, "\n")
+					rl.DrawText(textString, int32(gp32.Registers[c.RVideoX0]), int32(gp32.Registers[c.RVideoY0]), 16, colour.ConvertColour(gp32.Registers[c.RVideoColour]))
 				}
 
 			case c.IntVideoClear:
@@ -167,9 +167,9 @@ func Run(program []byte, args []string) {
 				for i := 0; i < 8; i++ {
 
 					if gp32.Registers[i+int(c.RIO00)] != 0 {
-						IO_status[i] = true
+						ioStatus[i] = true
 					} else {
-						IO_status[i] = false
+						ioStatus[i] = false
 					}
 
 				}
@@ -267,7 +267,7 @@ func Run(program []byte, args []string) {
 					if gp32.Subscribed(c.IntKeyboardDown) {
 						log.Println("Interrupt: Key down")
 
-						gp32_subbed_chan <- c.IntKeyboardDown
+						gp32SubbedChan <- c.IntKeyboardDown
 					}
 				} else if rl.IsKeyUp(key) {
 					log.Println("Interrupt: Bozo")
@@ -278,7 +278,7 @@ func Run(program []byte, args []string) {
 					if gp32.Subscribed(c.IntKeyboardUp) {
 						log.Println("Interrupt: Key up")
 
-						gp32_subbed_chan <- c.IntKeyboardUp
+						gp32SubbedChan <- c.IntKeyboardUp
 					}
 				} else {
 
@@ -287,11 +287,11 @@ func Run(program []byte, args []string) {
 					gp32.Registers[c.RKeyboardCurrent] = uint32(key)
 
 					if gp32.Subscribed(c.IntKeyboardDown) {
-						gp32_subbed_chan <- c.IntKeyboardDown
+						gp32SubbedChan <- c.IntKeyboardDown
 					}
 
 					if gp32.Subscribed(c.IntKeyboardUp) {
-						gp32_subbed_chan <- c.IntKeyboardUp
+						gp32SubbedChan <- c.IntKeyboardUp
 					}
 
 				}
@@ -303,16 +303,16 @@ func Run(program []byte, args []string) {
 
 		//Mouse
 
-		if uint32(rl.GetMouseX()) != previous_mouse.MouseX && uint32(CorrectedMouseY()) != previous_mouse.MouseY {
+		if uint32(rl.GetMouseX()) != previousMouse.MouseX && uint32(CorrectedMouseY()) != previousMouse.MouseY {
 
 			gp32.Registers[c.RMouseX] = uint32(rl.GetMouseX())
 			gp32.Registers[c.RMouseY] = uint32(CorrectedMouseY())
 
-			previous_mouse.MouseX = uint32(rl.GetMouseX())
-			previous_mouse.MouseY = uint32(CorrectedMouseY())
+			previousMouse.MouseX = uint32(rl.GetMouseX())
+			previousMouse.MouseY = uint32(CorrectedMouseY())
 
 			if gp32.Subscribed(c.IntMouseMove) {
-				gp32_subbed_chan <- c.IntMouseMove
+				gp32SubbedChan <- c.IntMouseMove
 			}
 
 		}
@@ -320,24 +320,24 @@ func Run(program []byte, args []string) {
 		//Loop through buttons and check each one
 		for i := 0; i < rl.MouseMiddleButton+1; i++ {
 
-			if rl.IsMouseButtonDown(int32(i)) && i != int(previous_mouse.Button) {
+			if rl.IsMouseButtonDown(int32(i)) && i != int(previousMouse.Button) {
 
 				gp32.Registers[c.RMouseButton] = uint32(i)
-				previous_mouse.Button = uint32(i)
+				previousMouse.Button = uint32(i)
 
 				if gp32.Subscribed(c.IntMouseDown) {
 					log.Println("Interrupt: Mouse down")
 
-					gp32_subbed_chan <- c.IntMouseDown
+					gp32SubbedChan <- c.IntMouseDown
 				}
 
-			} else if rl.IsMouseButtonReleased(int32(i)) && i != int(previous_mouse.Button) {
+			} else if rl.IsMouseButtonReleased(int32(i)) && i != int(previousMouse.Button) {
 				gp32.Registers[c.RMouseButton] = uint32(i)
 
 				if gp32.Subscribed(c.IntMouseUp) {
 					log.Println("Interrupt: Mouse up")
 
-					gp32_subbed_chan <- c.IntMouseUp
+					gp32SubbedChan <- c.IntMouseUp
 				}
 
 			}
@@ -348,14 +348,14 @@ func Run(program []byte, args []string) {
 
 		if rl.IsMouseButtonPressed(rl.MouseLeftButton) {
 
-			for index := range IOToggleSwitches {
+			for index := range ioToggleSwitches {
 
-				if IOToggleSwitches[index].Update(rl.Vector2{
+				if ioToggleSwitches[index].Update(rl.Vector2{
 					X: float32(rl.GetMouseX()),
 					Y: float32(rl.GetMouseY()),
 				}) {
 
-					if IOToggleSwitches[index].Toggled {
+					if ioToggleSwitches[index].Toggled {
 						gp32.Registers[int(c.RIO08)+index] = 1
 					} else {
 						gp32.Registers[int(c.RIO08)+index] = 0
@@ -363,7 +363,7 @@ func Run(program []byte, args []string) {
 
 					if gp32.Subscribed(c.Interrupt(int(c.IntIO08) + index)) {
 
-						gp32_subbed_chan <- c.Interrupt(int(c.IntIO08) + index)
+						gp32SubbedChan <- c.Interrupt(int(c.IntIO08) + index)
 					}
 
 				}

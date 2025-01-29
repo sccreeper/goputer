@@ -7,7 +7,7 @@ import (
 	c "sccreeper/goputer/pkg/constants"
 )
 
-func (m *VM) pop_stack() {
+func (m *VM) popStack() {
 	m.Registers[m.ArgSmall0] =
 		binary.LittleEndian.Uint32(
 			m.MemArray[m.Registers[c.RStackPointer]-4 : m.Registers[c.RStackPointer]],
@@ -19,7 +19,7 @@ func (m *VM) pop_stack() {
 
 }
 
-func (m *VM) push_stack() {
+func (m *VM) pushStack() {
 
 	binary.LittleEndian.PutUint32(m.MemArray[m.Registers[c.RStackPointer]:m.Registers[c.RStackPointer]+4], uint32(m.Registers[m.ArgSmall0]))
 

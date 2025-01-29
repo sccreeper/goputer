@@ -8,7 +8,7 @@ type InterruptInfo struct {
 	Type uint32
 }
 
-func (m *VM) subbed_interrupt(i c.Interrupt) {
+func (m *VM) subbedInterrupt(i c.Interrupt) {
 
 	m.ArgLarge = m.InterruptTable[i]
 
@@ -26,7 +26,7 @@ func (m *VM) Subscribed(i c.Interrupt) bool {
 
 }
 
-func (m *VM) called_interrupt() {
+func (m *VM) calledInterrupt() {
 
 	if c.Interrupt(m.ArgSmall0) == c.IntIOClear {
 

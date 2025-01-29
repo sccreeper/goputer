@@ -9,7 +9,7 @@ import (
 func main() {
 
 	//Inits the frontend list
-	get_frontends()
+	getFrontends()
 
 	//Inits the UI
 	LstFrontend.OnSelected = func(id widget.ListItemID) { SelectedFrontend = id }

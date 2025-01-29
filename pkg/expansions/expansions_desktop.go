@@ -49,26 +49,26 @@ type ExpansionLoaded struct {
 }
 
 var expansions map[string]ExpansionLoaded
-var bus_locations map[uint32]string
-var native_extension string
+var busLocations map[uint32]string
+var nativeExtension string
 
 func init() {
 
 	if runtime.GOOS == "windows" {
-		native_extension = "dll"
+		nativeExtension = "dll"
 	} else {
-		native_extension = "so"
+		nativeExtension = "so"
 	}
 
 	expansions = make(map[string]ExpansionLoaded)
-	bus_locations = make(map[uint32]string)
+	busLocations = make(map[uint32]string)
 
 }
 
 // Desktop method for loading expansions
 func LoadExpansions() {
 
-	var broken_plugins []string = make([]string, 0)
+	var brokenPlugins []string = make([]string, 0)
 
 	directories, err := os.ReadDir(ExpansionDir)
 	util.CheckError(err)
@@ -78,7 +78,7 @@ func LoadExpansions() {
 
 		if !v.IsDir() {
 			continue
-		} else if slices.Contains(broken_plugins, v.Name()) {
+		} else if slices.Contains(brokenPlugins, v.Name()) {
 			log.Printf("Skipping broken plugin %s\n", v.Name())
 			continue
 		} else {
@@ -89,52 +89,52 @@ func LoadExpansions() {
 				continue
 			} else {
 
-				var exp_config ExpansionManifest
-				var exp_loaded ExpansionLoaded
+				var expConfig ExpansionManifest
+				var expLoaded ExpansionLoaded
 
 				// Load TOML
-				config_bytes, err := os.ReadFile(path.Join(ExpansionDir, v.Name(), "expansion.toml"))
-				loader_error(err, v.Name())
+				configBytes, err := os.ReadFile(path.Join(ExpansionDir, v.Name(), "expansion.toml"))
+				loaderError(err, v.Name())
 
-				toml.Unmarshal(config_bytes, &exp_config)
-				loader_error(err, v.Name())
+				toml.Unmarshal(configBytes, &expConfig)
+				loaderError(err, v.Name())
 
 				// Load so/lua
 				// TODO: Lua
-				exp_loaded = ExpansionLoaded{
-					Manifest: exp_config,
+				expLoaded = ExpansionLoaded{
+					Manifest: expConfig,
 				}
 
-				if exp_loaded.Manifest.Info.Native {
+				if expLoaded.Manifest.Info.Native {
 					// Load symbols from plugin file.
 
-					exp_loaded.ExpansionObjectFile, err = plugin.Open(path.Join(ExpansionDir, v.Name(), fmt.Sprintf("%s.%s", v.Name(), native_extension)))
-					loader_error(err, v.Name())
+					expLoaded.ExpansionObjectFile, err = plugin.Open(path.Join(ExpansionDir, v.Name(), fmt.Sprintf("%s.%s", v.Name(), nativeExtension)))
+					loaderError(err, v.Name())
 
-					handler_temp, err := exp_loaded.ExpansionObjectFile.Lookup("Handler")
-					if loader_error(err, v.Name()) {
+					handlerTemp, err := expLoaded.ExpansionObjectFile.Lookup("Handler")
+					if loaderError(err, v.Name()) {
 						continue
 					}
-					exp_loaded.Handler = handler_temp.(func([]byte) []byte)
+					expLoaded.Handler = handlerTemp.(func([]byte) []byte)
 
-					get_attribute_temp, err := exp_loaded.ExpansionObjectFile.Lookup("GetAttribute")
-					if loader_error(err, v.Name()) {
+					getAttributeTemp, err := expLoaded.ExpansionObjectFile.Lookup("GetAttribute")
+					if loaderError(err, v.Name()) {
 						continue
 					}
-					exp_loaded.GetAttribute = get_attribute_temp.(func(string) interface{})
+					expLoaded.GetAttribute = getAttributeTemp.(func(string) interface{})
 
-					set_attribute_temp, err := exp_loaded.ExpansionObjectFile.Lookup("SetAttribute")
-					if loader_error(err, v.Name()) {
+					setAttributeTemp, err := expLoaded.ExpansionObjectFile.Lookup("SetAttribute")
+					if loaderError(err, v.Name()) {
 						continue
 					}
-					exp_loaded.SetAttribute = set_attribute_temp.(func(string, interface{}))
+					expLoaded.SetAttribute = setAttributeTemp.(func(string, interface{}))
 
-					expansions[exp_loaded.Manifest.Info.ID] = exp_loaded
+					expansions[expLoaded.Manifest.Info.ID] = expLoaded
 
 					log.Printf("Loaded expansion %s successfully.", v.Name())
 
 				} else {
-					loader_error(errors.New("lua expansions are not supported yet"), v.Name())
+					loaderError(errors.New("lua expansions are not supported yet"), v.Name())
 				}
 
 			}
@@ -145,18 +145,18 @@ func LoadExpansions() {
 
 	// Assign all expansions to locations on bus, goputer.sys will be 0
 
-	bus_locations = make(map[uint32]string)
-	bus_locations[0] = "goputer.sys"
+	busLocations = make(map[uint32]string)
+	busLocations[0] = "goputer.sys"
 
-	var bus_location_index int = 1
+	var busLocationIndex int = 1
 
 	for _, v := range expansions {
 
 		if v.Manifest.Info.ID == "goputer.sys" {
 			continue
 		} else {
-			bus_locations[uint32(bus_location_index)] = v.Manifest.Info.ID
-			bus_location_index++
+			busLocations[uint32(busLocationIndex)] = v.Manifest.Info.ID
+			busLocationIndex++
 		}
 
 	}
@@ -164,12 +164,12 @@ func LoadExpansions() {
 	// Log all bus locations
 	log.Println("Bus locations:")
 
-	for k, v := range bus_locations {
+	for k, v := range busLocations {
 		log.Printf("%d: %s\n", k, v)
 	}
 
 	//Set bus locations for system module
-	for k, v := range bus_locations {
+	for k, v := range busLocations {
 		expansions["goputer.sys"].GetAttribute("expansions").(map[string]uint32)[v] = k
 	}
 
@@ -177,7 +177,7 @@ func LoadExpansions() {
 
 func Interaction(location uint32, data []byte) []byte {
 
-	if val, ok := bus_locations[location]; ok {
+	if val, ok := busLocations[location]; ok {
 		return expansions[val].Handler(data)
 	} else {
 		return []byte{0, 0, 0, 0}
@@ -188,7 +188,7 @@ func Interaction(location uint32, data []byte) []byte {
 // Does a module exist at this location on the bus?
 func ModuleExists(location uint32) bool {
 
-	if _, ok := bus_locations[location]; ok {
+	if _, ok := busLocations[location]; ok {
 		return true
 	} else {
 		return false
@@ -204,14 +204,14 @@ func GetAttribute(id string, attribute string) interface{} {
 	return expansions[id].GetAttribute(attribute)
 }
 
-func loader_error(e error, expansion_name string) bool {
+func loaderError(e error, expansionName string) bool {
 
 	if e != nil {
 		log.Printf(`
 		Error:
 		%s
 		`, e.Error())
-		log.Printf("Failed to load expansion '%s'!\n", expansion_name)
+		log.Printf("Failed to load expansion '%s'!\n", expansionName)
 
 		return true
 

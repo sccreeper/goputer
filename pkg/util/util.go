@@ -48,11 +48,11 @@ func RandomNumber[T uint8 | int | uint32](min T, max T) T {
 
 }
 
-func AllEqualToX[T uint32 | byte](splice []T, check_value T) bool {
+func AllEqualToX[T uint32 | byte](splice []T, checkValue T) bool {
 
 	for _, v := range splice {
 
-		if v != check_value {
+		if v != checkValue {
 			return false
 		}
 

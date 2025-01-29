@@ -10,29 +10,29 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-var itn_map map[uint32]string
-var register_map map[uint32]string
-var interrupt_map map[constants.Interrupt]string
+var itnMap map[uint32]string
+var registerMap map[uint32]string
+var interuptMap map[constants.Interrupt]string
 
 // Just reverses maps for now
 func InitVMDebug() {
 
-	itn_map = make(map[uint32]string)
+	itnMap = make(map[uint32]string)
 
 	for k, v := range constants.InstructionInts {
-		itn_map[v] = k
+		itnMap[v] = k
 	}
 
-	register_map = make(map[uint32]string)
+	registerMap = make(map[uint32]string)
 
 	for k, v := range constants.RegisterInts {
-		register_map[v] = k
+		registerMap[v] = k
 	}
 
-	interrupt_map = make(map[constants.Interrupt]string)
+	interuptMap = make(map[constants.Interrupt]string)
 
 	for k, v := range constants.InterruptInts {
-		interrupt_map[v] = k
+		interuptMap[v] = k
 	}
 
 }
@@ -47,21 +47,21 @@ func RenderVMDebug(m *vm.VM) {
 
 	//Generate current instruction string
 
-	var arg_text string = ""
+	var argText string = ""
 
 	switch m.Opcode {
 	case constants.IJump, constants.ICall, constants.IConditionalJump, constants.IConditionalCall:
-		arg_text = util.ConvertHex(m.ArgLarge)
+		argText = util.ConvertHex(m.ArgLarge)
 	default:
 		if slices.Contains(constants.SingleArgInstructions, m.Opcode) && m.Opcode != constants.ICallInterrupt {
-			arg_text = register_map[m.ArgLarge]
+			argText = registerMap[m.ArgLarge]
 		} else if m.Opcode == constants.ICallInterrupt {
-			arg_text = interrupt_map[constants.Interrupt(m.ArgLarge)]
+			argText = interuptMap[constants.Interrupt(m.ArgLarge)]
 		} else {
-			arg_text = fmt.Sprintf("%s %s", register_map[uint32(m.ArgSmall0)], register_map[uint32(m.ArgSmall1)])
+			argText = fmt.Sprintf("%s %s", registerMap[uint32(m.ArgSmall0)], registerMap[uint32(m.ArgSmall1)])
 		}
 	}
 
-	rl.DrawText(fmt.Sprintf("Instruction: %s %s", itn_map[uint32(m.Opcode)], arg_text), 0, 33, 16, rl.Black)
+	rl.DrawText(fmt.Sprintf("Instruction: %s %s", itnMap[uint32(m.Opcode)], argText), 0, 33, 16, rl.Black)
 
 }

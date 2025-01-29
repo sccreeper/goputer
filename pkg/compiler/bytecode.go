@@ -16,45 +16,45 @@ const (
 // Takes in a ProgramStructure and returns the corresponding compiled bytecode.
 func GenerateBytecode(p ProgramStructure) []byte {
 
-	byte_index := BlockAddrSize + 4
-	final_bytes := make([]byte, 0)
+	byteIndex := BlockAddrSize + 4
+	finalBytes := make([]byte, 0)
 
-	jump_block_addr := make(map[string]uint32)
-	data_block_addr := make(map[string]uint32)
+	jumpBlockAddr := make(map[string]uint32)
+	dataBlockAddr := make(map[string]uint32)
 
 	//Generate definition bytecode first
 
-	definition_bytes := []byte{}
-	definition_start_index := byte_index
-	definition_addr_index := definition_start_index
+	definitionBytes := []byte{}
+	definitionStartIndex := byteIndex
+	definitionAddrIndex := definitionStartIndex
 
 	for _, d := range p.Definitions {
 
-		data_block_addr[d.Name] = definition_addr_index + StackSize
+		dataBlockAddr[d.Name] = definitionAddrIndex + StackSize
 
-		length_bytes := make([]byte, 4)
+		lengthBytes := make([]byte, 4)
 
-		binary.LittleEndian.PutUint32(length_bytes, uint32(len(d.Data)))
+		binary.LittleEndian.PutUint32(lengthBytes, uint32(len(d.Data)))
 
-		data_bytes := d.Data
+		dataBytes := d.Data
 
-		definition_bytes = append(definition_bytes, length_bytes...)
-		definition_bytes = append(definition_bytes, data_bytes...)
+		definitionBytes = append(definitionBytes, lengthBytes...)
+		definitionBytes = append(definitionBytes, dataBytes...)
 
-		definition_addr_index += uint32(len(length_bytes) + len(data_bytes))
+		definitionAddrIndex += uint32(len(lengthBytes) + len(dataBytes))
 
 	}
 
 	//Increment the byte index
 
-	byte_index += uint32(len(definition_bytes)) + PadSize
+	byteIndex += uint32(len(definitionBytes)) + PadSize
 
 	//Generate the jump block block
 
-	jump_block_start_index := byte_index
-	jump_block_addr_index := jump_block_start_index
+	jumpBlockStartIndex := byteIndex
+	jumpBlockAddrIndex := jumpBlockStartIndex
 
-	jump_block_bytes := []byte{}
+	jumpBlockBytes := []byte{}
 
 	//Order keys first
 
@@ -62,54 +62,54 @@ func GenerateBytecode(p ProgramStructure) []byte {
 
 		v := p.InstructionBlocks[s]
 
-		current_jump_block_bytes := []byte{}
+		currentJumpBlockBytes := []byte{}
 
-		jump_block_addr[v.Name] = jump_block_addr_index
+		jumpBlockAddr[v.Name] = jumpBlockAddrIndex
 
 		for _, i := range v.Instructions {
 
-			current_jump_block_bytes = append(current_jump_block_bytes, generate_instruction_bytecode(i, data_block_addr, jump_block_addr)...)
+			currentJumpBlockBytes = append(currentJumpBlockBytes, generateInstructionBytecode(i, dataBlockAddr, jumpBlockAddr)...)
 
 		}
 
-		current_jump_block_bytes = append(current_jump_block_bytes, []byte{0, 0, 0, 0, 0}...)
+		currentJumpBlockBytes = append(currentJumpBlockBytes, []byte{0, 0, 0, 0, 0}...)
 
-		jump_block_bytes = append(jump_block_bytes, current_jump_block_bytes...)
+		jumpBlockBytes = append(jumpBlockBytes, currentJumpBlockBytes...)
 
-		jump_block_addr_index += uint32(len(current_jump_block_bytes))
+		jumpBlockAddrIndex += uint32(len(currentJumpBlockBytes))
 
-		current_jump_block_bytes = nil
+		currentJumpBlockBytes = nil
 
 	}
 
-	byte_index += uint32(len(jump_block_bytes)) + PadSize
+	byteIndex += uint32(len(jumpBlockBytes)) + PadSize
 
 	//Generate the interrupt table
 
-	included_interrupts := []constants.Interrupt{}
-	current_interrupt_bytes := []byte{}
-	interrupt_bytes := []byte{}
+	includedInterrupts := []constants.Interrupt{}
+	currentInterruptBytes := []byte{}
+	interruptBytes := []byte{}
 
-	interrupt_block_start_index := byte_index
+	interruptBlockStartIndex := byteIndex
 
 	for _, v := range p.InterruptSubscriptions {
 
 		i := v.Interrupt
-		j_addr := jump_block_addr[v.JumpBlockName]
+		jAddr := jumpBlockAddr[v.JumpBlockName]
 
-		i_bytes := make([]byte, 2)
-		binary.LittleEndian.PutUint16(i_bytes[:], uint16(i))
-		j_addr_bytes := make([]byte, 4)
-		binary.LittleEndian.PutUint32(j_addr_bytes[:], j_addr+StackSize)
+		iBytes := make([]byte, 2)
+		binary.LittleEndian.PutUint16(iBytes[:], uint16(i))
+		jAddrBytes := make([]byte, 4)
+		binary.LittleEndian.PutUint32(jAddrBytes[:], jAddr+StackSize)
 
-		current_interrupt_bytes = append(current_interrupt_bytes, i_bytes...)
-		current_interrupt_bytes = append(current_interrupt_bytes, j_addr_bytes...)
+		currentInterruptBytes = append(currentInterruptBytes, iBytes...)
+		currentInterruptBytes = append(currentInterruptBytes, jAddrBytes...)
 
-		interrupt_bytes = append(interrupt_bytes, current_interrupt_bytes...)
+		interruptBytes = append(interruptBytes, currentInterruptBytes...)
 
-		current_interrupt_bytes = nil
+		currentInterruptBytes = nil
 
-		included_interrupts = append(included_interrupts, v.Interrupt)
+		includedInterrupts = append(includedInterrupts, v.Interrupt)
 
 	}
 
@@ -117,96 +117,96 @@ func GenerateBytecode(p ProgramStructure) []byte {
 
 	for _, v := range constants.SubscribableInterrupts {
 
-		if slices.Contains(included_interrupts, v) {
+		if slices.Contains(includedInterrupts, v) {
 			continue
 		} else {
 			i := v
-			j_addr := uint32(0x00000000)
+			jAddr := uint32(0x00000000)
 
-			i_bytes := make([]byte, 2)
-			binary.LittleEndian.PutUint16(i_bytes[:], uint16(i))
-			j_addr_bytes := make([]byte, 4)
-			binary.LittleEndian.PutUint32(j_addr_bytes[:], j_addr)
+			iBytes := make([]byte, 2)
+			binary.LittleEndian.PutUint16(iBytes[:], uint16(i))
+			jAddrBytes := make([]byte, 4)
+			binary.LittleEndian.PutUint32(jAddrBytes[:], jAddr)
 
-			current_interrupt_bytes = append(current_interrupt_bytes, i_bytes...)
-			current_interrupt_bytes = append(current_interrupt_bytes, j_addr_bytes...)
+			currentInterruptBytes = append(currentInterruptBytes, iBytes...)
+			currentInterruptBytes = append(currentInterruptBytes, jAddrBytes...)
 
-			interrupt_bytes = append(interrupt_bytes, current_interrupt_bytes...)
+			interruptBytes = append(interruptBytes, currentInterruptBytes...)
 
-			current_interrupt_bytes = nil
+			currentInterruptBytes = nil
 
 		}
 
 	}
 
-	byte_index += uint32(len(interrupt_bytes) + int(PadSize))
+	byteIndex += uint32(len(interruptBytes) + int(PadSize))
 
 	//Generate instruction bytecode
 
-	instruction_bytes := []byte{}
+	instructionBytes := []byte{}
 
-	instruction_start_index := byte_index
+	instructionStartIndex := byteIndex
 
 	for _, v := range p.ProgramInstructions {
 
-		instruction_bytes = append(instruction_bytes, generate_instruction_bytecode(
+		instructionBytes = append(instructionBytes, generateInstructionBytecode(
 			v,
-			data_block_addr,
-			jump_block_addr,
+			dataBlockAddr,
+			jumpBlockAddr,
 		)...)
 
 	}
 
 	//Construct final byte array
 
-	final_bytes = append(final_bytes, []byte(MagicString)...)
+	finalBytes = append(finalBytes, []byte(MagicString)...)
 
-	b_padding_bytes := []byte{PadValue, PadValue, PadValue, PadValue}
+	bPaddingBytes := []byte{PadValue, PadValue, PadValue, PadValue}
 
-	b_data_block_start := make([]byte, 4)
-	b_jmp_block_start := make([]byte, 4)
-	b_int_block_start := make([]byte, 4)
-	b_itn_block_start := make([]byte, 4)
+	bDataBlockStart := make([]byte, 4)
+	bJmpBlockStart := make([]byte, 4)
+	bIntBlockStart := make([]byte, 4)
+	bItnBlockStart := make([]byte, 4)
 
-	binary.LittleEndian.PutUint32(b_data_block_start, definition_start_index)
-	binary.LittleEndian.PutUint32(b_jmp_block_start, jump_block_start_index)
-	binary.LittleEndian.PutUint32(b_int_block_start, interrupt_block_start_index)
-	binary.LittleEndian.PutUint32(b_itn_block_start, instruction_start_index)
+	binary.LittleEndian.PutUint32(bDataBlockStart, definitionStartIndex)
+	binary.LittleEndian.PutUint32(bJmpBlockStart, jumpBlockStartIndex)
+	binary.LittleEndian.PutUint32(bIntBlockStart, interruptBlockStartIndex)
+	binary.LittleEndian.PutUint32(bItnBlockStart, instructionStartIndex)
 
-	final_bytes = append(final_bytes, b_data_block_start...)
-	final_bytes = append(final_bytes, b_jmp_block_start...)
-	final_bytes = append(final_bytes, b_int_block_start...)
-	final_bytes = append(final_bytes, b_itn_block_start...)
+	finalBytes = append(finalBytes, bDataBlockStart...)
+	finalBytes = append(finalBytes, bJmpBlockStart...)
+	finalBytes = append(finalBytes, bIntBlockStart...)
+	finalBytes = append(finalBytes, bItnBlockStart...)
 
-	final_bytes = append(final_bytes, b_padding_bytes...)
+	finalBytes = append(finalBytes, bPaddingBytes...)
 
-	final_bytes = append(final_bytes, definition_bytes...)
-	final_bytes = append(final_bytes, b_padding_bytes...)
+	finalBytes = append(finalBytes, definitionBytes...)
+	finalBytes = append(finalBytes, bPaddingBytes...)
 
-	final_bytes = append(final_bytes, jump_block_bytes...)
-	final_bytes = append(final_bytes, b_padding_bytes...)
+	finalBytes = append(finalBytes, jumpBlockBytes...)
+	finalBytes = append(finalBytes, bPaddingBytes...)
 
-	final_bytes = append(final_bytes, interrupt_bytes...)
-	final_bytes = append(final_bytes, b_padding_bytes...)
+	finalBytes = append(finalBytes, interruptBytes...)
+	finalBytes = append(finalBytes, bPaddingBytes...)
 
-	final_bytes = append(final_bytes, instruction_bytes...)
-	final_bytes = append(final_bytes, b_padding_bytes...)
+	finalBytes = append(finalBytes, instructionBytes...)
+	finalBytes = append(finalBytes, bPaddingBytes...)
 
-	return final_bytes
+	return finalBytes
 
 }
 
 // Generates individual instruction bytecode.
 //
 // 1 byte for instruction, 4 bytes for arguments.
-func generate_instruction_bytecode(i Instruction, d_block_addr map[string]uint32, j_blk_addr map[string]uint32) []byte {
+func generateInstructionBytecode(i Instruction, dBlockAddr map[string]uint32, jBlkAddr map[string]uint32) []byte {
 
 	//TODO: sign bit
 	//TODO: add offset for "hardware reserved" space
 
-	var instruction_bytes []byte
+	var instructionBytes []byte
 
-	instruction_bytes = append(instruction_bytes,
+	instructionBytes = append(instructionBytes,
 		uint8(i.Instruction),
 	)
 
@@ -219,11 +219,11 @@ func generate_instruction_bytecode(i Instruction, d_block_addr map[string]uint32
 
 		if v[0] == '@' { //LDA or STA
 
-			addr = d_block_addr[v[1:]]
+			addr = dBlockAddr[v[1:]]
 
 		} else if i.Instruction == uint32(constants.IJump) || i.Instruction == uint32(constants.IConditionalJump) || i.Instruction == uint32(constants.ICall) || i.Instruction == uint32(constants.IConditionalCall) { //jump
 
-			addr = uint32(j_blk_addr[v] + StackSize)
+			addr = uint32(jBlkAddr[v] + StackSize)
 
 		} else if i.Instruction == uint32(constants.ICallInterrupt) {
 			addr = uint32(constants.InterruptInts[v])
@@ -236,23 +236,23 @@ func generate_instruction_bytecode(i Instruction, d_block_addr map[string]uint32
 
 	//Add args to byte array
 
-	var data_array []byte
+	var dataArray []byte
 
 	if i.SingleData {
 
-		data_array = make([]byte, 4)
+		dataArray = make([]byte, 4)
 
-		binary.LittleEndian.PutUint32(data_array[:], addresses[0])
+		binary.LittleEndian.PutUint32(dataArray[:], addresses[0])
 
 	} else {
-		data_array = make([]byte, 4)
+		dataArray = make([]byte, 4)
 
-		binary.LittleEndian.PutUint16(data_array[:], uint16(addresses[0]))
-		binary.LittleEndian.PutUint16(data_array[2:], uint16(addresses[1]))
+		binary.LittleEndian.PutUint16(dataArray[:], uint16(addresses[0]))
+		binary.LittleEndian.PutUint16(dataArray[2:], uint16(addresses[1]))
 	}
 
-	instruction_bytes = append(instruction_bytes, data_array...)
+	instructionBytes = append(instructionBytes, dataArray...)
 
-	return instruction_bytes
+	return instructionBytes
 
 }

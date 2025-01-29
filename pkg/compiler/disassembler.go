@@ -19,68 +19,68 @@ type DisassembledProgram struct {
 }
 
 // Decodes individual instructions.
-func decode_instruction(b []byte) Instruction {
+func decodeInstruction(b []byte) Instruction {
 
 	i := Instruction{}
 
 	itn := constants.Instruction(b[0])
-	itn_data_bytes := b[1:]
+	itnDataBytes := b[1:]
 
-	var single_data bool
-	var itn_data []uint32
+	var singleData bool
+	var itnData []uint32
 
 	//Reverse maps
 
-	reg_map := make(map[constants.Register]string)
+	regMap := make(map[constants.Register]string)
 
 	for k, v := range constants.RegisterInts {
 
-		reg_map[constants.Register(v)] = k
+		regMap[constants.Register(v)] = k
 
 	}
 
-	interrupt_map := make(map[constants.Interrupt]string)
+	interruptMap := make(map[constants.Interrupt]string)
 
 	for k, v := range constants.InterruptInts {
 
-		interrupt_map[v] = k
+		interruptMap[v] = k
 
 	}
 
 	//Determine if instruction is two args or single arg
 	if slices.Contains(constants.SingleArgInstructions, itn) {
 
-		itn_data = append(itn_data, binary.LittleEndian.Uint32(itn_data_bytes))
+		itnData = append(itnData, binary.LittleEndian.Uint32(itnDataBytes))
 
-		single_data = true
+		singleData = true
 	} else {
-		itn_data = append(itn_data, uint32(binary.LittleEndian.Uint16(itn_data_bytes[:2])))
-		itn_data = append(itn_data, uint32(binary.LittleEndian.Uint16(itn_data_bytes[2:4])))
+		itnData = append(itnData, uint32(binary.LittleEndian.Uint16(itnDataBytes[:2])))
+		itnData = append(itnData, uint32(binary.LittleEndian.Uint16(itnDataBytes[2:4])))
 
-		single_data = false
+		singleData = false
 	}
 
 	d := ""
 
-	for _, v := range itn_data {
+	for _, v := range itnData {
 
 		if itn == constants.ILoad || itn == constants.IStore || itn == constants.IJump || itn == constants.IConditionalJump {
 
-			d = fmt.Sprintf("0x"+"%08X", itn_data[0])
+			d = fmt.Sprintf("0x"+"%08X", itnData[0])
 
 		} else {
 
 			if itn == constants.ICallInterrupt {
-				d = interrupt_map[constants.Interrupt(v)]
+				d = interruptMap[constants.Interrupt(v)]
 			} else {
-				d = reg_map[constants.Register(v)]
+				d = regMap[constants.Register(v)]
 			}
 		}
 
 		i.Data = append(i.Data, d)
 	}
 
-	i.SingleData = single_data
+	i.SingleData = singleData
 	i.Instruction = uint32(itn)
 
 	return i
@@ -91,57 +91,57 @@ func decode_instruction(b []byte) Instruction {
 //
 // Takes program bytes and returns a DisassembledProgram struct.
 // The disassembled struct is similar to an assembled program struct but it is missing many of the fields that the assembled program struct has.
-func Disassemble(program_bytes []byte, verbose bool) (DisassembledProgram, error) {
+func Disassemble(programBytes []byte, verbose bool) (DisassembledProgram, error) {
 
-	var data_block_start uint32
-	var data_block_bytes []byte
+	var dataBlockStart uint32
+	var dataBlockBytes []byte
 
-	var interrupt_table_start uint32
-	var interrupt_block_bytes []byte
+	var interruptTableStart uint32
+	var interruptBlockBytes []byte
 
-	var jump_block_start uint32
-	var jump_block_bytes []byte
+	var jumpBlockStart uint32
+	var jumpBlockBytes []byte
 
-	var instruction_start uint32
-	var instruction_bytes []byte
+	var instructionStart uint32
+	var instructionBytes []byte
 
 	var program DisassembledProgram
 
-	var byte_index uint32 = 0
+	var byteIndex uint32 = 0
 
 	//Extract header and
 
 	if verbose {
-		log.Printf("Got program with %d byte(s)", len(program_bytes)-4)
+		log.Printf("Got program with %d byte(s)", len(programBytes)-4)
 	}
 
-	program_bytes = program_bytes[4:]
+	programBytes = programBytes[4:]
 
 	program.StartIndexes = make([]uint32, 4)
 
-	data_block_start = binary.LittleEndian.Uint32(program_bytes[:4])
-	program.StartIndexes[0] = data_block_start
-	jump_block_start = binary.LittleEndian.Uint32(program_bytes[4:8])
-	program.StartIndexes[1] = jump_block_start
-	interrupt_table_start = binary.LittleEndian.Uint32(program_bytes[8:12])
-	program.StartIndexes[2] = interrupt_table_start
-	instruction_start = binary.LittleEndian.Uint32(program_bytes[12:16])
-	program.StartIndexes[3] = instruction_start
+	dataBlockStart = binary.LittleEndian.Uint32(programBytes[:4])
+	program.StartIndexes[0] = dataBlockStart
+	jumpBlockStart = binary.LittleEndian.Uint32(programBytes[4:8])
+	program.StartIndexes[1] = jumpBlockStart
+	interruptTableStart = binary.LittleEndian.Uint32(programBytes[8:12])
+	program.StartIndexes[2] = interruptTableStart
+	instructionStart = binary.LittleEndian.Uint32(programBytes[12:16])
+	program.StartIndexes[3] = instructionStart
 
 	if verbose {
 
 		log.Println("Indexes are:")
-		log.Printf("Data block start index %d", data_block_start)
-		log.Printf("Jump block start index %d", jump_block_start)
-		log.Printf("Interrupt table start index %d", interrupt_table_start)
-		log.Printf("Instruction start index %d", instruction_start)
+		log.Printf("Data block start index %d", dataBlockStart)
+		log.Printf("Jump block start index %d", jumpBlockStart)
+		log.Printf("Interrupt table start index %d", interruptTableStart)
+		log.Printf("Instruction start index %d", instructionStart)
 
 	}
 
-	data_block_bytes = program_bytes[data_block_start : jump_block_start-PadSize]
-	jump_block_bytes = program_bytes[jump_block_start : interrupt_table_start-PadSize]
-	interrupt_block_bytes = program_bytes[interrupt_table_start : instruction_start-PadSize]
-	instruction_bytes = program_bytes[instruction_start : len(program_bytes)-int(PadSize)]
+	dataBlockBytes = programBytes[dataBlockStart : jumpBlockStart-PadSize]
+	jumpBlockBytes = programBytes[jumpBlockStart : interruptTableStart-PadSize]
+	interruptBlockBytes = programBytes[interruptTableStart : instructionStart-PadSize]
+	instructionBytes = programBytes[instructionStart : len(programBytes)-int(PadSize)]
 
 	if verbose {
 		log.Println("Disassembling data table...")
@@ -151,53 +151,53 @@ func Disassemble(program_bytes []byte, verbose bool) (DisassembledProgram, error
 	//Build data table
 	//----------------
 
-	byte_index = data_block_start
+	byteIndex = dataBlockStart
 
 	program.ProgramDefinitions = append(program.ProgramDefinitions, []byte{})
-	var definition_index uint32 = 0
-	var definition_length_index uint32 = 0
-	var definition_length uint32 = 0
-	var in_definition bool = false
-	var data_bytes_index uint32 = 0
+	var definitionIndex uint32 = 0
+	var definitionLengthIndex uint32 = 0
+	var definitionLength uint32 = 0
+	var inDefinition bool = false
+	var dataBytesIndex uint32 = 0
 
 	//Break definitions up into individual byte arrays
 
-	for range data_block_bytes {
+	for range dataBlockBytes {
 
-		if int(data_bytes_index) > len(data_block_bytes) || int(data_bytes_index+4) > len(data_block_bytes) {
+		if int(dataBytesIndex) > len(dataBlockBytes) || int(dataBytesIndex+4) > len(dataBlockBytes) {
 			break
 		}
 
-		if !in_definition {
+		if !inDefinition {
 
-			definition_length = binary.LittleEndian.Uint32(data_block_bytes[data_bytes_index : data_bytes_index+4])
+			definitionLength = binary.LittleEndian.Uint32(dataBlockBytes[dataBytesIndex : dataBytesIndex+4])
 
 			if verbose {
-				log.Printf("%d definition - %d byte(s) long.", definition_index, definition_length)
+				log.Printf("%d definition - %d byte(s) long.", definitionIndex, definitionLength)
 			}
 
-			data_bytes_index += 4
-			in_definition = true
+			dataBytesIndex += 4
+			inDefinition = true
 			continue
 
-		} else if definition_length_index >= definition_length {
+		} else if definitionLengthIndex >= definitionLength {
 
-			in_definition = false
+			inDefinition = false
 
 			program.ProgramDefinitions = append(program.ProgramDefinitions, []byte{})
 
-			definition_index++
-			definition_length_index = 0
+			definitionIndex++
+			definitionLengthIndex = 0
 
 			continue
 		} else {
 
-			program.ProgramDefinitions[definition_index] = append(program.ProgramDefinitions[definition_index], data_block_bytes[data_bytes_index])
-			definition_length_index++
+			program.ProgramDefinitions[definitionIndex] = append(program.ProgramDefinitions[definitionIndex], dataBlockBytes[dataBytesIndex])
+			definitionLengthIndex++
 
 		}
 
-		data_bytes_index++
+		dataBytesIndex++
 
 	}
 
@@ -209,28 +209,28 @@ func Disassemble(program_bytes []byte, verbose bool) (DisassembledProgram, error
 	//Build jump blocks
 	//--------------------
 
-	byte_index = jump_block_start
+	byteIndex = jumpBlockStart
 
 	program.JumpBlocks = make(map[uint32][]Instruction)
 
-	jump_block_addr_index := byte_index
+	jumpBlockAddrIndex := byteIndex
 
-	in_jump_block := false
+	inJumpBlock := false
 
-	for _, v := range util.SliceChunks(jump_block_bytes, int(InstructionLength)) {
+	for _, v := range util.SliceChunks(jumpBlockBytes, int(InstructionLength)) {
 
-		if !in_jump_block {
-			program.JumpBlocks[jump_block_addr_index] = make([]Instruction, 0)
+		if !inJumpBlock {
+			program.JumpBlocks[jumpBlockAddrIndex] = make([]Instruction, 0)
 
-			program.JumpBlocks[jump_block_addr_index] = append(program.JumpBlocks[jump_block_addr_index], decode_instruction(v))
+			program.JumpBlocks[jumpBlockAddrIndex] = append(program.JumpBlocks[jumpBlockAddrIndex], decodeInstruction(v))
 
-			in_jump_block = true
-		} else if all_zero(v) {
-			in_jump_block = false
+			inJumpBlock = true
+		} else if allZero(v) {
+			inJumpBlock = false
 
-			jump_block_addr_index += uint32((len(program.JumpBlocks[jump_block_addr_index]) * int(InstructionLength)) + int(InstructionLength))
+			jumpBlockAddrIndex += uint32((len(program.JumpBlocks[jumpBlockAddrIndex]) * int(InstructionLength)) + int(InstructionLength))
 		} else {
-			program.JumpBlocks[jump_block_addr_index] = append(program.JumpBlocks[jump_block_addr_index], decode_instruction(v))
+			program.JumpBlocks[jumpBlockAddrIndex] = append(program.JumpBlocks[jumpBlockAddrIndex], decodeInstruction(v))
 		}
 
 	}
@@ -244,15 +244,15 @@ func Disassemble(program_bytes []byte, verbose bool) (DisassembledProgram, error
 	//Build interrupt table
 	//---------------------
 
-	byte_index = interrupt_table_start
+	byteIndex = interruptTableStart
 
 	//Reverse interrupt map
 
-	interrupt_map := make(map[constants.Interrupt]string)
+	interruptMap := make(map[constants.Interrupt]string)
 
 	for k, v := range constants.SubscribableInterrupts {
 
-		interrupt_map[v] = k
+		interruptMap[v] = k
 
 	}
 
@@ -261,17 +261,17 @@ func Disassemble(program_bytes []byte, verbose bool) (DisassembledProgram, error
 	program.InterruptTable = make(map[constants.Interrupt]uint32)
 
 	if verbose {
-		log.Printf("Interrupt byte length %d", len(interrupt_block_bytes))
+		log.Printf("Interrupt byte length %d", len(interruptBlockBytes))
 	}
 
-	for _, v := range util.SliceChunks(interrupt_block_bytes, 6) {
+	for _, v := range util.SliceChunks(interruptBlockBytes, 6) {
 
 		//log.Println(current_bytes)
 
 		interrupt := constants.Interrupt(binary.LittleEndian.Uint16(v[:2]))
-		jump_block_addr := binary.LittleEndian.Uint32(v[2:])
+		jumpBlockAddr := binary.LittleEndian.Uint32(v[2:])
 
-		program.InterruptTable[interrupt] = jump_block_addr
+		program.InterruptTable[interrupt] = jumpBlockAddr
 
 	}
 
@@ -283,9 +283,9 @@ func Disassemble(program_bytes []byte, verbose bool) (DisassembledProgram, error
 	//Decode instructions
 	//---------------------------
 
-	for _, v := range util.SliceChunks(instruction_bytes, int(InstructionLength)) {
+	for _, v := range util.SliceChunks(instructionBytes, int(InstructionLength)) {
 
-		program.Instructions = append(program.Instructions, decode_instruction(v))
+		program.Instructions = append(program.Instructions, decodeInstruction(v))
 
 	}
 
@@ -293,7 +293,7 @@ func Disassemble(program_bytes []byte, verbose bool) (DisassembledProgram, error
 
 }
 
-func all_zero(b []byte) bool {
+func allZero(b []byte) bool {
 
 	for _, v := range b {
 

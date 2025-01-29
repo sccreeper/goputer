@@ -2,9 +2,9 @@ package main
 
 import "encoding/binary"
 
-func handle_field_query(argument_bytes []byte) []byte {
+func handleFieldQuery(argumentBytes []byte) []byte {
 
-	switch argument_bytes[1] {
+	switch argumentBytes[1] {
 	case FieldName:
 		return []byte(attributes["name"].(string))
 	case FieldDisplayWidth:
