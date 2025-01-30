@@ -182,7 +182,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 				continue
 			} else if f_name == p.ImportedFrom {
 
-				p.parsing_error(ErrImport, CircularImport)
+				p.parsingError(ErrImport, CircularImport)
 
 			}
 
@@ -204,7 +204,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 			util.CheckError(err)
 
 			if p.ImportedFrom == f_name {
-				p.parsing_error(ErrImport, CircularImport)
+				p.parsingError(ErrImport, CircularImport)
 			}
 
 			p.ProgramStructure, err = p.combine(imported_program_structure)
@@ -298,11 +298,11 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 			//Error checking
 
 			if _, exists := constants.InterruptInts[e[1]]; !exists || constants.InterruptInts[e[1]] < constants.IntMouseMove {
-				p.parsing_error(ErrSymbol, SymbolDoesNotExist)
+				p.parsingError(ErrSymbol, SymbolDoesNotExist)
 			}
 
 			if !slices.Contains(p.ProgramStructure.InstructionBlockNames, e[2]) {
-				p.parsing_error(ErrSymbol, ErrorType(fmt.Sprintf("unrecognized jump %s", e[2])))
+				p.parsingError(ErrSymbol, ErrorType(fmt.Sprintf("unrecognized jump %s", e[2])))
 			}
 
 			p.ProgramStructure.InterruptSubscriptions = append(
@@ -319,7 +319,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 		} else if e[0] == "end" { //Reaching end of jump block
 			if !in_jump_block {
-				p.parsing_error(ErrSyntax, UnexpectedEndStatement)
+				p.parsingError(ErrSyntax, UnexpectedEndStatement)
 			}
 
 			p.ProgramStructure.InstructionBlocks[jump_block_name] = CodeBlock{
@@ -337,10 +337,10 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 		} else if e[0][0] == ':' { //Jump block definition.
 			//Errors
 			if in_jump_block {
-				p.parsing_error(ErrSyntax, NestingError)
+				p.parsingError(ErrSyntax, NestingError)
 			}
 			if len(e[0]) == 1 {
-				p.parsing_error(ErrSyntax, MinimumNameLength)
+				p.parsingError(ErrSyntax, MinimumNameLength)
 			}
 			//Check if name of jump block isn't shared by registers or instructions
 			p.name_collision(e[0][1:])
@@ -359,7 +359,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 			//Check if statement exists in instructions
 			if _, exists := constants.InstructionInts[e[0]]; !exists {
-				p.parsing_error(ErrDoesNotExist, InstructionDoesNotExist)
+				p.parsingError(ErrDoesNotExist, InstructionDoesNotExist)
 			}
 
 			//Check if args are valid
@@ -368,7 +368,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 				if e[0] == "int" {
 					if _, exists := constants.InterruptInts[arg]; !exists {
-						p.parsing_error(ErrSymbol, InvalidArgument)
+						p.parsingError(ErrSymbol, InvalidArgument)
 					}
 
 				} else if arg[0] == '@' && (e[0] == "lda" || e[0] == "sta") {
@@ -384,7 +384,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 					}
 
 					if !exists {
-						p.parsing_error(ErrDoesNotExist, ErrorType(fmt.Sprintf("definition '%s' does not exist", e[1][1:])))
+						p.parsingError(ErrDoesNotExist, ErrorType(fmt.Sprintf("definition '%s' does not exist", e[1][1:])))
 					}
 				} else if e[0] == "jmp" || e[0] == "cndjmp" || e[0] == "call" || e[0] == "cndcall" {
 
@@ -400,14 +400,14 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 					}
 
 					if !exists {
-						p.parsing_error(ErrDoesNotExist, ErrorType(fmt.Sprintf("unknown instruction block '%s'", arg)))
+						p.parsingError(ErrDoesNotExist, ErrorType(fmt.Sprintf("unknown instruction block '%s'", arg)))
 					}
 
 				} else {
 
 					if _, exists := constants.RegisterInts[arg]; !exists {
 
-						p.parsing_error(ErrDoesNotExist, ErrorType(fmt.Sprintf("unknown register '%s'", arg)))
+						p.parsingError(ErrDoesNotExist, ErrorType(fmt.Sprintf("unknown register '%s'", arg)))
 
 					}
 
@@ -459,7 +459,7 @@ func (p *Parser) combine(s1 ProgramStructure) (ProgramStructure, error) {
 
 	if slices.Contains(s1.ImportedFiles, p.FileName) {
 
-		p.parsing_error(ErrImport, CircularImport)
+		p.parsingError(ErrImport, CircularImport)
 
 	}
 
@@ -533,7 +533,7 @@ func (p *Parser) name_collision(s string) string {
 	}
 
 	if err != "" {
-		p.parsing_error(ErrSymbol, ErrorType(err))
+		p.parsingError(ErrSymbol, ErrorType(err))
 		return ""
 	} else {
 		return err

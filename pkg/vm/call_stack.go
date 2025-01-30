@@ -6,7 +6,7 @@ import (
 )
 
 // Set program pointer to previous position and then pop from stack.
-func (m *VM) pop_call() {
+func (m *VM) popCall() {
 
 	//Get address at call stack pointer
 	m.Registers[c.RProgramCounter] = binary.LittleEndian.Uint32(

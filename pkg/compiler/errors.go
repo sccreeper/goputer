@@ -35,76 +35,76 @@ var RedError color.Color = *color.New(color.FgHiRed, color.Bold)
 var ItalicCode color.Color = *color.New(color.Italic)
 
 // Handles a parsing error
-func (p *Parser) parsing_error(e error, error_type ErrorType) {
+func (p *Parser) parsingError(e error, errorType ErrorType) {
 
-	var error_text string
+	var errorText string
 
-	error_text += "Error\n"
+	errorText += "Error\n"
 
 	if p.LineIndex != -1 {
-		error_text += fmt.Sprintf("In file '%s' on line %d\n", p.FileName, p.LineIndex+1)
+		errorText += fmt.Sprintf("In file '%s' on line %d\n", p.FileName, p.LineIndex+1)
 	} else {
-		error_text += fmt.Sprintf("In file '%s'\n", p.FileName)
+		errorText += fmt.Sprintf("In file '%s'\n", p.FileName)
 	}
 
-	error_text += format_line(p.CurrentLine) + "\n"
+	errorText += formatLine(p.CurrentLine) + "\n"
 
 	switch e {
 	case ErrSyntax:
-		error_text += fmt.Sprintf("%s %s\n", RedError.Sprint("Syntax error:"), error_type)
+		errorText += fmt.Sprintf("%s %s\n", RedError.Sprint("Syntax error:"), errorType)
 	case ErrSymbol:
-		error_text += fmt.Sprintf("%s %s\n", RedError.Sprint("Symbol error:"), error_type)
+		errorText += fmt.Sprintf("%s %s\n", RedError.Sprint("Symbol error:"), errorType)
 	case ErrDoesNotExist:
-		error_text += fmt.Sprintf("%s %s\n", RedError.Sprint("Does not exist:"), error_type)
+		errorText += fmt.Sprintf("%s %s\n", RedError.Sprint("Does not exist:"), errorType)
 	case ErrInvalidArgument:
-		error_text += fmt.Sprintf("%s %s\n", RedError.Sprint("Invalid argument:"), error_type)
+		errorText += fmt.Sprintf("%s %s\n", RedError.Sprint("Invalid argument:"), errorType)
 	case ErrImport:
-		error_text += fmt.Sprintf("%s %s\n", RedError.Sprint("Import error:"), error_type)
+		errorText += fmt.Sprintf("%s %s\n", RedError.Sprint("Import error:"), errorType)
 	}
 
-	p.ErrorHandler(error_type, error_text)
+	p.ErrorHandler(errorType, errorText)
 
 }
 
-func format_line(line string) string {
+func formatLine(line string) string {
 
-	line_data := strings.Split(line, " ")
+	lineData := strings.Split(line, " ")
 
-	if line_data[0] == "def" {
+	if lineData[0] == "def" {
 
-		def_line := []string{}
-		def_line = append(def_line, "def", line_data[1])
+		defLine := []string{}
+		defLine = append(defLine, "def", lineData[1])
 
-		if line_data[2][0] == '"' {
+		if lineData[2][0] == '"' {
 
-			def_line = append(def_line, line[len("def")+len(line_data[1])-1+3:])
+			defLine = append(defLine, line[len("def")+len(lineData[1])-1+3:])
 
 		} else {
-			def_line = append(def_line, line_data[2])
+			defLine = append(defLine, lineData[2])
 		}
 
-		line_data = def_line
+		lineData = defLine
 
 	}
 
-	var final_line string = ""
+	var finalLine string = ""
 
-	for index, v := range line_data {
+	for index, v := range lineData {
 
 		if index == 0 {
 
-			final_line += ItalicCode.Sprint(color.GreenString(v))
+			finalLine += ItalicCode.Sprint(color.GreenString(v))
 
 		} else {
 
-			final_line += ItalicCode.Sprint(color.CyanString(v))
+			finalLine += ItalicCode.Sprint(color.CyanString(v))
 
 		}
 
-		final_line += " "
+		finalLine += " "
 
 	}
 
-	return final_line
+	return finalLine
 
 }

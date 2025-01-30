@@ -6,7 +6,7 @@ import (
 
 //Shifting left and shifting right
 
-func (m *VM) shift_left() {
+func (m *VM) shiftLeft() {
 	switch m.ArgSmall0 {
 	case uint16(c.RData):
 		copy(m.DataBuffer[:], append(m.DataBuffer[m.Registers[m.ArgSmall1]:], make([]byte, 128-len(m.DataBuffer[m.Registers[m.ArgSmall1]:]))...))
@@ -18,7 +18,7 @@ func (m *VM) shift_left() {
 
 }
 
-func (m *VM) shift_right() {
+func (m *VM) shiftRight() {
 	switch m.ArgSmall0 {
 	case uint16(c.RData):
 		copy(m.DataBuffer[:], append(make([]byte, m.Registers[m.ArgSmall1]), m.DataBuffer[:128-m.Registers[m.Registers[m.ArgSmall1]]]...))

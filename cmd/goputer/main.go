@@ -110,7 +110,7 @@ func main() {
 			{
 				Name:   "list",
 				Usage:  "Lists plugins available",
-				Action: _list_frontends,
+				Action: _listFrontends,
 			},
 		},
 	}

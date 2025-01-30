@@ -25,7 +25,7 @@ type FrontendInfo struct {
 	} `toml:"build"`
 }
 
-func _list_frontends(ctx *cli.Context) error {
+func _listFrontends(ctx *cli.Context) error {
 
 	plugin_dir, err := ioutil.ReadDir("./frontends/")
 	util.CheckError(err)
@@ -34,23 +34,23 @@ func _list_frontends(ctx *cli.Context) error {
 
 		//Load TOML
 
-		toml_file, err := os.ReadFile(fmt.Sprintf("./frontends/%s/frontend.toml", v.Name()))
+		tomlFile, err := os.ReadFile(fmt.Sprintf("./frontends/%s/frontend.toml", v.Name()))
 		util.CheckError(err)
 
-		var frontend_info FrontendInfo
+		var frontendInfo FrontendInfo
 
-		toml.Unmarshal(toml_file, &frontend_info)
+		toml.Unmarshal(tomlFile, &frontendInfo)
 		util.CheckError(err)
 
 		fmt.Println()
-		Bold.Print(frontend_info.Info.Name + "\n")
+		Bold.Print(frontendInfo.Info.Name + "\n")
 		fmt.Println()
 
-		fmt.Printf("%s %s\n", Bold.Sprintf("Description:"), frontend_info.Info.Description)
-		fmt.Printf("%s %s\n", Bold.Sprintf("Authour:"), frontend_info.Info.Authour)
-		fmt.Printf("%s %s\n", Bold.Sprintf("Repository:"), frontend_info.Info.Repository)
+		fmt.Printf("%s %s\n", Bold.Sprintf("Description:"), frontendInfo.Info.Description)
+		fmt.Printf("%s %s\n", Bold.Sprintf("Authour:"), frontendInfo.Info.Authour)
+		fmt.Printf("%s %s\n", Bold.Sprintf("Repository:"), frontendInfo.Info.Repository)
 
-		if frontend_info.Info.IsPlugin {
+		if frontendInfo.Info.IsPlugin {
 			fmt.Printf("%s %s\n", Bold.Sprintf("Is Plugin:"), "Yes")
 		} else {
 			fmt.Printf("%s %s\n", Bold.Sprintf("Is Plugin:"), "No")

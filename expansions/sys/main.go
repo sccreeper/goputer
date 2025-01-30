@@ -7,22 +7,22 @@ import (
 	"strings"
 )
 
-func Handler(argument_bytes []byte) []byte {
+func Handler(argumentBytes []byte) []byte {
 
 	// If the argument is less than
-	if len(argument_bytes) < 2 {
+	if len(argumentBytes) < 2 {
 		return []byte{0, 0, 0, 0}
 	}
 
-	switch argument_bytes[0] {
+	switch argumentBytes[0] {
 	case SysIFieldQuery:
-		return handle_field_query(argument_bytes)
+		return handleFieldQuery(argumentBytes)
 	case SysIDeviceQuery:
 
-		module_id := string(argument_bytes[1:])
-		module_id = strings.ReplaceAll(module_id, "\x00", "")
+		moduleId := string(argumentBytes[1:])
+		moduleId = strings.ReplaceAll(moduleId, "\x00", "")
 
-		if val, ok := attributes["expansions"].(map[string]uint32)[module_id]; ok {
+		if val, ok := attributes["expansions"].(map[string]uint32)[moduleId]; ok {
 			var bus_location []byte = make([]byte, 4)
 			binary.LittleEndian.PutUint32(bus_location[:], val)
 

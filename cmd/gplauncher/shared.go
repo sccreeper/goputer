@@ -24,8 +24,8 @@ var (
 	App = app.New()
 	Win = App.NewWindow("goputer Launcher")
 
-	BtnOpenCode = widget.NewButton("Run Code", run_code)
-	BtnRunCode  = widget.NewButton("Open Code", open_code)
+	BtnOpenCode = widget.NewButton("Run Code", runCode)
+	BtnRunCode  = widget.NewButton("Open Code", openCode)
 
 	LblSelectedCode = widget.NewLabel(CodePath)
 

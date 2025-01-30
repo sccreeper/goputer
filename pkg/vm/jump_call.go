@@ -26,7 +26,7 @@ func (m *VM) call() {
 	m.Registers[c.RProgramCounter] = m.ArgLarge
 }
 
-func (m *VM) conditional_call() bool {
+func (m *VM) conditionalCall() bool {
 	if m.Registers[c.RAccumulator] != 0 {
 		m.Registers[c.RCallStackPointer] += 4
 		binary.LittleEndian.PutUint32(
@@ -47,7 +47,7 @@ func (m *VM) jump() {
 	m.Registers[c.RProgramCounter] = m.ArgLarge
 }
 
-func (m *VM) conditional_jump() bool {
+func (m *VM) conditionalJump() bool {
 
 	if m.Registers[c.RAccumulator] != 0 {
 		m.HandlingInterrupt = false

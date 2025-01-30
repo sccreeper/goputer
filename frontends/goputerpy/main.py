@@ -260,7 +260,7 @@ while True:
     
     pg.display.flip()
 
-    gppy.Step()
+    gppy.Cycle()
 
     clock.tick(120)
 

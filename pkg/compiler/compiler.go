@@ -21,11 +21,11 @@ type AssembledProgram struct {
 //
 // Mainly used by the command line.
 // Designed to work on desktop systems only.
-func Compile(root_path string, get_file func(path string) []byte, config CompilerConfig, error_handler func(error_type ErrorType, error_text string)) (AssembledProgram, error) {
+func Compile(rootPath string, getFile func(path string) []byte, config CompilerConfig, error_handler func(errorType ErrorType, errorText string)) (AssembledProgram, error) {
 
-	start_time := time.Now().UnixMicro()
+	startTime := time.Now().UnixMicro()
 
-	prev_dir, err := os.Getwd()
+	prevDir, err := os.Getwd()
 	util.CheckError(err)
 
 	//Change working directory so file imports are relative
@@ -38,15 +38,15 @@ func Compile(root_path string, get_file func(path string) []byte, config Compile
 	}
 
 	p := Parser{
-		CodeString:   string(get_file(root_path)),
+		CodeString:   string(getFile(rootPath)),
 		FileName:     config.FilePath,
 		Verbose:      false,
 		Imported:     false,
 		ErrorHandler: error_handler,
-		FileReader:   get_file,
+		FileReader:   getFile,
 	}
 
-	program_data, err := p.Parse()
+	programData, err := p.Parse()
 
 	util.CheckError(err)
 
@@ -54,7 +54,7 @@ func Compile(root_path string, get_file func(path string) []byte, config Compile
 	// Generate JSON
 	// ----------------
 
-	json_bytes, err := json.MarshalIndent(program_data, "", "\t")
+	jsonBytes, err := json.MarshalIndent(programData, "", "\t")
 
 	util.CheckError(err)
 
@@ -64,7 +64,7 @@ func Compile(root_path string, get_file func(path string) []byte, config Compile
 		log.Println("Bytecode generation...")
 	}
 
-	program_bytes := GenerateBytecode(program_data)
+	programBytes := GenerateBytecode(programData)
 
 	//Output start indexes
 
@@ -72,33 +72,33 @@ func Compile(root_path string, get_file func(path string) []byte, config Compile
 	// log.Printf("Jump start index: %d", jmp_block_start_index)
 	// log.Printf("Interrupt table start index: %d", interrupt_table_start_index)
 	// log.Printf("Program start index: %d", instruction_start_index)
-	fmt.Printf("Final executable size: %d byte(s)\n", len(program_bytes))
+	fmt.Printf("Final executable size: %d byte(s)\n", len(programBytes))
 
 	// -------------------
 	// Output elapsed time
 	// -------------------
 
-	elapsed_time := float64(time.Now().UnixMicro() - start_time)
-	time_unit := "µ"
+	elapsedTime := float64(time.Now().UnixMicro() - startTime)
+	timeUnit := "µ"
 
-	if elapsed_time > math.Pow10(6) {
-		elapsed_time = elapsed_time / math.Pow10(6)
-		time_unit = ""
-	} else if elapsed_time > math.Pow10(3) {
-		elapsed_time = elapsed_time / math.Pow10(3)
-		time_unit = "m"
+	if elapsedTime > math.Pow10(6) {
+		elapsedTime = elapsedTime / math.Pow10(6)
+		timeUnit = ""
+	} else if elapsedTime > math.Pow10(3) {
+		elapsedTime = elapsedTime / math.Pow10(3)
+		timeUnit = "m"
 
 	}
 
-	fmt.Printf("Compiled in %f %ss\n", elapsed_time, time_unit)
+	fmt.Printf("Compiled in %f %ss\n", elapsedTime, timeUnit)
 
-	os.Chdir(prev_dir)
+	os.Chdir(prevDir)
 
 	return AssembledProgram{
 
-		ProgramBytes:     program_bytes,
-		ProgramStructure: program_data,
-		ProgramJson:      string(json_bytes),
+		ProgramBytes:     programBytes,
+		ProgramStructure: programData,
+		ProgramJson:      string(jsonBytes),
 	}, nil
 
 }

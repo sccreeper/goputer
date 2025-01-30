@@ -6,7 +6,7 @@ export default {
     vmIsAlive: false,
     vmInited: false,
     runInterval: null,
-    FPS: 60,
+    FPS: 240,
     vmWorker: null,
     audio_context: null,
     oscillator: null,
