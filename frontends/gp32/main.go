@@ -45,8 +45,6 @@ func Run(program []byte, args []string) {
 	rl.SetTargetFPS(128)
 
 	var gp32 vm.VM
-	var gp32Chan chan c.Interrupt = make(chan c.Interrupt)
-	var gp32SubbedChan chan c.Interrupt = make(chan c.Interrupt)
 	var textString string = ""
 
 	var ioStatus [16]bool = [16]bool{}
@@ -89,17 +87,17 @@ func Run(program []byte, args []string) {
 		Button: 64,
 	}
 
-	vm.InitVM(&gp32, program, gp32Chan, gp32SubbedChan, false, true)
+	vm.InitVM(&gp32, program, true)
 
 	expansions.SetAttribute("goputer.sys", "name", "gp32")
-
-	go gp32.Run()
 
 	sound.SoundInit()
 
 	//Start rendering
 
 	for !rl.WindowShouldClose() {
+
+		gp32.Cycle()
 
 		//Render IO
 
@@ -121,11 +119,14 @@ func Run(program []byte, args []string) {
 
 		rl.BeginTextureMode(VideoRenderTexture)
 
-		select {
-		case x := <-gp32Chan:
+		for len(gp32.InterruptQueue) > 0 {
+
+			var x c.Interrupt
+			x, gp32.InterruptQueue = gp32.InterruptQueue[0], gp32.InterruptQueue[1:]
+
 			switch x {
 			//Video interrupts
-			//TODO: Change colour to use colour in vc register
+
 			case c.IntVideoText:
 				if gp32.TextBuffer[0] == 0 {
 					textString = ""
@@ -159,6 +160,7 @@ func Run(program []byte, args []string) {
 					int32(gp32.Registers[c.RVideoY1]-gp32.Registers[c.RVideoY0]),
 					colour.ConvertColour(gp32.Registers[c.RVideoColour]),
 				)
+			// Sound interrupts
 			case c.IntSoundFlush:
 				sound.PlaySound(gp32.Registers[c.RSoundWave], gp32.Registers[c.RSoundTone], gp32.Registers[c.RSoundVolume])
 			case c.IntSoundStop:
@@ -173,9 +175,9 @@ func Run(program []byte, args []string) {
 					}
 
 				}
-
+			default:
+				continue
 			}
-		default:
 		}
 
 		// Draw video brightness
@@ -267,7 +269,7 @@ func Run(program []byte, args []string) {
 					if gp32.Subscribed(c.IntKeyboardDown) {
 						log.Println("Interrupt: Key down")
 
-						gp32SubbedChan <- c.IntKeyboardDown
+						gp32.SubbedInterruptQueue = append(gp32.SubbedInterruptQueue, c.IntKeyboardDown)
 					}
 				} else if rl.IsKeyUp(key) {
 					log.Println("Interrupt: Bozo")
@@ -278,7 +280,7 @@ func Run(program []byte, args []string) {
 					if gp32.Subscribed(c.IntKeyboardUp) {
 						log.Println("Interrupt: Key up")
 
-						gp32SubbedChan <- c.IntKeyboardUp
+						gp32.SubbedInterruptQueue = append(gp32.SubbedInterruptQueue, c.IntKeyboardUp)
 					}
 				} else {
 
@@ -287,11 +289,11 @@ func Run(program []byte, args []string) {
 					gp32.Registers[c.RKeyboardCurrent] = uint32(key)
 
 					if gp32.Subscribed(c.IntKeyboardDown) {
-						gp32SubbedChan <- c.IntKeyboardDown
+						gp32.SubbedInterruptQueue = append(gp32.SubbedInterruptQueue, c.IntKeyboardDown)
 					}
 
 					if gp32.Subscribed(c.IntKeyboardUp) {
-						gp32SubbedChan <- c.IntKeyboardUp
+						gp32.SubbedInterruptQueue = append(gp32.SubbedInterruptQueue, c.IntKeyboardUp)
 					}
 
 				}
@@ -312,7 +314,7 @@ func Run(program []byte, args []string) {
 			previousMouse.MouseY = uint32(CorrectedMouseY())
 
 			if gp32.Subscribed(c.IntMouseMove) {
-				gp32SubbedChan <- c.IntMouseMove
+				gp32.SubbedInterruptQueue = append(gp32.SubbedInterruptQueue, c.IntMouseMove)
 			}
 
 		}
@@ -328,7 +330,7 @@ func Run(program []byte, args []string) {
 				if gp32.Subscribed(c.IntMouseDown) {
 					log.Println("Interrupt: Mouse down")
 
-					gp32SubbedChan <- c.IntMouseDown
+					gp32.SubbedInterruptQueue = append(gp32.SubbedInterruptQueue, c.IntMouseDown)
 				}
 
 			} else if rl.IsMouseButtonReleased(int32(i)) && i != int(previousMouse.Button) {
@@ -337,7 +339,7 @@ func Run(program []byte, args []string) {
 				if gp32.Subscribed(c.IntMouseUp) {
 					log.Println("Interrupt: Mouse up")
 
-					gp32SubbedChan <- c.IntMouseUp
+					gp32.SubbedInterruptQueue = append(gp32.SubbedInterruptQueue, c.IntMouseUp)
 				}
 
 			}
@@ -362,8 +364,7 @@ func Run(program []byte, args []string) {
 					}
 
 					if gp32.Subscribed(c.Interrupt(int(c.IntIO08) + index)) {
-
-						gp32SubbedChan <- c.Interrupt(int(c.IntIO08) + index)
+						gp32.SubbedInterruptQueue = append(gp32.SubbedInterruptQueue, c.Interrupt(int(c.IntIO08)+index))
 					}
 
 				}

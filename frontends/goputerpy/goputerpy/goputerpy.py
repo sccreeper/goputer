@@ -42,8 +42,8 @@ _get_register.restype = ctypes.c_void_p
 _is_finished = _lib.IsFinished
 _is_finished.restype = ctypes.c_uint32
 
-_step = _lib.Step
-_step.restype = ctypes.c_void_p
+_cycle = _lib.Cycle
+_cycle.restype = ctypes.c_void_p
 
 _free = _lib.free
 _free.argtypes = [ctypes.c_void_p]
@@ -122,8 +122,8 @@ def IsFinished() -> bool:
 
     return True if finished == 1 else False
 
-def Step() -> None:
-    _step()
+def Cycle() -> None:
+    _cycle()
 
 def GetLargeArg() -> int:
 

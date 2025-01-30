@@ -369,7 +369,7 @@ export function Cycle() {
 
         //Finally cycle VM.
 
-        stepVM();
+        cycleVM();
 
     }
 

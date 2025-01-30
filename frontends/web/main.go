@@ -20,16 +20,13 @@ import (
 
 var js32 vm.VM
 
-var js32InterruptChannel chan constants.Interrupt = make(chan constants.Interrupt)
-var js32SubbedInterruptChannel chan constants.Interrupt = make(chan constants.Interrupt)
+var programBytes []byte
 
-var program_bytes []byte
+var itnMap map[uint32]string
+var registerMap map[uint32]string
+var interruptMap map[constants.Interrupt]string
 
-var itn_map map[uint32]string
-var register_map map[uint32]string
-var interrupt_map map[constants.Interrupt]string
-
-var file_map map[string]string
+var fileMap map[string]string
 
 //Custom compile and run methods.
 
@@ -49,9 +46,9 @@ func Compile() js.Func {
 		program_structure, err := p.Parse()
 		util.CheckError(err)
 
-		program_bytes = compiler.GenerateBytecode(program_structure)
+		programBytes = compiler.GenerateBytecode(program_structure)
 
-		fmt.Printf("Compiled program length: %d\n", len(program_bytes))
+		fmt.Printf("Compiled program length: %d\n", len(programBytes))
 
 		return js.ValueOf(nil)
 
@@ -62,24 +59,24 @@ func Compile() js.Func {
 }
 
 func file_reader(path string) []byte {
-	return []byte(file_map[path])
+	return []byte(fileMap[path])
 }
 
 func UpdateFile(this js.Value, args []js.Value) any {
-	file_map[args[0].String()] = args[1].String()
+	fileMap[args[0].String()] = args[1].String()
 
 	return js.ValueOf(nil)
 }
 
 func GetFile(this js.Value, args []js.Value) any {
 
-	return js.ValueOf(file_map[args[0].String()])
+	return js.ValueOf(fileMap[args[0].String()])
 
 }
 
 func RemoveFile(this js.Value, args []js.Value) any {
 
-	delete(file_map, args[0].String())
+	delete(fileMap, args[0].String())
 
 	return js.ValueOf(nil)
 
@@ -89,7 +86,7 @@ func GetFiles(this js.Value, args []js.Value) any {
 
 	keys := make([]interface{}, 0)
 
-	for k, _ := range file_map {
+	for k, _ := range fileMap {
 		keys = append(keys, k)
 	}
 
@@ -109,25 +106,13 @@ func Init() js.Func {
 
 		js32 = vm.VM{}
 
-		vm.InitVM(&js32, program_bytes, js32.InterruptChannel, js32SubbedInterruptChannel, true, true)
+		vm.InitVM(&js32, programBytes, true)
 
 		return js.ValueOf(nil)
 
 	})
 
 	return init_func
-}
-
-func Run() js.Func {
-	run_func := js.FuncOf(func(this js.Value, args []js.Value) any {
-
-		go js32.Run()
-
-		return js.ValueOf(nil)
-
-	})
-
-	return run_func
 }
 
 // Methods for interacting with the VM
@@ -188,7 +173,7 @@ func SendInterrupt(this js.Value, args []js.Value) any {
 
 	if js32.Subscribed(constants.Interrupt(args[0].Int())) {
 
-		js32.SubbedInterruptArray = append(js32.SubbedInterruptArray, constants.Interrupt(args[0].Int()))
+		js32.SubbedInterruptQueue = append(js32.SubbedInterruptQueue, constants.Interrupt(args[0].Int()))
 
 		return js.ValueOf(nil)
 
@@ -200,10 +185,10 @@ func SendInterrupt(this js.Value, args []js.Value) any {
 
 func GetInterrupt(this js.Value, args []js.Value) any {
 
-	if len(js32.InterruptArray) > 0 {
+	if len(js32.InterruptQueue) > 0 {
 
-		x := js32.InterruptArray[len(js32.InterruptArray)-1]
-		js32.InterruptArray = js32.InterruptArray[:len(js32.InterruptArray)-1]
+		var x constants.Interrupt
+		x, js32.InterruptQueue = js32.InterruptQueue[0], js32.InterruptQueue[1:]
 
 		return js.ValueOf(int(x))
 
@@ -228,9 +213,9 @@ func IsFinished(this js.Value, args []js.Value) any {
 
 }
 
-func Step(this js.Value, args []js.Value) any {
+func Cycle(this js.Value, args []js.Value) any {
 
-	js32.Step()
+	js32.Cycle()
 
 	return js.ValueOf(nil)
 
@@ -247,15 +232,15 @@ func ParserItnStr(this js.Value, args []js.Value) any {
 		arg_text = util.ConvertHex(js32.ArgLarge)
 	default:
 		if slices.Contains(constants.SingleArgInstructions, js32.Opcode) && js32.Opcode != constants.ICallInterrupt {
-			arg_text = register_map[js32.ArgLarge]
+			arg_text = registerMap[js32.ArgLarge]
 		} else if js32.Opcode == constants.ICallInterrupt {
-			arg_text = interrupt_map[constants.Interrupt(js32.ArgLarge)]
+			arg_text = interruptMap[constants.Interrupt(js32.ArgLarge)]
 		} else {
-			arg_text = fmt.Sprintf("%s %s", register_map[uint32(js32.ArgSmall0)], register_map[uint32(js32.ArgSmall1)])
+			arg_text = fmt.Sprintf("%s %s", registerMap[uint32(js32.ArgSmall0)], registerMap[uint32(js32.ArgSmall1)])
 		}
 	}
 
-	return js.ValueOf(fmt.Sprintf("%s %s", itn_map[uint32(js32.Opcode)], arg_text))
+	return js.ValueOf(fmt.Sprintf("%s %s", itnMap[uint32(js32.Opcode)], arg_text))
 
 }
 
@@ -285,7 +270,7 @@ func GetProgramBytes(this js.Value, args []js.Value) any {
 
 	interface_program_bytes := make([]interface{}, 0)
 
-	for _, v := range program_bytes {
+	for _, v := range programBytes {
 		interface_program_bytes = append(interface_program_bytes, v)
 	}
 
@@ -319,29 +304,28 @@ func main() {
 
 	// Reversed maps
 
-	itn_map = make(map[uint32]string)
+	itnMap = make(map[uint32]string)
 
 	for k, v := range constants.InstructionInts {
-		itn_map[v] = k
+		itnMap[v] = k
 	}
 
-	register_map = make(map[uint32]string)
+	registerMap = make(map[uint32]string)
 
 	for k, v := range constants.RegisterInts {
-		register_map[v] = k
+		registerMap[v] = k
 	}
 
-	interrupt_map = make(map[constants.Interrupt]string)
+	interruptMap = make(map[constants.Interrupt]string)
 
 	for k, v := range constants.InterruptInts {
-		interrupt_map[v] = k
+		interruptMap[v] = k
 	}
 
 	// VM init methods
 
 	js.Global().Set("compileCode", Compile())
 	js.Global().Set("initVM", Init())
-	js.Global().Set("runVM", Run())
 
 	//VM interaction methods
 
@@ -355,7 +339,7 @@ func main() {
 
 	js.Global().Set("currentItn", js.FuncOf(ParserItnStr))
 
-	js.Global().Set("stepVM", js.FuncOf(Step))
+	js.Global().Set("cycleVM", js.FuncOf(Cycle))
 
 	js.Global().Set("isFinished", js.FuncOf(IsFinished))
 
@@ -368,21 +352,21 @@ func main() {
 
 	js.Global().Set("disassembleCode", js.FuncOf(Disassemble))
 
-	file_map = make(map[string]string)
-	file_map["main.gpasm"] = ""
+	fileMap = make(map[string]string)
+	fileMap["main.gpasm"] = ""
 
 	//Convert constants maps into [string]interface maps
 
-	interrupts_converted := make(map[string]interface{}, 0)
+	interruptsConverted := make(map[string]interface{}, 0)
 
 	for k, v := range constants.InterruptInts {
-		interrupts_converted[k] = int(v)
+		interruptsConverted[k] = int(v)
 	}
 
-	instructions_converted := make(map[string]interface{}, 0)
+	instructionsConverted := make(map[string]interface{}, 0)
 
 	for k, v := range constants.InstructionInts {
-		instructions_converted[k] = int(v)
+		instructionsConverted[k] = int(v)
 	}
 
 	registers_converted := make(map[string]interface{}, 0)
@@ -409,8 +393,8 @@ func main() {
 
 	}
 
-	js.Global().Set("interruptInts", js.ValueOf(interrupts_converted))
-	js.Global().Set("instructionInts", js.ValueOf(instructions_converted))
+	js.Global().Set("interruptInts", js.ValueOf(interruptsConverted))
+	js.Global().Set("instructionInts", js.ValueOf(instructionsConverted))
 	js.Global().Set("registerInts", js.ValueOf(registers_converted))
 
 	js.Global().Set("instructionArray", js.ValueOf(instructions_array))

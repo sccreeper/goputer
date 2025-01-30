@@ -21,9 +21,6 @@ func Init(programBytes *C.char, codeLength C.int) {
 	vm.InitVM(
 		&py32,
 		C.GoBytes(unsafe.Pointer(programBytes), codeLength),
-		py32InteruptChannel,
-		py32SubbedInterruptChannel,
-		true,
 		false,
 	)
 
@@ -34,9 +31,9 @@ func Init(programBytes *C.char, codeLength C.int) {
 //export GetInterrupt
 func GetInterrupt() C.uint {
 
-	if len(py32.InterruptArray) > 0 {
-		x := py32.InterruptArray[len(py32.InterruptArray)-1]
-		py32.InterruptArray = py32.InterruptArray[:len(py32.InterruptArray)-1]
+	if len(py32.InterruptQueue) > 0 {
+		var x constants.Interrupt
+		x, py32.InterruptQueue = py32.InterruptQueue[0], py32.InterruptQueue[1:]
 
 		return C.uint(x)
 	} else {
@@ -50,7 +47,7 @@ func SendInterrupt(i C.uint) {
 
 	if py32.Subscribed(constants.Interrupt(i)) {
 
-		py32.SubbedInterruptArray = append(py32.SubbedInterruptArray, constants.Interrupt(i))
+		py32.SubbedInterruptQueue = append(py32.SubbedInterruptQueue, constants.Interrupt(i))
 
 	}
 
@@ -119,10 +116,10 @@ func IsFinished() C.uint {
 
 }
 
-//export Step
-func Step() {
+//export Cycle
+func Cycle() {
 
-	py32.Step()
+	py32.Cycle()
 
 }
 

@@ -16,13 +16,7 @@ func (m *VM) subbedInterrupt(i c.Interrupt) {
 
 func (m *VM) Subscribed(i c.Interrupt) bool {
 
-	if m.InterruptTable[i] == 0 {
-		return false
-	} else {
-
-		return true
-
-	}
+	return m.InterruptTable[i] != 0
 
 }
 
@@ -38,12 +32,6 @@ func (m *VM) calledInterrupt() {
 
 	}
 
-	if !m.ShouldStep {
-		m.InterruptChannel <- c.Interrupt(m.ArgSmall0)
-	} else {
-
-		m.InterruptArray = append(m.InterruptArray, c.Interrupt(m.ArgSmall0))
-
-	}
+	m.InterruptQueue = append(m.InterruptQueue, c.Interrupt(m.ArgSmall0))
 
 }
