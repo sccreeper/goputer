@@ -31,6 +31,8 @@ clr vy0
 
 int vt
 
+iret
+
 end
 
 intsub kd test

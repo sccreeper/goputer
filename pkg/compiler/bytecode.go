@@ -238,7 +238,11 @@ func generateInstructionBytecode(i Instruction, dBlockAddr map[string]uint32, jB
 
 	var dataArray []byte
 
-	if i.SingleData {
+	if i.ArgumentCount == 0 {
+
+		dataArray = []byte{0, 0, 0, 0}
+
+	} else if i.ArgumentCount == 1 {
 
 		dataArray = make([]byte, 4)
 

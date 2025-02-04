@@ -152,9 +152,9 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 	//Make program data struct
 
-	var current_jump_block_instructions []Instruction
+	var currentJumpBlockInstructions []Instruction
 	jump_block_name := ""
-	in_jump_block := false
+	inJumpBlock := false
 
 	for index, e := range p.ProgramStatements {
 
@@ -318,25 +318,25 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 			continue
 
 		} else if e[0] == "end" { //Reaching end of jump block
-			if !in_jump_block {
+			if !inJumpBlock {
 				p.parsingError(ErrSyntax, UnexpectedEndStatement)
 			}
 
 			p.ProgramStructure.InstructionBlocks[jump_block_name] = CodeBlock{
 
 				Name:         jump_block_name,
-				Instructions: current_jump_block_instructions,
+				Instructions: currentJumpBlockInstructions,
 			}
 
-			in_jump_block = false
+			inJumpBlock = false
 			jump_block_name = ""
-			current_jump_block_instructions = nil
+			currentJumpBlockInstructions = nil
 
 			continue
 
 		} else if e[0][0] == ':' { //Jump block definition.
 			//Errors
-			if in_jump_block {
+			if inJumpBlock {
 				p.parsingError(ErrSyntax, NestingError)
 			}
 			if len(e[0]) == 1 {
@@ -348,7 +348,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 			jump_block_name = e[0][1:]
 			p.ProgramStructure.AllNames = append(p.ProgramStructure.AllNames, e[0][1:])
 
-			in_jump_block = true
+			inJumpBlock = true
 			p.ProgramStructure.InstructionBlockNames = append(p.ProgramStructure.InstructionBlockNames, e[0][1:])
 
 			continue
@@ -366,12 +366,16 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 			for _, arg := range e[1:] {
 
+				// Interrupts
+
 				if e[0] == "int" {
 					if _, exists := constants.InterruptInts[arg]; !exists {
 						p.parsingError(ErrSymbol, InvalidArgument)
 					}
 
 				} else if arg[0] == '@' && (e[0] == "lda" || e[0] == "sta") {
+
+					// Checks definitions for valid argument.
 
 					var exists bool = false
 
@@ -403,6 +407,12 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 						p.parsingError(ErrDoesNotExist, ErrorType(fmt.Sprintf("unknown instruction block '%s'", arg)))
 					}
 
+				} else if e[0] == "ret" || e[0] == "iret" {
+
+					if len(e) > 1 {
+						p.parsingError(ErrTooManyArgs, ErrorType(fmt.Sprintf("should only have one argument for '%s'", e[0])))
+					}
+
 				} else {
 
 					if _, exists := constants.RegisterInts[arg]; !exists {
@@ -419,24 +429,18 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 		//If does exist, continue
 
-		single_data := false
-
-		if len(e[1:]) == 1 {
-			single_data = true
+		instructionToBeAdded := Instruction{
+			ArgumentCount: uint32(len(e) - 1),
+			Data:          e[1:],
+			Instruction:   constants.InstructionInts[e[0]],
 		}
 
-		instruction_to_be_added := Instruction{
-			SingleData:  single_data,
-			Data:        e[1:],
-			Instruction: constants.InstructionInts[e[0]],
-		}
+		if inJumpBlock {
 
-		if in_jump_block {
-
-			current_jump_block_instructions = append(current_jump_block_instructions, instruction_to_be_added)
+			currentJumpBlockInstructions = append(currentJumpBlockInstructions, instructionToBeAdded)
 
 		} else if !p.Imported {
-			p.ProgramStructure.ProgramInstructions = append(p.ProgramStructure.ProgramInstructions, instruction_to_be_added)
+			p.ProgramStructure.ProgramInstructions = append(p.ProgramStructure.ProgramInstructions, instructionToBeAdded)
 		}
 
 	}

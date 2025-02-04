@@ -14,8 +14,6 @@ import (
 	"sccreeper/goputer/pkg/util"
 	"sccreeper/goputer/pkg/vm"
 	"syscall/js"
-
-	"golang.org/x/exp/slices"
 )
 
 var js32 vm.VM
@@ -231,7 +229,7 @@ func ParserItnStr(this js.Value, args []js.Value) any {
 	case constants.IJump, constants.ICall, constants.IConditionalJump, constants.IConditionalCall:
 		arg_text = util.ConvertHex(js32.ArgLarge)
 	default:
-		if slices.Contains(constants.SingleArgInstructions, js32.Opcode) && js32.Opcode != constants.ICallInterrupt {
+		if constants.InstructionArgumentCounts[js32.Opcode] == 1 && js32.Opcode != constants.ICallInterrupt {
 			arg_text = registerMap[js32.ArgLarge]
 		} else if js32.Opcode == constants.ICallInterrupt {
 			arg_text = interruptMap[constants.Interrupt(js32.ArgLarge)]
@@ -369,36 +367,36 @@ func main() {
 		instructionsConverted[k] = int(v)
 	}
 
-	registers_converted := make(map[string]interface{}, 0)
+	registersConverted := make(map[string]interface{}, 0)
 
 	for k, v := range constants.RegisterInts {
-		registers_converted[k] = int(v)
+		registersConverted[k] = int(v)
 	}
 
 	// Make an instruction & interrupt array for disassembling
 
-	instructions_array := make([]interface{}, vm.InstructionCount)
+	instructionsArray := make([]interface{}, vm.InstructionCount)
 
 	for k, v := range constants.InstructionInts {
 
-		instructions_array[v] = k
+		instructionsArray[v] = k
 
 	}
 
-	interrupt_array := make([]interface{}, vm.InterruptCount)
+	interruptArray := make([]interface{}, vm.InterruptCount)
 
 	for k, v := range constants.InterruptInts {
 
-		interrupt_array[v] = k
+		interruptArray[v] = k
 
 	}
 
 	js.Global().Set("interruptInts", js.ValueOf(interruptsConverted))
 	js.Global().Set("instructionInts", js.ValueOf(instructionsConverted))
-	js.Global().Set("registerInts", js.ValueOf(registers_converted))
+	js.Global().Set("registerInts", js.ValueOf(registersConverted))
 
-	js.Global().Set("instructionArray", js.ValueOf(instructions_array))
-	js.Global().Set("interruptArray", js.ValueOf(interrupt_array))
+	js.Global().Set("instructionArray", js.ValueOf(instructionsArray))
+	js.Global().Set("interruptArray", js.ValueOf(interruptArray))
 
 	js.Global().Set("memOffset", js.ValueOf(int(compiler.StackSize)))
 

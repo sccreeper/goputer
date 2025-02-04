@@ -19,8 +19,8 @@ type CompilerConfig struct {
 
 // Types for statements
 type Instruction struct {
-	SingleData bool     `json:"single_data"`
-	Data       []string `json:"data"`
+	ArgumentCount uint32   `json:"argument_count"`
+	Data          []string `json:"data"`
 
 	Instruction uint32 `json:"instruction"`
 }

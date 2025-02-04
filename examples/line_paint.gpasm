@@ -18,6 +18,8 @@ int vl
 mov mx r00
 mov my r01
 
+iret
+
 end
 
 :clear_bg
@@ -27,6 +29,9 @@ int vc
 
 lda @black
 mov d0 vc
+
+iret
+
 end
 
 intsub mm handle_mouse_move

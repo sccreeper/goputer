@@ -7,35 +7,39 @@ lda @bg
 mov d0 vc
 int vc
 
+// Main hang loop
+
 :loop
 jmp loop
 end
 
+// Cleanup
+
 :end_draw
 
 clr a0
-decr io00
+clr io00
 int iof
 
-jmp loop
+ret
 
 end
 
+// Two main draw calls
+
 :draw_line
-
 int vl
-jmp end_draw
-
+ret
 end
 
 :draw_square
-
 int va
-jmp end_draw
-
+ret
 end
 
-:draw
+// Decide wether to draw square or line
+
+:finish_draw
 
 mov mx vx1
 mov my vy1
@@ -43,25 +47,43 @@ mov my vy1
 clr a0
 
 eq io08 r00
-cndjmp draw_square
+cndcall draw_square
 
-jmp draw_line
+neq io08 r00
+cndcall draw_line
+
+call end_draw
+
+iret
 
 end
 
-:onpress
-
-eq a0 r00
-cndjmp draw
+:start_draw
 
 mov mx vx0
 mov my vy0
 
-incr a0
+clr a0
 incr io00
 int iof
 
+iret
+
 end
+
+// Handle initial keyboard press
+
+:onpress
+
+neq io00 r00
+cndjmp start_draw
+
+eq io00 r00
+cndjmp finish_draw
+
+end
+
+// Entrypoint
 
 intsub kd onpress
 

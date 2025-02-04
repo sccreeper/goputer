@@ -6,8 +6,6 @@ import (
 	"log"
 	"sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/util"
-
-	"golang.org/x/exp/slices"
 )
 
 type DisassembledProgram struct {
@@ -26,7 +24,6 @@ func decodeInstruction(b []byte) Instruction {
 	itn := constants.Instruction(b[0])
 	itnDataBytes := b[1:]
 
-	var singleData bool
 	var itnData []uint32
 
 	//Reverse maps
@@ -48,16 +45,14 @@ func decodeInstruction(b []byte) Instruction {
 	}
 
 	//Determine if instruction is two args or single arg
-	if slices.Contains(constants.SingleArgInstructions, itn) {
+	if constants.InstructionArgumentCounts[itn] == 1 {
 
 		itnData = append(itnData, binary.LittleEndian.Uint32(itnDataBytes))
 
-		singleData = true
 	} else {
 		itnData = append(itnData, uint32(binary.LittleEndian.Uint16(itnDataBytes[:2])))
 		itnData = append(itnData, uint32(binary.LittleEndian.Uint16(itnDataBytes[2:4])))
 
-		singleData = false
 	}
 
 	d := ""
@@ -80,7 +75,6 @@ func decodeInstruction(b []byte) Instruction {
 		i.Data = append(i.Data, d)
 	}
 
-	i.SingleData = singleData
 	i.Instruction = uint32(itn)
 
 	return i

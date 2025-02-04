@@ -128,6 +128,9 @@ var InstructionInts = map[string]uint32{
 	"mod": 30, //Mod instruction
 
 	"emi": 31, //Expansion module interact, not an interrupt because it is handled by the core, not frontends.
+
+	"ret":  32, // Return for normal call
+	"iret": 33, // Return for interrupt call
 }
 
 var RegisterInts = map[string]uint32{
@@ -290,28 +293,49 @@ const (
 	IModulo Instruction = 30
 
 	IExpansionModuleInteract Instruction = 31
+
+	ICallReturn          Instruction = 32
+	IInterruptCallReturn Instruction = 33
 )
 
-// Instructions that take a single 32 bit arg, as opposed to 2x16bit args
-var SingleArgInstructions = []Instruction{
+var InstructionArgumentCounts map[Instruction]int = map[Instruction]int{
 
-	IJump,
-	IConditionalJump,
-	IInvert,
-	ICallInterrupt,
-	ILoad,
-	IStore,
-	IIncrement,
-	IDecrement,
-	IHalt,
-	ISquareRoot,
-	ICall,
-	IConditionalCall,
-	IClear,
-	ICallInterrupt,
-	IPush,
-	IPop,
-	IExpansionModuleInteract,
+	IJump:                    1,
+	IConditionalJump:         1,
+	IInvert:                  1,
+	ICallInterrupt:           1,
+	ILoad:                    1,
+	IStore:                   1,
+	IIncrement:               1,
+	IDecrement:               1,
+	IHalt:                    1,
+	ISquareRoot:              1,
+	ICall:                    1,
+	IConditionalCall:         1,
+	IClear:                   1,
+	IPush:                    1,
+	IPop:                     1,
+	IExpansionModuleInteract: 1,
+
+	IMove:        2,
+	IAdd:         2,
+	IMultiply:    2,
+	IDivide:      2,
+	ISubtract:    2,
+	IGreaterThan: 2,
+	ILessThan:    2,
+	IOr:          2,
+	IXor:         2,
+	IAnd:         2,
+	IEquals:      2,
+	INotEquals:   2,
+	IShiftLeft:   2,
+	IShiftRight:  2,
+	IPower:       2,
+	IModulo:      2,
+
+	ICallReturn:          0,
+	IInterruptCallReturn: 0,
 }
 
 const (

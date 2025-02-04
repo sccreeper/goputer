@@ -29,6 +29,7 @@ func (m *VM) call() {
 func (m *VM) conditionalCall() bool {
 	if m.Registers[c.RAccumulator] != 0 {
 		m.Registers[c.RCallStackPointer] += 4
+
 		binary.LittleEndian.PutUint32(
 			m.MemArray[m.Registers[c.RCallStackPointer]:m.Registers[c.RCallStackPointer]+4],
 			m.Registers[c.RProgramCounter]+compiler.InstructionLength)

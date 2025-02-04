@@ -17,6 +17,7 @@ add my r00
 mov a0 vy1
 
 int va
+iret
 
 end
 

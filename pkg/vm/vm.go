@@ -19,7 +19,7 @@ const (
 	_MemSize                uint32 = 65536 // 2 ^ 16
 	_SubscribableInterrupts uint16 = 22
 	RegisterCount           uint16 = 57
-	InstructionCount        uint16 = 32
+	InstructionCount        uint16 = 34
 	InterruptCount          uint16 = 22
 )
 
@@ -161,27 +161,19 @@ func (m *VM) Cycle() {
 
 	}
 
-	//If it is null itn, could be end of program or end of call block
+	// If there is a null instruction, then terminate program.
+	// Null instructions should only ever be encountered this way.
 	if m.Opcode == 0 && m.ArgLarge == 0 {
 
-		//If the next opcode and arg is 0 as well we exit
-		//If not we pop from the call stack
-
-		next_instruction := m.MemArray[m.Registers[c.RProgramCounter]+comp.InstructionLength : m.Registers[c.RProgramCounter]+(comp.InstructionLength*2)]
-
-		if next_instruction[0] == 0 && util.AllEqualToX(m.CurrentInstruction[1:5], 0) {
-			m.Finished = true
-			return
-		} else {
-			m.HandlingInterrupt = false
-			m.popCall()
-			return
-		}
+		m.Finished = true
+		return
 
 	}
 
 	switch m.Opcode {
-	//Handle push and pop instructions
+
+	// Handle push and pop instructions
+
 	case c.IPush:
 		m.pushStack()
 	case c.IPop:
@@ -189,6 +181,8 @@ func (m *VM) Cycle() {
 
 	case c.IMove:
 		m.move()
+
+		// Control flow
 
 	case c.ICall:
 		m.call()
@@ -208,7 +202,16 @@ func (m *VM) Cycle() {
 			return
 		}
 
+	case c.IInterruptCallReturn:
+		m.HandlingInterrupt = false
+		m.popCall()
+		return
+	case c.ICallReturn:
+		m.popCall()
+		return
+
 		// Load & store
+
 	case c.ILoad:
 		m.load()
 

@@ -13,6 +13,8 @@ mov io15 io07
 
 int iof
 
+iret
+
 end
 
 intsub io08 handle_io

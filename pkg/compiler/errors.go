@@ -30,6 +30,7 @@ var ErrSymbol error = errors.New("symbol error")
 var ErrDoesNotExist error = errors.New("does not exist error")
 var ErrInvalidArgument error = errors.New("invalid argument")
 var ErrImport error = errors.New("import error")
+var ErrTooManyArgs error = errors.New("too many arguments")
 
 var RedError color.Color = *color.New(color.FgHiRed, color.Bold)
 var ItalicCode color.Color = *color.New(color.Italic)
