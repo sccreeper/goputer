@@ -16,7 +16,7 @@ def generate_instruction_string(itn: int, large_arg: int, args: list[2]) -> str:
 
     itn_string += c.InstructionStrings[itn]
 
-    if itn in c.SingleArgInstructions:
+    if c.InstructionArgCounts[itn] == 1:
         
         if itn == c.Instructions["jmp"] or itn == c.Instructions["cndjmp"] or itn == c.Instructions["call"] or itn == c.Instructions["cndcall"] or itn == c.Instructions["lda"] or itn == c.Instructions["sta"]:
             itn_string += f" {convert_to_hex(large_arg)}"
@@ -24,8 +24,8 @@ def generate_instruction_string(itn: int, large_arg: int, args: list[2]) -> str:
             itn_string += f" {c.InterruptStrings[large_arg]}"
         else:
             itn_string += f" {c.RegisterStrings[large_arg]}"
-
-    else:
+    
+    elif c.InstructionArgCounts[itn] == 2: 
         itn_string += f" {c.RegisterStrings[args[0]]} {c.RegisterStrings[args[1]]}"
     
     return itn_string

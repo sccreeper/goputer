@@ -155,24 +155,55 @@ Instructions = {
      
 	"mod" : 30,
     "emi" : 31,
+    
+	"ret": 32,
+    "iret": 33
 }
 
-SingleArgInstructions = [
-	Instructions["jmp"],
-	Instructions["cndjmp"],
-	Instructions["inv"],
-	Instructions["call"],
-	Instructions["lda"],
-	Instructions["sta"],
-	Instructions["incr"],
-	Instructions["decr"],
-	Instructions["hlt"],
-	Instructions["sqrt"],
-	Instructions["call"],
-	Instructions["cndcall"],
-	Instructions["clr"],
-    Instructions["emi"],
-]
+InstructionArgCounts = {
+    Instructions["jmp"] : 1,
+	Instructions["cndjmp"] : 1,
+	Instructions["inv"] : 1,
+	Instructions["call"] : 1,
+	Instructions["lda"] : 1,
+	Instructions["sta"] : 1,
+	Instructions["incr"]: 1,
+	Instructions["decr"] : 1,
+	Instructions["hlt"] : 1,
+	Instructions["sqrt"] : 1,
+	Instructions["call"] : 1,
+	Instructions["cndcall"] : 1,
+	Instructions["clr"] : 1,
+    Instructions["emi"] : 1,
+    Instructions["pop"] : 1,
+    Instructions["push"] : 1,
+    
+	Instructions["add"] : 2,
+    Instructions["mul"] : 2,
+    Instructions["div"] : 2,
+    Instructions["sub"] : 2,
+    
+	Instructions["gt"] : 2,
+    Instructions["lt"] : 2,
+    
+	Instructions["or"] : 2,
+    Instructions["xor"] : 2,
+    Instructions["and"] : 2,
+    
+	Instructions["eq"] : 2,
+    Instructions["neq"] : 2,
+    
+	Instructions["sl"] : 2,
+    Instructions["sr"] : 2,
+
+	Instructions["pow"] : 2,
+     
+	Instructions["mod"] : 2,
+     
+	Instructions["ret"] : 0,
+    Instructions["iret"] : 0,
+    	
+}
 
 InterruptInts = {
 
