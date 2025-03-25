@@ -1,6 +1,6 @@
 //Paint but uses lines
-//r00 = mx prev
-//r01 = my prev
+//r00 = mx previous
+//r01 = my previous
 
 def white 0xFFFFFFFF
 def black 0x000000FF

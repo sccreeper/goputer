@@ -55,6 +55,8 @@ mov io15 io07
 
 int iof
 
+iret
+
 end
 
 intsub io08 handle_io
@@ -70,12 +72,13 @@ intsub io15 handle_io
 jmp hang_loop
 end
 
-jmp hang_loop    
+jmp hang_loop
+ 
 """},
     { name="Paint", description="Simple paint program", path="line_paint", program_text="""
 //Paint but uses lines
-//r00 = mx prev
-//r01 = my prev
+//r00 = mx previous
+//r01 = my previous
 
 def white 0xFFFFFFFF
 def black 0x000000FF
@@ -93,6 +96,8 @@ int vl
 mov mx r00
 mov my r01
 
+iret
+
 end
 
 :clear_bg
@@ -102,6 +107,9 @@ int vc
 
 lda @black
 mov d0 vc
+
+iret
+
 end
 
 intsub mm handle_mouse_move
@@ -169,7 +177,7 @@ mov d0 vt
 int vt
 """},
 {name="Paint keyboard", description="Like paint but uses keyboard presses for drawing", path="paint_keyboard_press", program_text="""
-//Paint that uses key presses
+//Paint that uses clicks
 
 def bg 0xffffffff
 def line 0x000000ff
@@ -178,38 +186,83 @@ lda @bg
 mov d0 vc
 int vc
 
+// Main hang loop
+
 :loop
 jmp loop
 end
 
+// Cleanup
+
+:end_draw
+
+clr a0
+clr io00
+int iof
+
+ret
+
+end
+
+// Two main draw calls
+
 :draw_line
+int vl
+ret
+end
+
+:draw_square
+int va
+ret
+end
+
+// Decide wether to draw square or line
+
+:finish_draw
 
 mov mx vx1
 mov my vy1
 
-int vl
-
 clr a0
-decr io00
-int iof
 
-call loop
+eq io08 r00
+cndcall draw_square
+
+neq io08 r00
+cndcall draw_line
+
+call end_draw
+
+iret
 
 end
 
-:onpress
-
-eq a0 r00
-cndjmp draw_line
+:start_draw
 
 mov mx vx0
 mov my vy0
 
-incr a0
+clr a0
 incr io00
 int iof
 
+iret
+
 end
+
+// Handle initial keyboard press
+
+:onpress
+
+neq io00 r00
+cndjmp start_draw
+
+eq io00 r00
+cndjmp finish_draw
+
+end
+
+// Entrypoint
 
 intsub kd onpress
 

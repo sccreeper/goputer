@@ -1,5 +1,3 @@
-def x 0
-
 :handle_io
 
 mov io08 io00
