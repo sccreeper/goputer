@@ -44,35 +44,29 @@ func decodeInstruction(b []byte) Instruction {
 
 	}
 
-	//Determine if instruction is two args or single arg
-	if constants.InstructionArgumentCounts[itn] == 1 {
-
-		itnData = append(itnData, binary.LittleEndian.Uint32(itnDataBytes))
-
-	} else {
-		itnData = append(itnData, uint32(binary.LittleEndian.Uint16(itnDataBytes[:2])))
-		itnData = append(itnData, uint32(binary.LittleEndian.Uint16(itnDataBytes[2:4])))
-
+	// Get instruction arguments
+	for i := 0; i < constants.InstructionArgumentCounts[itn]; i += 2 {
+		itnData = append(itnData, uint32(binary.LittleEndian.Uint16(itnDataBytes[i:i+2])))
 	}
 
-	d := ""
+	argumentData := ""
 
 	for _, v := range itnData {
 
 		if itn == constants.ILoad || itn == constants.IStore || itn == constants.IJump || itn == constants.IConditionalJump {
 
-			d = fmt.Sprintf("0x"+"%08X", itnData[0])
+			argumentData = fmt.Sprintf("0x"+"%08X", itnData[0])
 
 		} else {
 
 			if itn == constants.ICallInterrupt {
-				d = interruptMap[constants.Interrupt(v)]
+				argumentData = interruptMap[constants.Interrupt(v)]
 			} else {
-				d = regMap[constants.Register(v)]
+				argumentData = regMap[constants.Register(v)]
 			}
 		}
 
-		i.Data = append(i.Data, d)
+		i.Data = append(i.Data, argumentData)
 	}
 
 	i.Instruction = uint32(itn)

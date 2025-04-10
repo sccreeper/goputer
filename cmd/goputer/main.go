@@ -15,7 +15,7 @@ import (
 	_ "embed"
 )
 
-func format_instruction(i_name string, i_data []string) string {
+func formatInstruction(i_name string, i_data []string) string {
 
 	return fmt.Sprintf("%s %s", color.GreenString(i_name), color.CyanString(strings.Join(i_data[:], " ")))
 

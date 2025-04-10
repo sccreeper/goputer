@@ -95,7 +95,12 @@ func _disassemble(ctx *cli.Context) error {
 
 		for _, v1 := range v {
 
-			fmt.Println(format_instruction(itnMap[constants.Instruction(v1.Instruction)], v1.Data))
+			fmt.Println(
+				formatInstruction(
+					itnMap[constants.Instruction(v1.Instruction)],
+					v1.Data,
+				),
+			)
 
 		}
 
@@ -107,7 +112,12 @@ func _disassemble(ctx *cli.Context) error {
 
 	for _, v := range program.Instructions {
 
-		fmt.Println(format_instruction(itnMap[constants.Instruction(v.Instruction)], v.Data))
+		fmt.Println(
+			formatInstruction(
+				itnMap[constants.Instruction(v.Instruction)],
+				v.Data,
+			),
+		)
 
 	}
 
