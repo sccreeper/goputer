@@ -29,9 +29,9 @@ func (m *VM) move() {
 	} else if m.ArgSmall1 == uint16(c.RData) || m.ArgSmall1 == uint16(c.RVideoText) {
 		switch m.ArgSmall1 {
 		case uint16(c.RData):
-			binary.BigEndian.PutUint32(m.DataBuffer[:4], m.Registers[m.ArgSmall0])
+			binary.LittleEndian.PutUint32(m.DataBuffer[:4], m.Registers[m.ArgSmall0])
 		case uint16(c.RVideoText):
-			binary.BigEndian.PutUint32(m.TextBuffer[:4], m.Registers[m.ArgSmall0])
+			binary.LittleEndian.PutUint32(m.TextBuffer[:4], m.Registers[m.ArgSmall0])
 		}
 
 	} else {
