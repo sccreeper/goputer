@@ -244,21 +244,21 @@ func ParserItnStr(this js.Value, args []js.Value) any {
 
 func Disassemble(this js.Value, args []js.Value) any {
 
-	program_int_array := make([]byte, 0)
+	programIntArray := make([]byte, 0)
 
 	for i := 0; i < args[0].Length(); i++ {
 
-		program_int_array = append(program_int_array, byte(args[0].Index(i).Int()))
+		programIntArray = append(programIntArray, byte(args[0].Index(i).Int()))
 
 	}
 
-	disassembled_program, err := compiler.Disassemble(program_int_array, false)
+	disassembledProgram, err := compiler.Disassemble(programIntArray, false)
 	util.CheckError(err)
 
-	json_string, err := json.Marshal(disassembled_program)
+	jsonString, err := json.Marshal(disassembledProgram)
 	util.CheckError(err)
 
-	return js.ValueOf(string(json_string[:]))
+	return js.ValueOf(string(jsonString[:]))
 
 }
 

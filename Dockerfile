@@ -33,11 +33,14 @@ COPY poetry.lock pyproject.toml /usr/app/
 
 RUN PATH=$PATH:$HOME/.local/bin:/usr/bin poetry export -f requirements.txt | python3 -m pip install -r /dev/stdin
 
-COPY go.mod go.sum /usr/app/
-COPY ./ /usr/app/
+# Install go modules
 
-RUN go clean -modcache
-RUN go mod tidy
+COPY go.mod go.sum /usr/app/
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    go mod download
+
+COPY ./ /usr/app/
 
 RUN cp /root/go/bin/mage ./mage
 

@@ -16,6 +16,22 @@ type DisassembledProgram struct {
 	StartIndexes       []uint32                       `json:"start_indexes"`
 }
 
+var regMap map[constants.Register]string
+var interruptMap map[constants.Interrupt]string
+
+func init() {
+	regMap = make(map[constants.Register]string)
+	interruptMap = make(map[constants.Interrupt]string)
+
+	for k, v := range constants.RegisterInts {
+		regMap[constants.Register(v)] = k
+	}
+
+	for k, v := range constants.InterruptInts {
+		interruptMap[v] = k
+	}
+}
+
 // Decodes individual instructions.
 func decodeInstruction(b []byte) Instruction {
 
@@ -26,24 +42,6 @@ func decodeInstruction(b []byte) Instruction {
 
 	var itnData []uint32
 
-	//Reverse maps
-
-	regMap := make(map[constants.Register]string)
-
-	for k, v := range constants.RegisterInts {
-
-		regMap[constants.Register(v)] = k
-
-	}
-
-	interruptMap := make(map[constants.Interrupt]string)
-
-	for k, v := range constants.InterruptInts {
-
-		interruptMap[v] = k
-
-	}
-
 	// Get instruction arguments
 	for i := 0; i < constants.InstructionArgumentCounts[itn]; i += 2 {
 		itnData = append(itnData, uint32(binary.LittleEndian.Uint16(itnDataBytes[i:i+2])))
@@ -53,7 +51,13 @@ func decodeInstruction(b []byte) Instruction {
 
 	for _, v := range itnData {
 
-		if itn == constants.ILoad || itn == constants.IStore || itn == constants.IJump || itn == constants.IConditionalJump {
+		// If the instruction is one where a memory address is passed as an arguement instead of a register.
+		if itn == constants.ILoad ||
+			itn == constants.IStore ||
+			itn == constants.IJump ||
+			itn == constants.IConditionalJump ||
+			itn == constants.ICall ||
+			itn == constants.IConditionalCall {
 
 			argumentData = fmt.Sprintf("0x"+"%08X", itnData[0])
 
@@ -228,23 +232,9 @@ func Disassemble(programBytes []byte, verbose bool) (DisassembledProgram, error)
 		log.Println("Disassembling interrupt table...")
 	}
 
-	//---------------------
-	//Build interrupt table
-	//---------------------
+	// Build interrupt table
 
 	byteIndex = interruptTableStart
-
-	//Reverse interrupt map
-
-	interruptMap := make(map[constants.Interrupt]string)
-
-	for k, v := range constants.SubscribableInterrupts {
-
-		interruptMap[v] = k
-
-	}
-
-	//Decode bytes
 
 	program.InterruptTable = make(map[constants.Interrupt]uint32)
 
@@ -253,8 +243,6 @@ func Disassemble(programBytes []byte, verbose bool) (DisassembledProgram, error)
 	}
 
 	for _, v := range util.SliceChunks(interruptBlockBytes, 6) {
-
-		//log.Println(current_bytes)
 
 		interrupt := constants.Interrupt(binary.LittleEndian.Uint16(v[:2]))
 		jumpBlockAddr := binary.LittleEndian.Uint32(v[2:])
@@ -267,9 +255,7 @@ func Disassemble(programBytes []byte, verbose bool) (DisassembledProgram, error)
 		log.Println("Disassembling instructions...")
 	}
 
-	//---------------------------
-	//Decode instructions
-	//---------------------------
+	// Decode instructions
 
 	for _, v := range util.SliceChunks(instructionBytes, int(InstructionLength)) {
 

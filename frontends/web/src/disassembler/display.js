@@ -1,67 +1,69 @@
 // Display disassembled code in UI.
 
-import { ContainerInstructions, ContainerJumpBlocks, DefinitionsContainer, InterruptTableContainer } from "./main";
+import { instructionsContainer, jumpBlocksContainer, definitionsContainer, interruptTableContainer } from "./main";
 import shared from "./shared";
 
-function GenerateInstructionHTML(instruction_obj) {
+function GenerateInstructionHTML(instrutionObj) {
 
     let p = document.createElement("p")
     p.classList.add("font-fira")
 
-    let itn_el = document.createElement("span")
-    itn_el.classList.add("text-green-500")
-    itn_el.textContent = instructionArray[instruction_obj.instruction] + " "
+    let itnElement = document.createElement("span")
+    itnElement.classList.add("text-green-500")
+    itnElement.textContent = instructionArray[instrutionObj.instruction] + " "
 
-    let args_el = document.createElement("span")
-    args_el.classList.add("text-cyan-600")
+    let argsElement = document.createElement("span")
+    argsElement.classList.add("text-cyan-600")
 
-    instruction_obj.data.forEach(element => {
-        args_el.textContent += element + " ";
-    });
+    if (instrutionObj.data != null) {
+        instrutionObj.data.forEach(element => {
+            argsElement.textContent += element + " ";
+        });
+    }
 
-    p.appendChild(itn_el)
-    p.appendChild(args_el)
+    p.appendChild(itnElement)
+    p.appendChild(argsElement)
 
     return p
 
 }
 
-export function DisplayDisassembledCode(code_string) {
+export function DisplayDisassembledCode(codeJSONString) {
 
-    let code_object = JSON.parse(code_string)
-    shared.file_json = JSON.stringify(code_object, null, 3);
+    let codeObject = JSON.parse(codeJSONString)
+    shared.file_json = JSON.stringify(codeObject, null, 3);
 
     // Display instructions
 
-    if (code_object.instructions.length == 0) {
-        ContainerInstructions.querySelector("p").textContent = "No instructions"
+    if (codeObject.instructions.length == 0) {
+        instructionsContainer.querySelector("p").textContent = "No instructions"
     } else {
-        ContainerInstructions.replaceChildren();
+        instructionsContainer.replaceChildren();
 
-        code_object.instructions.forEach(element => {
+        codeObject.instructions.forEach(element => {
 
-            ContainerInstructions.appendChild(GenerateInstructionHTML(element));
+            instructionsContainer.appendChild(GenerateInstructionHTML(element));
 
         });
     }
 
     // Display jump blocks
 
-    if (Object.keys(code_object.jump_blocks).length == 0) {
-        ContainerJumpBlocks.querySelector("p").textContent = "No jump blocks"
+    if (Object.keys(codeObject.jump_blocks).length == 0) {
+        jumpBlocksContainer.querySelector("p").textContent = "No jump blocks"
     } else {
-        ContainerJumpBlocks.replaceChildren();
+        jumpBlocksContainer.replaceChildren();
 
-        for (const [key, value] of Object.entries(code_object.jump_blocks)) {
+        for (const [key, value] of Object.entries(codeObject.jump_blocks)) {
 
             let jump_block_header = document.createElement("h3")
             jump_block_header.classList.add("font-bold");
             jump_block_header.textContent = `Block ${convertHex(parseInt(key), true)}`
 
-            ContainerJumpBlocks.appendChild(jump_block_header)
+            jumpBlocksContainer.appendChild(jump_block_header)
 
             value.forEach(element => {
-                ContainerJumpBlocks.appendChild(GenerateInstructionHTML(element));
+                jumpBlocksContainer.appendChild(GenerateInstructionHTML(element));
             });
 
         }
@@ -69,12 +71,12 @@ export function DisplayDisassembledCode(code_string) {
 
     // Display interrupt subscriptions
 
-    InterruptTableContainer.replaceChildren();
+    interruptTableContainer.replaceChildren();
 
     var interrupt_table = document.createElement("table")
     interrupt_table.classList.add("w-full");
 
-    for (const [key, value] of Object.entries(code_object.interrupt_table)) {
+    for (const [key, value] of Object.entries(codeObject.interrupt_table)) {
 
         let interrupt_row = document.createElement("tr")
 
@@ -91,53 +93,53 @@ export function DisplayDisassembledCode(code_string) {
 
     }
 
-    InterruptTableContainer.appendChild(interrupt_table);
+    interruptTableContainer.appendChild(interrupt_table);
 
     // Display definitions
 
-    if (code_object.program_definitions.length == 0) {
+    if (codeObject.program_definitions.length == 0) {
 
-        DefinitionsContainer.querySelector("p").textContent = "No definitions."
+        definitionsContainer.querySelector("p").textContent = "No definitions."
 
     } else {
-        DefinitionsContainer.replaceChildren();
+        definitionsContainer.replaceChildren();
 
-        code_object.program_definitions.forEach(element => {
+        codeObject.program_definitions.forEach(element => {
 
-            let definition_container = document.createElement("div")
-            definition_container.classList.add("border-b", "border-gray-400", "p-2")
+            let definitionContainer = document.createElement("div")
+            definitionContainer.classList.add("border-b", "border-gray-400", "p-2")
 
-            let definition_title = document.createElement("h3")
-            definition_title.classList.add("font-bold");
-            definition_title.textContent = "Text representation"
+            let definitionTitle = document.createElement("h3")
+            definitionTitle.classList.add("font-bold");
+            definitionTitle.textContent = "Text representation"
 
             let definition = document.createElement("p")
             definition.classList.add("table-code")
 
             definition.textContent = atob(element)
 
-            let definition_title_1 = document.createElement("h3")
-            definition_title_1.classList.add("font-bold")
-            definition_title_1.textContent = "Hex representation"
+            let definitionTitle1 = document.createElement("h3")
+            definitionTitle1.classList.add("font-bold")
+            definitionTitle1.textContent = "Hex representation"
 
-            let definition_hex = document.createElement("p")
-            definition_hex.classList.add("table-code")
+            let definitionHex = document.createElement("p")
+            definitionHex.classList.add("table-code")
 
             // https://stackoverflow.com/a/41106346/7345078
             let int_array = Uint8Array.from(atob(element), c => c.charCodeAt(0));
             
             int_array.forEach(element => {
                 
-                definition_hex.textContent += element.toString(16).toUpperCase();
+                definitionHex.textContent += element.toString(16).toUpperCase();
 
             });
 
-            definition_container.appendChild(definition_title)
-            definition_container.appendChild(definition)
-            definition_container.appendChild(definition_title_1)
-            definition_container.appendChild(definition_hex)
+            definitionContainer.appendChild(definitionTitle)
+            definitionContainer.appendChild(definition)
+            definitionContainer.appendChild(definitionTitle1)
+            definitionContainer.appendChild(definitionHex)
 
-            DefinitionsContainer.appendChild(definition_container)
+            definitionsContainer.appendChild(definitionContainer)
 
         });
     }

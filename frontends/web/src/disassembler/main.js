@@ -1,10 +1,10 @@
 import { DisplayDisassembledCode } from "./display";
 import shared from "./shared";
 
-var uploaded_bytes = []
-var file_uploaded = false
+var uploadedBytes = []
+var fileUploaded = false
 var file_disassembled = false
-var file_name = ""
+var fileName = ""
 
 const go = new Go();
 await WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
@@ -29,14 +29,14 @@ const ButtonDisassemble = document.getElementById("button-disassemble")
 const ButtonDownload = document.getElementById("button-download")
 const FileForm = document.getElementById("file-form")
 
-export const ContainerInstructions = document.getElementById("container-instructions")
-export const ContainerJumpBlocks = document.getElementById("container-jump-blocks")
-export const InterruptTableContainer = document.getElementById("container-interrupt-table")
-export const DefinitionsContainer = document.getElementById("container-definitions")
+export const instructionsContainer = document.getElementById("container-instructions")
+export const jumpBlocksContainer = document.getElementById("container-jump-blocks")
+export const interruptTableContainer = document.getElementById("container-interrupt-table")
+export const definitionsContainer = document.getElementById("container-definitions")
 
 FileForm.addEventListener("change", (e) => {
 
-    file_name = e.target.files[0].name;
+    fileName = e.target.files[0].name;
 
     var reader = new FileReader()
 
@@ -45,12 +45,12 @@ FileForm.addEventListener("change", (e) => {
         var arrayBuffer = this.result,
         array = new Uint8Array(arrayBuffer)
 
-        uploaded_bytes = array
+        uploadedBytes = array
 
     }
 
     reader.readAsArrayBuffer(e.target.files[0])
-    file_uploaded = true;
+    fileUploaded = true;
 
     ButtonDisassemble.removeAttribute("disabled")
 
@@ -62,12 +62,12 @@ ButtonUpload.addEventListener("click", (e) => {
 
 ButtonDisassemble.addEventListener("click", (e) => {
 
-    if (String.fromCharCode(...uploaded_bytes.slice(0, 4)) != "GPTR") {
+    if (String.fromCharCode(...uploadedBytes.slice(0, 4)) != "GPTR") {
         alert("Invalid file!")
         return
     }
 
-    let code_string = disassembleCode(uploaded_bytes)
+    let code_string = disassembleCode(uploadedBytes)
     
     DisplayDisassembledCode(code_string)
 
@@ -81,7 +81,7 @@ ButtonDownload.addEventListener("click", (e) => {
 
     var file_element = document.createElement("a")
     file_element.setAttribute("href", `data:text/plain;charset=utf-8,${encodeURIComponent(shared.file_json)}`)
-    file_element.setAttribute("download", `disassembled_${file_name}.json`)
+    file_element.setAttribute("download", `disassembled_${fileName}.json`)
     file_element.style.display = "none";
 
     document.body.appendChild(file_element)
