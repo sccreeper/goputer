@@ -13,7 +13,7 @@ import (
 )
 
 //go:embed test_files
-var test_files embed.FS
+var testFiles embed.FS
 
 // Generalized instruction tests.
 
@@ -40,58 +40,53 @@ func compile(text string) []byte {
 		FileReader:   func(path string) []byte { return []byte(text) },
 	}
 
-	program_structure, err := p.Parse()
+	programStructure, err := p.Parse()
 	util.CheckError(err)
 
-	program_bytes := compiler.GenerateBytecode(program_structure)
+	programBytes := compiler.GenerateBytecode(programStructure)
 
-	return program_bytes
+	return programBytes
 
 }
 
 func TestInstructions(t *testing.T) {
 
-	var test_details TestArray
+	var testDetails TestArray
 
-	toml_file, err := test_files.ReadFile("test_files/instruction_tests.toml")
+	tomlFile, err := testFiles.ReadFile("test_files/instruction_tests.toml")
 	if err != nil {
 		panic(err)
 	}
 
-	toml.Unmarshal(toml_file, &test_details)
+	toml.Unmarshal(tomlFile, &testDetails)
 
 	// Start VM runtime
 
-	for _, v := range test_details.Tests {
+	for _, v := range testDetails.Tests {
 
 		// Compile example code
 
-		program_bytes := compile(v.CodeText)
+		programBytes := compile(v.CodeText)
 
 		// Create VM instance
 		// TODO: make this more time and memory efficient.
 
-		var test_32 vm.VM
-		var test_32_interrupt_channel chan constants.Interrupt
-		var test_32_subbed_interrupt_channel chan constants.Interrupt
+		var test32 vm.VM
 
-		test_32_interrupt_channel = make(chan constants.Interrupt)
-		test_32_subbed_interrupt_channel = make(chan constants.Interrupt)
-
-		vm.InitVM(&test_32, program_bytes, test_32_interrupt_channel, test_32_subbed_interrupt_channel, false, false)
-
-		test_32.Run()
+		vm.InitVM(&test32, programBytes, false)
 
 		for {
-			if !test_32.Finished {
+			test32.Cycle()
+
+			if !test32.Finished {
 				continue
 			} else {
 				break
 			}
 		}
 
-		if test_32.Registers[constants.RegisterInts[v.CheckRegister]] != uint32(v.CheckValue) {
-			t.Errorf("Failed instruction test %s. Value should be %d but got %d", v.Name, v.CheckValue, test_32.Registers[constants.RegisterInts[v.CheckRegister]])
+		if test32.Registers[constants.RegisterInts[v.CheckRegister]] != uint32(v.CheckValue) {
+			t.Errorf("Failed instruction test %s. Value should be %d but got %d", v.Name, v.CheckValue, test32.Registers[constants.RegisterInts[v.CheckRegister]])
 		}
 
 	}
@@ -102,34 +97,29 @@ func TestInstructions(t *testing.T) {
 
 func TestJump(t *testing.T) {
 
-	var test_32 vm.VM
-	var test_32_interrupt_channel chan constants.Interrupt
-	var test_32_subbed_interrupt_channel chan constants.Interrupt
+	var test32 vm.VM
 
-	test_32_interrupt_channel = make(chan constants.Interrupt)
-	test_32_subbed_interrupt_channel = make(chan constants.Interrupt)
-
-	program_text, err := test_files.ReadFile("test_files/test_jump.gpasm")
+	programText, err := testFiles.ReadFile("test_files/test_jump.gpasm")
 	if err != nil {
 		panic(err)
 	}
 
-	vm.InitVM(&test_32, compile(string(program_text[:])), test_32_interrupt_channel, test_32_subbed_interrupt_channel, true, false)
+	vm.InitVM(&test32, compile(string(programText[:])), false)
 
-	var in_jump bool = false
-	var jump_addr uint32
+	var inJump bool = false
+	var jumpAddr uint32
 
 	for {
 
-		test_32.Step()
+		test32.Cycle()
 
-		if test_32.Opcode == constants.IJump && !in_jump {
-			in_jump = true
-			jump_addr = test_32.ArgLarge
-		} else if test_32.Opcode != constants.IJump && in_jump {
+		if test32.Opcode == constants.IJump && !inJump {
+			inJump = true
+			jumpAddr = test32.ArgLarge
+		} else if test32.Opcode != constants.IJump && inJump {
 
-			if test_32.Registers[constants.RProgramCounter]-5 != jump_addr {
-				t.Fatalf("Program counter should be %d is %d instead\n", jump_addr, test_32.Registers[constants.RProgramCounter])
+			if test32.Registers[constants.RProgramCounter]-5 != jumpAddr {
+				t.Fatalf("Program counter should be %d is %d instead\n", jumpAddr, test32.Registers[constants.RProgramCounter])
 			} else {
 				break
 			}
@@ -141,34 +131,30 @@ func TestJump(t *testing.T) {
 }
 
 func TestCall(t *testing.T) {
-	var test_32 vm.VM
-	var test_32_interrupt_channel chan constants.Interrupt
-	var test_32_subbed_interrupt_channel chan constants.Interrupt
 
-	test_32_interrupt_channel = make(chan constants.Interrupt)
-	test_32_subbed_interrupt_channel = make(chan constants.Interrupt)
+	var test32 vm.VM
 
-	program_text, err := test_files.ReadFile("test_files/test_jump.gpasm")
+	programText, err := testFiles.ReadFile("test_files/test_jump.gpasm")
 	if err != nil {
 		panic(err)
 	}
 
-	vm.InitVM(&test_32, compile(string(program_text[:])), test_32_interrupt_channel, test_32_subbed_interrupt_channel, true, false)
+	vm.InitVM(&test32, compile(string(programText[:])), false)
 
-	var in_call bool = false
-	var call_addr uint32
+	var inCall bool = false
+	var callAddr uint32
 
 	for {
 
-		test_32.Step()
+		test32.Cycle()
 
-		if test_32.Opcode == constants.IJump && !in_call {
-			in_call = true
-			call_addr = test_32.ArgLarge
-		} else if test_32.Opcode != constants.IJump && in_call {
+		if test32.Opcode == constants.IJump && !inCall {
+			inCall = true
+			callAddr = test32.ArgLarge
+		} else if test32.Opcode != constants.IJump && inCall {
 
-			if test_32.Registers[constants.RProgramCounter]-5 != call_addr {
-				t.Fatalf("Program counter should be %d is %d instead\n", call_addr, test_32.Registers[constants.RProgramCounter])
+			if test32.Registers[constants.RProgramCounter]-5 != callAddr {
+				t.Fatalf("Program counter should be %d is %d instead\n", callAddr, test32.Registers[constants.RProgramCounter])
 			} else {
 				break
 			}
@@ -184,34 +170,30 @@ func TestCall(t *testing.T) {
 // Should jump, if it doesn't test fails
 
 func TestConditionalJump(t *testing.T) {
-	var test_32 vm.VM
-	var test_32_interrupt_channel chan constants.Interrupt
-	var test_32_subbed_interrupt_channel chan constants.Interrupt
 
-	test_32_interrupt_channel = make(chan constants.Interrupt)
-	test_32_subbed_interrupt_channel = make(chan constants.Interrupt)
+	var test32 vm.VM
 
-	program_text, err := test_files.ReadFile("test_files/test_cndjump.gpasm")
+	programText, err := testFiles.ReadFile("test_files/test_cndjump.gpasm")
 	if err != nil {
 		panic(err)
 	}
 
-	vm.InitVM(&test_32, compile(string(program_text[:])), test_32_interrupt_channel, test_32_subbed_interrupt_channel, true, false)
+	vm.InitVM(&test32, compile(string(programText[:])), false)
 
-	var in_jump bool = false
-	var jump_addr uint32
+	var inJump bool = false
+	var jumpAddr uint32
 
 	for {
 
-		test_32.Step()
+		test32.Cycle()
 
-		if test_32.Opcode == constants.IConditionalJump && !in_jump {
-			in_jump = true
-			jump_addr = test_32.ArgLarge
-		} else if test_32.Opcode != constants.IConditionalJump && in_jump {
+		if test32.Opcode == constants.IConditionalJump && !inJump {
+			inJump = true
+			jumpAddr = test32.ArgLarge
+		} else if test32.Opcode != constants.IConditionalJump && inJump {
 
-			if test_32.Registers[constants.RProgramCounter]-5 != jump_addr {
-				t.Fatalf("Program counter should be %d is %d instead\n", jump_addr, test_32.Registers[constants.RProgramCounter])
+			if test32.Registers[constants.RProgramCounter]-5 != jumpAddr {
+				t.Fatalf("Program counter should be %d is %d instead\n", jumpAddr, test32.Registers[constants.RProgramCounter])
 			} else {
 				break
 			}
@@ -223,34 +205,29 @@ func TestConditionalJump(t *testing.T) {
 }
 
 func TestConditionalCall(t *testing.T) {
-	var test_32 vm.VM
-	var test_32_interrupt_channel chan constants.Interrupt
-	var test_32_subbed_interrupt_channel chan constants.Interrupt
+	var test32 vm.VM
 
-	test_32_interrupt_channel = make(chan constants.Interrupt)
-	test_32_subbed_interrupt_channel = make(chan constants.Interrupt)
-
-	program_text, err := test_files.ReadFile("test_files/test_cndcall.gpasm")
+	programText, err := testFiles.ReadFile("test_files/test_cndcall.gpasm")
 	if err != nil {
 		panic(err)
 	}
 
-	vm.InitVM(&test_32, compile(string(program_text[:])), test_32_interrupt_channel, test_32_subbed_interrupt_channel, true, false)
+	vm.InitVM(&test32, compile(string(programText[:])), false)
 
-	var in_jump bool = false
-	var jump_addr uint32
+	var inJump bool = false
+	var jumpAddr uint32
 
 	for {
 
-		test_32.Step()
+		test32.Cycle()
 
-		if test_32.Opcode == constants.IConditionalCall && !in_jump {
-			in_jump = true
-			jump_addr = test_32.ArgLarge
-		} else if test_32.Opcode != constants.IConditionalCall && in_jump {
+		if test32.Opcode == constants.IConditionalCall && !inJump {
+			inJump = true
+			jumpAddr = test32.ArgLarge
+		} else if test32.Opcode != constants.IConditionalCall && inJump {
 
-			if test_32.Registers[constants.RProgramCounter]-5 != jump_addr {
-				t.Fatalf("Program counter should be %d is %d instead\n", jump_addr, test_32.Registers[constants.RProgramCounter])
+			if test32.Registers[constants.RProgramCounter]-5 != jumpAddr {
+				t.Fatalf("Program counter should be %d is %d instead\n", jumpAddr, test32.Registers[constants.RProgramCounter])
 			} else {
 				break
 			}
@@ -259,21 +236,3 @@ func TestConditionalCall(t *testing.T) {
 
 	}
 }
-
-// func TestShiftLeft() {
-
-// }
-
-// func TestShiftRight() {
-
-// }
-
-// // Misc
-
-// func TestHalt() {
-
-// }
-
-// func TestInterrupt() {
-
-// }
