@@ -48,7 +48,7 @@ func RenderIO(status []bool, switches []IOSwitch) {
 				Y:      0,
 			},
 				0.5,
-				16,
+				8,
 				c,
 			)
 
@@ -59,8 +59,7 @@ func RenderIO(status []bool, switches []IOSwitch) {
 				Y:      0,
 			},
 				0.5,
-				16,
-				1,
+				8,
 				rl.Black,
 			)
 		} else {
@@ -93,7 +92,7 @@ func (s *IOSwitch) RenderSwitch() {
 		Y:      s.Y,
 	},
 		0.5,
-		16,
+		8,
 		ColourIOOff,
 	)
 
@@ -104,8 +103,7 @@ func (s *IOSwitch) RenderSwitch() {
 		Y:      s.Y,
 	},
 		0.5,
-		16,
-		1,
+		8,
 		rl.Black,
 	)
 

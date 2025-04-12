@@ -196,10 +196,10 @@ func Run(program []byte, args []string) {
 			640,
 			480,
 			rl.Color{
-				0,
-				0,
-				0,
-				uint8(b),
+				R: 0,
+				G: 0,
+				B: 0,
+				A: uint8(b),
 			},
 		)
 
@@ -320,9 +320,9 @@ func Run(program []byte, args []string) {
 		}
 
 		//Loop through buttons and check each one
-		for i := 0; i < rl.MouseMiddleButton+1; i++ {
+		for i := 0; i < int(rl.MouseMiddleButton)+1; i++ {
 
-			if rl.IsMouseButtonDown(int32(i)) && i != int(previousMouse.Button) {
+			if rl.IsMouseButtonDown(rl.MouseButton(i)) && i != int(previousMouse.Button) {
 
 				gp32.Registers[c.RMouseButton] = uint32(i)
 				previousMouse.Button = uint32(i)
@@ -333,7 +333,7 @@ func Run(program []byte, args []string) {
 					gp32.SubbedInterruptQueue = append(gp32.SubbedInterruptQueue, c.IntMouseDown)
 				}
 
-			} else if rl.IsMouseButtonReleased(int32(i)) && i != int(previousMouse.Button) {
+			} else if rl.IsMouseButtonReleased(rl.MouseButton(i)) && i != int(previousMouse.Button) {
 				gp32.Registers[c.RMouseButton] = uint32(i)
 
 				if gp32.Subscribed(c.IntMouseUp) {
