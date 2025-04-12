@@ -1,15 +1,16 @@
-def x 10
-def t 50
-def vol 16
+#def x 10
+#def t 50
+#def vol 16
 
-:loop
+#label loop
 add r00 r02
 mov a0 r00
 mov r00 st
 int sf
 hlt r01
-jmp loop
-end
+jmp @loop
+
+#label start
 
 lda @x
 mov d0 r00
@@ -21,4 +22,4 @@ mov d0 r01
 lda @vol
 mov d0 sv
 
-jmp loop
+jmp @loop

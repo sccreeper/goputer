@@ -2,10 +2,10 @@
 //r00 = mx previous
 //r01 = my previous
 
-def white 0xFFFFFFFF
-def black 0x000000FF
+#def white 0xFFFFFFFF
+#def black 0x000000FF
 
-:handle_mouse_move
+#label handle_mouse_move
 
 mov mx vx1
 mov my vy1
@@ -20,9 +20,7 @@ mov my r01
 
 iret
 
-end
-
-:clear_bg
+#label clear_bg
 lda @white
 mov d0 vc
 int vc
@@ -32,14 +30,13 @@ mov d0 vc
 
 iret
 
-end
+#intsub mm handle_mouse_move
+#intsub kd clear_bg
 
-intsub mm handle_mouse_move
-intsub kd clear_bg
+#label loop
+jmp @loop
 
-:loop
-jmp loop
-end
+#label start
 
 lda @white
 mov d0 vc
@@ -48,4 +45,4 @@ int vc
 lda @black
 mov d0 vc
 
-jmp loop
+jmp @loop

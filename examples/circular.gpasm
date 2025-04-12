@@ -1,4 +1,6 @@
 //Test circular import
-import "circular_import.gpasm"
+#import "circular_import.gpasm"
+
+#label start
 
 decr r00

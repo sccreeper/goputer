@@ -1,4 +1,6 @@
 //Test circular import error
-import "circular.gpasm"
+#import "circular.gpasm"
+
+#label start
 
 incr r00

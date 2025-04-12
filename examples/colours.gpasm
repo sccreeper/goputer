@@ -1,9 +1,9 @@
-def white 0xFFFFFFFF
-def black 0x000000FF
+#def white 0xFFFFFFFF
+#def black 0x000000FF
 
-def red 0xFF0000FF
-def green 0x00FF00FF
-def blue 0x0000FFFF
+#def red 0xFF0000FF
+#def green 0x00FF00FF
+#def blue 0x0000FFFF
 
-def gray 0xAAAAAAFF
-def dark_gray 0x555555FF
+#def gray 0xAAAAAAFF
+#def dark_gray 0x555555FF

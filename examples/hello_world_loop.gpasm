@@ -1,17 +1,18 @@
 //Prints hello world lots of times
-def text "\nHello World"
-def time 1000
-def black 0x000000FF
-def white 0xFFFFFFFF
+#def text "\nHello World"
+#def time 1000
+#def black 0x000000FF
+#def white 0xFFFFFFFF
 
-:loop
+#label loop
 mov r14 vc
 int vc
 mov r15 vc
 int vt
 hlt r00
-jmp loop
-end
+jmp @loop
+
+#label start
 
 lda @text
 mov d0 vt
@@ -24,4 +25,4 @@ mov d0 r14
 lda @white
 mov d0 r15
 
-jmp loop
+jmp @loop

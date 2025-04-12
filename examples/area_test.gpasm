@@ -1,8 +1,10 @@
 //Draws a rectangle to the screen & tests some multiplication
-def pos 64
-def size 5
+#def pos 64
+#def size 5
 
-def white 0xFFFFFFFF
+#def white 0xFFFFFFFF
+
+#label start
 
 lda @white
 mov d0 vc

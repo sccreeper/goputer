@@ -1,10 +1,7 @@
-def x "Hello World"
-def x "Hello World"
+#def x "Hello World"
+#def x "Hello World"
 
-:x
+#label x
 int vc
-end
-
-end
 
 hellooll sdfsdf tyttyty

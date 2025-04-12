@@ -1,8 +1,10 @@
-def test_number 64
-def test_string "Hello World"
-def x "HHH"
-def shift_int 12
-def white 0xFFFFFFFF
+#def test_number 64
+#def test_string "Hello World"
+#def x "HHH"
+#def shift_int 12
+#def white 0xFFFFFFFF
+
+#label start
 
 lda @shift_int
 mov d0 r00

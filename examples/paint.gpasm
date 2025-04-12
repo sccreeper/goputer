@@ -1,11 +1,10 @@
 //Paint program
 
-def background 0xFFFFFFFF
-def pen 0x000000FF
-def size 8
-//def stop 1
+#def background 0xFFFFFFFF
+#def pen 0x000000FF
+#def size 8
 
-:handle_mouse_move
+#label handle_mouse_move
 
 mov mx vx0
 mov my vy0
@@ -19,13 +18,12 @@ mov a0 vy1
 int va
 iret
 
-end
+#intsub mm handle_mouse_move
 
-intsub mm handle_mouse_move
+#label hang_loop
+jmp @hang_loop
 
-:hang_loop
-jmp hang_loop
-end
+#label start
 
 lda @background
 mov d0 vc
@@ -37,4 +35,4 @@ mov d0 vc
 lda @size
 mov d0 r00
 
-jmp hang_loop
+jmp @hang_loop

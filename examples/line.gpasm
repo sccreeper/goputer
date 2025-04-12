@@ -1,11 +1,13 @@
 // Draws a line
 
-def pos 0
+#def pos 0
 
-def pos1x 639
-def pos1y 479
+#def pos1x 639
+#def pos1y 479
 
-def white 0xFFFFFFFF
+#def white 0xFFFFFFFF
+
+#label start
 
 lda @pos
 mov d0 vx0

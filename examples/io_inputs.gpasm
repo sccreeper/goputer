@@ -1,4 +1,4 @@
-:handle_io
+#label handle_io
 
 mov io08 io00
 mov io09 io01
@@ -13,19 +13,18 @@ int iof
 
 iret
 
-end
+#intsub io08 handle_io
+#intsub io09 handle_io
+#intsub io10 handle_io
+#intsub io11 handle_io
+#intsub io12 handle_io
+#intsub io13 handle_io
+#intsub io14 handle_io
+#intsub io15 handle_io
 
-intsub io08 handle_io
-intsub io09 handle_io
-intsub io10 handle_io
-intsub io11 handle_io
-intsub io12 handle_io
-intsub io13 handle_io
-intsub io14 handle_io
-intsub io15 handle_io
-
-:hang_loop
+#label hang_loop
 jmp hang_loop
-end
 
+
+#label start
 jmp hang_loop

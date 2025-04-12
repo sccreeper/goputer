@@ -1,6 +1,8 @@
 //Pixel test
-def white 0xFFFFFFFF
-def pos 50
+#def white 0xFFFFFFFF
+#def pos 50
+
+#label start
 
 lda @white
 mov d0 vc

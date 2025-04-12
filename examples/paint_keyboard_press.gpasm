@@ -1,7 +1,7 @@
 //Paint that uses clicks
 
-def bg 0xffffffff
-def line 0x000000ff
+#def bg 0xffffffff
+#def line 0x000000ff
 
 lda @bg
 mov d0 vc
@@ -9,13 +9,12 @@ int vc
 
 // Main hang loop
 
-:loop
-jmp loop
-end
+#label loop
+jmp @loop
 
 // Cleanup
 
-:end_draw
+#label end_draw
 
 clr a0
 clr io00
@@ -23,23 +22,19 @@ int iof
 
 ret
 
-end
-
 // Two main draw calls
 
-:draw_line
+#label draw_line
 int vl
 ret
-end
 
-:draw_square
+#label draw_square
 int va
 ret
-end
 
 // Decide wether to draw square or line
 
-:finish_draw
+#label finish_draw
 
 mov mx vx1
 mov my vy1
@@ -47,18 +42,16 @@ mov my vy1
 clr a0
 
 eq io08 r00
-cndcall draw_square
+cndcall @draw_square
 
 neq io08 r00
-cndcall draw_line
+cndcall @draw_line
 
-call end_draw
+call @end_draw
 
 iret
 
-end
-
-:start_draw
+#label start_draw
 
 mov mx vx0
 mov my vy0
@@ -69,17 +62,15 @@ int iof
 
 iret
 
-end
-
 // Handle initial keyboard press
 
-:onpress
+#label onpress
 
 neq io00 r00
-cndjmp start_draw
+cndjmp @start_draw
 
 eq io00 r00
-cndjmp finish_draw
+cndjmp @finish_draw
 
 end
 
@@ -92,4 +83,4 @@ mov d0 vc
 
 incr r00
 
-jmp loop
+jmp @loop

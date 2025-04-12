@@ -1,13 +1,14 @@
-def x 1000
-def vol 16
+#def x 1000
+#def vol 16
 
-:loop
+#label loop
 int sf
 hlt r00
 int ss
 hlt r00
-jmp loop
-end
+jmp @loop
+
+#label start
 
 lda @x
 mov d0 r00
@@ -18,4 +19,4 @@ incr sw
 lda @vol
 mov d0 sv
 
-jmp loop
+jmp @loop

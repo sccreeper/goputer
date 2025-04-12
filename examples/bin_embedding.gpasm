@@ -1,5 +1,7 @@
-def bin @bin_test_file
-def white 0xFFFFFFFF
+#def bin file:"bin_test_file"
+#def white 0xFFFFFFFF
+
+#label start
 
 lda @bin
 mov d0 vt

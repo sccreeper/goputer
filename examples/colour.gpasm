@@ -1,5 +1,7 @@
 //Clears the screen with colour and finishes
-def colour 0x00FFFFFF
+#def colour 0x00FFFFFF
+
+#label start
 
 lda @colour
 mov d0 vc

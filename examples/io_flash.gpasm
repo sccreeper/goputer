@@ -1,17 +1,18 @@
 // Simple flashing IO test
-def t 250
+#def t 250
 
-:loop
+#label loop
 incr io00
 int iof
 hlt r00
 decr io00
 int iof
 hlt r00
-jmp loop
-end
+jmp @loop
+
+#label start
 
 lda @t
 mov d0 r00
 
-jmp loop
+jmp @loop
