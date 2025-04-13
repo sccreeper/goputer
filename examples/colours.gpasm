@@ -7,3 +7,7 @@
 
 #def gray 0xAAAAAAFF
 #def dark_gray 0x555555FF
+
+#label clear_screen
+int vc
+ret

@@ -98,7 +98,7 @@ func _disassemble(ctx *cli.Context) error {
 			fmt.Println(
 				formatInstruction(
 					itnMap[constants.Instruction(v1.Instruction)],
-					v1.Data,
+					v1.StringData,
 				),
 			)
 
@@ -115,7 +115,7 @@ func _disassemble(ctx *cli.Context) error {
 		fmt.Println(
 			formatInstruction(
 				itnMap[constants.Instruction(v.Instruction)],
-				v.Data,
+				v.StringData,
 			),
 		)
 

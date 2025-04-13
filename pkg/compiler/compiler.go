@@ -21,7 +21,7 @@ type AssembledProgram struct {
 //
 // Mainly used by the command line.
 // Designed to work on desktop systems only.
-func Compile(rootPath string, getFile func(path string) []byte, config CompilerConfig, error_handler func(errorType ErrorType, errorText string)) (AssembledProgram, error) {
+func Compile(rootPath string, getFile func(path string) ([]byte, error), config CompilerConfig, error_handler func(errorType ErrorType, errorText string)) (AssembledProgram, error) {
 
 	startTime := time.Now().UnixMicro()
 
@@ -37,8 +37,14 @@ func Compile(rootPath string, getFile func(path string) []byte, config CompilerC
 		log.Println("Parsing...")
 	}
 
+	fileData, err := getFile(rootPath)
+
+	if err != nil {
+		return AssembledProgram{}, err
+	}
+
 	p := Parser{
-		CodeString:   string(getFile(rootPath)),
+		CodeString:   string(fileData),
 		FileName:     config.FilePath,
 		Verbose:      false,
 		Imported:     false,

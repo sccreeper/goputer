@@ -70,7 +70,7 @@ func decodeInstruction(b []byte) Instruction {
 			}
 		}
 
-		i.Data = append(i.Data, argumentData)
+		i.StringData = append(i.StringData, argumentData)
 	}
 
 	i.Instruction = uint32(itn)

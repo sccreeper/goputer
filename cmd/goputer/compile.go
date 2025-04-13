@@ -196,12 +196,10 @@ func errorHandler(errorType compiler.ErrorType, errorText string) {
 
 }
 
-func getFile(path string) []byte {
+func getFile(path string) ([]byte, error) {
 
 	f, err := os.ReadFile(path)
 
-	util.CheckError(err)
-
-	return f
+	return f, err
 
 }

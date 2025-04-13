@@ -38,7 +38,7 @@ func Compile() js.Func {
 			Verbose:      false,
 			Imported:     false,
 			ErrorHandler: HandleError,
-			FileReader:   file_reader,
+			FileReader:   fileReader,
 		}
 
 		program_structure, err := p.Parse()
@@ -56,8 +56,12 @@ func Compile() js.Func {
 
 }
 
-func file_reader(path string) []byte {
-	return []byte(fileMap[path])
+func fileReader(path string) ([]byte, error) {
+	if val, exists := fileMap[path]; exists {
+		return []byte(val), nil
+	} else {
+		return nil, compiler.ErrFile
+	}
 }
 
 func UpdateFile(this js.Value, args []js.Value) any {

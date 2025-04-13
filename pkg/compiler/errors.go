@@ -20,17 +20,20 @@ const (
 	InstructionDoesNotExist ErrorType = "instruction does not exist"
 	SymbolDoesNotExist      ErrorType = "symbol does not exist" //When a symbol for a definition or a jump block doesn't exist.
 	InvalidArgument         ErrorType = "invalid argument"
+	InvalidValue            ErrorType = "invalid value"
 
 	CircularImport ErrorType = "circular import"
 	FileNotFound   ErrorType = "file not found"
 )
 
 var ErrSyntax error = errors.New("syntax error")
+var ErrValue error = errors.New("value error")
 var ErrSymbol error = errors.New("symbol error")
 var ErrDoesNotExist error = errors.New("does not exist error")
 var ErrInvalidArgument error = errors.New("invalid argument")
 var ErrImport error = errors.New("import error")
-var ErrTooManyArgs error = errors.New("too many arguments")
+var ErrWrongNumArgs error = errors.New("wrong number of arguements")
+var ErrFile = errors.New("error whilst reading file")
 
 var RedError color.Color = *color.New(color.FgHiRed, color.Bold)
 var ItalicCode color.Color = *color.New(color.Italic)

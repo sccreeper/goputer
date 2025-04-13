@@ -2,6 +2,16 @@
 
 package constants
 
+func init() {
+
+	InterruptIntsReversed = make(map[Interrupt]string)
+
+	for k, v := range InterruptInts {
+		InterruptIntsReversed[v] = k
+	}
+
+}
+
 // Custom types
 type Interrupt uint16
 type Register uint16
@@ -11,6 +21,8 @@ type Instruction uint8
 type DefType uint8
 
 type SoundWaveType uint32
+
+var InterruptIntsReversed map[Interrupt]string
 
 //Maps are used by compiler
 

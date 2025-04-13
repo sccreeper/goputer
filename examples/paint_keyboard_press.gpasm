@@ -76,7 +76,7 @@ end
 
 // Entrypoint
 
-intsub kd onpress
+#intsub kd onpress
 
 lda @line
 mov d0 vc

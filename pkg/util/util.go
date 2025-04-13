@@ -67,3 +67,13 @@ func ConvertHex[T int | uint32 | uint64](i T) string {
 	return fmt.Sprintf("0x"+"%08X", i)
 
 }
+
+func CombineMap[Map ~map[K]V, K comparable, V any](a map[K]V, b map[K]V) (result map[K]V) {
+	result = a
+
+	for k, v := range b {
+		result[k] = v
+	}
+
+	return
+}

@@ -1,13 +1,13 @@
 package compiler
 
 import (
-	"bytes"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"log"
 	"math"
 	"os"
+	"regexp"
 	"sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/util"
 	"strconv"
@@ -15,6 +15,48 @@ import (
 
 	"golang.org/x/exp/slices"
 )
+
+// Regex expressions
+
+var compTimeStatementRegex *regexp.Regexp
+var commentStatementRegex *regexp.Regexp
+var doubleQuoteStringValueRegex *regexp.Regexp
+var intValueRegex *regexp.Regexp
+var floatValueRegex *regexp.Regexp
+var hexValueRegex *regexp.Regexp
+var specialValueRegex *regexp.Regexp
+var nameValueRegex *regexp.Regexp
+
+func init() {
+
+	// Match statements that follow the form "#label value"
+	compTimeStatementRegex = regexp.MustCompile(`^#([a-zA-Z]+) +(.+)$`)
+
+	// Match comments that are at the beginning of a line
+	commentStatementRegex = regexp.MustCompile(`^\/\/\s*(.*)`)
+
+	// String value
+	doubleQuoteStringValueRegex = regexp.MustCompile(`^"(?:\\.|[^"\\])*"$`)
+
+	// Match integer values
+	intValueRegex = regexp.MustCompile(`^(-?[0-9]+)$`)
+
+	// Match floating point values
+	floatValueRegex = regexp.MustCompile(`^(-?[0-9]+\.[0-9]+)$`)
+
+	// Match hex values
+	hexValueRegex = regexp.MustCompile(`^0x([a-zA-Z0-9]+)$`)
+
+	// Match values in the form hello:world
+	specialValueRegex = regexp.MustCompile(`^(.+):(.+)$`)
+
+	// Match name value pairs e.g.
+	// this_number 45
+	// this string "isn't valid"
+
+	nameValueRegex = regexp.MustCompile(`^([a-zA-Z0-9_\-]+)\s+(.+)$`)
+
+}
 
 // Parser struct
 // Can parse files with the Parse() method.
@@ -37,7 +79,7 @@ type Parser struct {
 	Verbose bool //Should there be output when parsing the file.
 
 	ErrorHandler func(error_type ErrorType, error_text string) //The error handler method, required.
-	FileReader   func(path string) []byte                      //The file reader method, required.
+	FileReader   func(path string) ([]byte, error)             //The file reader method, required.
 }
 
 // Parser method
@@ -57,110 +99,22 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 		log.Printf("Code lines: %d line(s)", len(p.CodeLines))
 	}
 
-	//---------------------------
-	//Begin parsing of statements
-	//---------------------------
-
-	p.ProgramStatements = make([][]string, 0)
-
-	in_element := false
-	_ = in_element
-	in_string := false
-
-	for index, statement := range p.CodeLines {
-
-		in_string = false
-
-		if statement == "" {
-			p.ProgramStatements = append(p.ProgramStatements, []string{})
-			continue
-		} else if statement == "\n" {
-			p.ProgramStatements = append(p.ProgramStatements, []string{})
-			continue
-		} else if statement[:2] == "//" { //Ignore if comment
-			p.ProgramStatements = append(p.ProgramStatements, []string{statement})
-			continue
-		}
-
-		line := statement
-		current_statement := ""
-
-		//Remove trailing whitespace
-
-		line = strings.Trim(line, " ")
-
-		//Loop to split the statement into individual elements (instructions, registers, data etc.)
-		for _, char := range line {
-
-			in_element = true
-
-			current_statement += string(char)
-
-			if (char == ' ' && !in_string) || (in_string && char == '"') {
-
-				if len(p.ProgramStatements)-1 < index || index == 0 {
-
-					p.ProgramStatements = append(p.ProgramStatements, make([]string, 0))
-				}
-
-				if char == '"' {
-					in_string = false
-				}
-
-				p.ProgramStatements[index] = append(p.ProgramStatements[index], strings.TrimSpace(current_statement))
-
-				current_statement = ""
-
-			}
-
-			if char == '"' {
-				in_string = true
-			}
-
-		}
-
-		if len(p.ProgramStatements)-1 < index || index == 0 {
-
-			p.ProgramStatements = append(p.ProgramStatements, make([]string, 0))
-		}
-
-		p.ProgramStatements[index] = append(p.ProgramStatements[index], strings.TrimSpace(current_statement))
-	}
-
-	if p.Verbose {
-		log.Println("Finished first stage of parsing...")
-
-		//Debug, print statements to console
-
-		for _, e := range p.ProgramStatements {
-
-			log.Printf("Statement %s\n", e)
-			log.Printf("Statement length %d\n", len(e))
-
-		}
-
-	}
+	// Begin parsing of statements
 
 	p.ProgramStructure = ProgramStructure{
-		InstructionBlocks: make(map[string]CodeBlock),
-		ImportedFiles:     []string{},
+		ImportedFiles:          make([]string, 0),
+		InterruptSubscriptions: make(map[string]InterruptSubscription),
+		AllNames:               make([]string, 0),
+		ProgramLabels:          make(map[string]ProgramLabel),
+		ProgramInstructions:    make([]Instruction, 0),
+		Definitions:            make(map[string]Definition),
 	}
 
-	//------------------------
 	// Begin data construction
-	//------------------------
 
-	//Make program data struct
+	var instructionCount int = 0
 
-	var currentJumpBlockInstructions []Instruction
-	jump_block_name := ""
-	inJumpBlock := false
-
-	for index, e := range p.ProgramStatements {
-
-		if index >= len(p.CodeLines) {
-			break
-		}
+	for index, line := range p.CodeLines {
 
 		p.LineIndex = index
 		p.CurrentLine = p.CodeLines[index]
@@ -169,248 +123,275 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 			log.Printf("Parsing statement %d", index)
 		}
 
-		if len(e) == 0 {
-			continue
-		} else if len(e) == 1 && e[0] == "" {
-			continue
-		} else if e[0] == "import" {
-			//Read other file
-			f_name := strings.Trim(e[1], "\"")
+		// Skip conditions
 
-			if slices.Contains(p.ProgramStructure.ImportedFiles, f_name) {
-				//Already imported
-				continue
-			} else if f_name == p.ImportedFrom {
-
-				p.parsingError(ErrImport, CircularImport)
-
-			}
-
-			imported_file := p.FileReader(f_name)
-
-			import_parser := Parser{
-				CodeString:   string(imported_file[:]),
-				FileName:     f_name,
-				Imported:     true,
-				ImportedFrom: p.FileName,
-				Verbose:      false,
-				ErrorHandler: p.ErrorHandler,
-				FileReader:   p.FileReader,
-			}
-
-			p.ProgramStructure.ImportedFiles = append(p.ProgramStructure.ImportedFiles, f_name)
-
-			imported_program_structure, err := import_parser.Parse()
-			util.CheckError(err)
-
-			if p.ImportedFrom == f_name {
-				p.parsingError(ErrImport, CircularImport)
-			}
-
-			p.ProgramStructure, err = p.combine(imported_program_structure)
-			util.CheckError(err)
-
-			continue
-		} else if e[0][:2] == "//" {
+		if len(line) == 0 || commentStatementRegex.MatchString(line) || len(strings.TrimSpace(line)) == 0 {
 			continue
 		}
 
-		// Parse for special purpose (compiler only) statements
+		// Keep going
 
-		if e[0] == "def" { //Constant definition
-			p.name_collision(e[1])
+		if compTimeStatementRegex.MatchString(line) {
 
-			p.ProgramStructure.DefNames = append(p.ProgramStructure.DefNames, e[1])
-			p.ProgramStructure.AllNames = append(p.ProgramStructure.AllNames, e[1])
+			statementType := compTimeStatementRegex.FindStringSubmatch(line)[1]
+			statementValue := compTimeStatementRegex.FindStringSubmatch(line)[2]
 
-			// Parse definition data, decide wether is int string, float, etc.
+			switch statementType {
+			case "label":
 
-			var def_type constants.DefType = 0
-			data_array := make([]byte, 4)
-
-			//Is float
-			if strings.Contains(e[2], ".") && !(e[2][0] == '"') {
-				def_type = constants.FloatType
-			} else if e[2][0] == '-' { //Signed int
-				def_type = constants.IntType
-			} else if e[2][0] == '"' {
-				def_type = constants.StringType
-			} else if len(e[2]) > 2 && e[2][0:2] == "0x" || e[2][0] == '@' {
-				def_type = constants.BytesType
-			} else {
-				def_type = constants.UintType
-			}
-
-			//Convert definition data to byte array
-			switch def_type {
-			case constants.FloatType:
-				i, err := strconv.ParseFloat(e[2], 32)
-				util.Check(err)
-				binary.LittleEndian.PutUint32(data_array[:], math.Float32bits(float32(i)))
-
-			case constants.UintType:
-				i, err := strconv.ParseUint(e[2], 10, 32)
-				util.Check(err)
-				binary.LittleEndian.PutUint32(data_array[:], uint32(i))
-
-			case constants.StringType:
-				//Remove speech marks
-
-				e[2] = strings.Trim(e[2], "\"")
-				e[2] = strings.Replace(e[2], `\n`, "\n", -1)
-
-				data_array = []byte(e[2])
-
-			case constants.IntType:
-				i, err := strconv.ParseInt(e[2], 10, 32)
-				util.Check(err)
-
-				buffer := new(bytes.Buffer)
-				binary.Write(buffer, binary.LittleEndian, i)
-
-				data_array = []byte(buffer.Bytes())
-			case constants.BytesType:
-				if e[2][0] == '@' {
-
-					b, err := os.ReadFile(e[2][1:])
-					util.CheckError(err)
-
-					data_array = b
-
+				if slices.Contains(p.AllNames, statementValue) {
+					p.parsingError(ErrSymbol, NameConflict)
 				} else {
-					data_array, _ = hex.DecodeString(e[2][2:])
+					p.AllNames = append(p.AllNames, statementValue)
+
+					p.ProgramStructure.ProgramLabels[statementValue] = ProgramLabel{
+						Name:              statementValue,
+						InstructionOffset: instructionCount,
+					}
+				}
+
+			case "def":
+
+				defName := nameValueRegex.FindStringSubmatch(statementValue)[1]
+				defStringValue := nameValueRegex.FindStringSubmatch(statementValue)[2]
+
+				if slices.Contains(p.AllNames, defName) {
+					p.parsingError(ErrSymbol, NameConflict)
+				} else {
+					p.AllNames = append(p.AllNames, defName)
+
+					var defByteValue []byte
+					var defType constants.DefType
+
+					if doubleQuoteStringValueRegex.MatchString(defStringValue) {
+
+						strValue, err := strconv.Unquote(defStringValue)
+						if err != nil {
+							p.parsingError(ErrSyntax, ErrorType(err.Error()))
+						}
+
+						defByteValue = []byte(strValue)
+						defType = constants.StringType
+
+					} else if intValueRegex.MatchString(defStringValue) {
+
+						defByteValue = make([]byte, 4)
+
+						x, err := strconv.Atoi(defStringValue)
+						if err != nil {
+							p.parsingError(ErrSyntax, ErrorType(err.Error()))
+						}
+
+						binary.LittleEndian.PutUint32(defByteValue[:], uint32(x))
+						defType = constants.IntType
+
+					} else if floatValueRegex.MatchString(defStringValue) {
+
+						x, err := strconv.ParseFloat(defStringValue, 32)
+						if err != nil {
+							p.parsingError(ErrSyntax, ErrorType(err.Error()))
+						}
+
+						binary.LittleEndian.PutUint32(defByteValue[:], math.Float32bits(float32(x)))
+						defType = constants.FloatType
+
+					} else if hexValueRegex.MatchString(defStringValue) {
+
+						// Get actual hex value
+
+						hexValue := hexValueRegex.FindStringSubmatch(defStringValue)[1]
+
+						var err error
+						defByteValue, err = hex.DecodeString(hexValue)
+						if err != nil {
+							panic(err)
+						}
+
+						defType = constants.BytesType
+
+					} else if specialValueRegex.MatchString(defStringValue) {
+
+						specialType := specialValueRegex.FindStringSubmatch(defStringValue)[1]
+						specialValue := specialValueRegex.FindStringSubmatch(defStringValue)[2]
+
+						if specialType == "file" {
+
+							// See if value is string
+
+							if doubleQuoteStringValueRegex.MatchString(specialValue) {
+
+								// Remove speechmarks
+
+								specialValue = specialValue[1 : len(specialValue)-1]
+
+								b, err := os.ReadFile(specialValue)
+								if err != nil {
+									panic(err)
+								}
+
+								defByteValue = b
+								defType = constants.BytesType
+
+							} else {
+								p.parsingError(ErrSyntax, ErrorType("malformed string"))
+							}
+
+						} else if specialType == "region" {
+
+							// Get region size
+
+							regionSize, err := strconv.Atoi(specialValue)
+							if err != nil {
+								p.parsingError(ErrValue, InvalidValue)
+							}
+
+							if regionSize < 0 {
+								p.parsingError(ErrValue, "region size cannot be negative")
+							}
+
+							defByteValue = make([]byte, regionSize, regionSize)
+							defType = constants.BytesType
+
+						} else {
+							p.parsingError(ErrSyntax, ErrorType(fmt.Sprintf("unrecognised special definition type '%s'", specialType)))
+						}
+
+					} else {
+						p.parsingError(ErrSyntax, InvalidValue)
+					}
+
+					p.ProgramStructure.Definitions[defName] = Definition{
+						Name:       defName,
+						StringData: defStringValue,
+						ByteData:   defByteValue,
+						Type:       defType,
+					}
+				}
+
+			case "import":
+
+				if !doubleQuoteStringValueRegex.MatchString(statementValue) {
+					p.parsingError(ErrSyntax, "value should be string")
+				}
+
+				//Read other file
+
+				fName := strings.Trim(statementValue, "\"")
+
+				if slices.Contains(p.ProgramStructure.ImportedFiles, fName) {
+					continue
+				} else if fName == p.ImportedFrom {
+					p.parsingError(ErrImport, CircularImport)
+				}
+
+				importedFile, err := p.FileReader(fName)
+
+				if err != nil {
+					p.parsingError(ErrFile, ErrorType(fmt.Sprintf("error reading file '%s'", fName)))
+				}
+
+				importParser := Parser{
+					CodeString:   string(importedFile[:]),
+					FileName:     fName,
+					Imported:     true,
+					ImportedFrom: p.FileName,
+					Verbose:      false,
+					ErrorHandler: p.ErrorHandler,
+					FileReader:   p.FileReader,
+				}
+
+				p.ProgramStructure.ImportedFiles = append(p.ProgramStructure.ImportedFiles, fName)
+
+				importedProgramStructure, err := importParser.Parse()
+				if err != nil {
+					p.parsingError(err, ErrorType(err.Error()))
+				}
+
+				if p.ImportedFrom == fName {
+					p.parsingError(ErrImport, CircularImport)
+				}
+
+				p.ProgramStructure, err = p.combine(importedProgramStructure)
+				if err != nil {
+					p.parsingError(err, ErrorType(err.Error()))
+				}
+
+				instructionCount = len(p.ProgramStructure.ProgramInstructions)
+
+			case "intsub":
+
+				interruptType := strings.Split(statementValue, " ")[0]
+				interruptLabel := strings.Split(statementValue, " ")[1]
+
+				if _, exists := constants.InterruptInts[interruptType]; !exists || constants.InterruptInts[interruptType] < constants.IntMouseMove {
+					p.parsingError(ErrSymbol, ErrorType(fmt.Sprintf("unknown interrupt '%s'", interruptType)))
+				}
+
+				if _, exists := p.ProgramStructure.ProgramLabels[interruptLabel]; !exists {
+					p.parsingError(ErrSymbol, ErrorType(fmt.Sprintf("unrecognized label '%s'", interruptLabel)))
+				}
+
+				p.ProgramStructure.InterruptSubscriptions[interruptType] = InterruptSubscription{
+					InterruptName: interruptType,
+					Interrupt:     constants.InterruptInts[interruptType],
+					LabelName:     interruptLabel,
 				}
 
 			}
 
-			p.ProgramStructure.Definitions = append(p.ProgramStructure.Definitions,
-				Definition{
-					Name: e[1],
-					Data: data_array,
-					Type: def_type,
-				},
-			)
-
-			continue
-
-		} else if e[0] == "intsub" { //Interrupt subscription
-
-			//Error checking
-
-			if _, exists := constants.InterruptInts[e[1]]; !exists || constants.InterruptInts[e[1]] < constants.IntMouseMove {
-				p.parsingError(ErrSymbol, SymbolDoesNotExist)
-			}
-
-			if !slices.Contains(p.ProgramStructure.InstructionBlockNames, e[2]) {
-				p.parsingError(ErrSymbol, ErrorType(fmt.Sprintf("unrecognized jump %s", e[2])))
-			}
-
-			p.ProgramStructure.InterruptSubscriptions = append(
-				p.ProgramStructure.InterruptSubscriptions,
-
-				InterruptSubscription{
-					InterruptName: e[1],
-					Interrupt:     constants.Interrupt(constants.InterruptInts[e[1]]),
-					JumpBlockName: e[2],
-				},
-			)
-
-			continue
-
-		} else if e[0] == "end" { //Reaching end of jump block
-			if !inJumpBlock {
-				p.parsingError(ErrSyntax, UnexpectedEndStatement)
-			}
-
-			p.ProgramStructure.InstructionBlocks[jump_block_name] = CodeBlock{
-
-				Name:         jump_block_name,
-				Instructions: currentJumpBlockInstructions,
-			}
-
-			inJumpBlock = false
-			jump_block_name = ""
-			currentJumpBlockInstructions = nil
-
-			continue
-
-		} else if e[0][0] == ':' { //Jump block definition.
-			//Errors
-			if inJumpBlock {
-				p.parsingError(ErrSyntax, NestingError)
-			}
-			if len(e[0]) == 1 {
-				p.parsingError(ErrSyntax, MinimumNameLength)
-			}
-			//Check if name of jump block isn't shared by registers or instructions
-			p.name_collision(e[0][1:])
-
-			jump_block_name = e[0][1:]
-			p.ProgramStructure.AllNames = append(p.ProgramStructure.AllNames, e[0][1:])
-
-			inJumpBlock = true
-			p.ProgramStructure.InstructionBlockNames = append(p.ProgramStructure.InstructionBlockNames, e[0][1:])
-
-			continue
-
 		} else {
 
-			//Parse for other statements
+			lineSplit := strings.Split(line, " ")
 
-			//Check if statement exists in instructions
-			if _, exists := constants.InstructionInts[e[0]]; !exists {
+			// Instructions
+
+			if _, exists := constants.InstructionInts[lineSplit[0]]; !exists {
 				p.parsingError(ErrDoesNotExist, InstructionDoesNotExist)
 			}
 
-			//Check if args are valid
+			// Check if we have the correct number of arguments
 
-			for _, arg := range e[1:] {
+			var correctNumArgs int = constants.InstructionArgumentCounts[constants.Instruction(constants.InstructionInts[lineSplit[0]])]
+
+			if len(lineSplit)-1 != correctNumArgs {
+
+				p.parsingError(
+					ErrWrongNumArgs,
+					ErrorType(
+						fmt.Sprintf("too many arguements in call of '%s' - was expecting %d got %d", lineSplit[0], correctNumArgs, len(lineSplit)-1),
+					),
+				)
+
+			}
+
+			for _, arg := range lineSplit[1:] {
 
 				// Interrupts
 
-				if e[0] == "int" {
+				if lineSplit[0] == "int" {
 					if _, exists := constants.InterruptInts[arg]; !exists {
 						p.parsingError(ErrSymbol, InvalidArgument)
 					}
 
-				} else if arg[0] == '@' && (e[0] == "lda" || e[0] == "sta") {
+				} else if arg[0] == '@' && (lineSplit[0] == "lda" || lineSplit[0] == "sta") {
 
 					// Checks definitions for valid argument.
 
-					var exists bool = false
-
-					for _, v := range p.ProgramStructure.DefNames {
-
-						if arg[1:] == v {
-							exists = true
-							break
-						}
+					if _, exists := p.ProgramStructure.Definitions[arg[1:]]; !exists {
+						p.parsingError(
+							ErrDoesNotExist,
+							ErrorType(fmt.Sprintf("definition '%s' does not exist", lineSplit[1][1:])),
+						)
 					}
 
-					if !exists {
-						p.parsingError(ErrDoesNotExist, ErrorType(fmt.Sprintf("definition '%s' does not exist", e[1][1:])))
-					}
-				} else if e[0] == "jmp" || e[0] == "cndjmp" || e[0] == "call" || e[0] == "cndcall" {
+				} else if lineSplit[0] == "jmp" || lineSplit[0] == "cndjmp" || lineSplit[0] == "call" || lineSplit[0] == "cndcall" {
 
-					var exists bool = false
+					if lineSplit[1][0] == '@' {
 
-					for _, v := range p.ProgramStructure.InstructionBlockNames {
-
-						if e[1] == v {
-							exists = true
-							break
+						if _, exists := p.ProgramStructure.ProgramLabels[lineSplit[1][1:]]; !exists {
+							p.parsingError(ErrSymbol, SymbolDoesNotExist)
 						}
 
-					}
-
-					if !exists {
-						p.parsingError(ErrDoesNotExist, ErrorType(fmt.Sprintf("unknown instruction block '%s'", arg)))
-					}
-
-				} else if e[0] == "ret" || e[0] == "iret" {
-
-					if len(e) > 1 {
-						p.parsingError(ErrTooManyArgs, ErrorType(fmt.Sprintf("should only have one argument for '%s'", e[0])))
 					}
 
 				} else {
@@ -425,24 +406,24 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 			}
 
-		}
+			//If does exist, continue
 
-		//If does exist, continue
+			instructionToBeAdded := Instruction{
+				ArgumentCount: uint32(len(strings.Split(line, " ")) - 1),
+				StringData:    strings.Split(line, " ")[1:],
+				Instruction:   constants.InstructionInts[strings.Split(line, " ")[0]],
+			}
 
-		instructionToBeAdded := Instruction{
-			ArgumentCount: uint32(len(e) - 1),
-			Data:          e[1:],
-			Instruction:   constants.InstructionInts[e[0]],
-		}
-
-		if inJumpBlock {
-
-			currentJumpBlockInstructions = append(currentJumpBlockInstructions, instructionToBeAdded)
-
-		} else if !p.Imported {
 			p.ProgramStructure.ProgramInstructions = append(p.ProgramStructure.ProgramInstructions, instructionToBeAdded)
+
+			instructionCount++
+
 		}
 
+	}
+
+	if _, exists := p.ProgramStructure.ProgramLabels["start"]; !exists && !p.Imported {
+		p.parsingError(ErrSyntax, "no entrypoint found")
 	}
 
 	return p.ProgramStructure, nil
@@ -482,34 +463,22 @@ func (p *Parser) combine(s1 ProgramStructure) (ProgramStructure, error) {
 	} else {
 		combined.AllNames = p.ProgramStructure.AllNames
 	}
-	if len(s1.InstructionBlockNames) > 0 {
-		combined.InstructionBlockNames = append(p.ProgramStructure.InstructionBlockNames, s1.InstructionBlockNames...)
+
+	if len(s1.ProgramLabels) > 0 {
+		combined.ProgramLabels = util.CombineMap[map[string]ProgramLabel](p.ProgramStructure.ProgramLabels, s1.ProgramLabels)
 	} else {
-		combined.InstructionBlockNames = p.ProgramStructure.InstructionBlockNames
-	}
-	if len(s1.AllNames) > 0 {
-		combined.DefNames = append(p.ProgramStructure.DefNames, s1.DefNames...)
-	} else {
-		combined.DefNames = p.ProgramStructure.DefNames
+		combined.ProgramLabels = p.ProgramStructure.ProgramLabels
 	}
 
 	if len(s1.Definitions) > 0 {
-		combined.Definitions = append(p.ProgramStructure.Definitions, s1.Definitions...)
+		combined.Definitions = util.CombineMap[map[string]Definition](p.ProgramStructure.Definitions, s1.Definitions)
 	} else {
 		combined.Definitions = p.ProgramStructure.Definitions
 	}
 
-	//Combine instruction blocks
+	// Combine instructions
 
-	combined.InstructionBlocks = p.ProgramStructure.InstructionBlocks
-
-	if len(s1.InstructionBlocks) > 0 {
-		for k, v := range s1.InstructionBlocks {
-
-			combined.InstructionBlocks[k] = v
-
-		}
-	}
+	combined.ProgramInstructions = append(s1.ProgramInstructions, p.ProgramStructure.ProgramInstructions...)
 
 	return combined, nil
 
@@ -518,7 +487,7 @@ func (p *Parser) combine(s1 ProgramStructure) (ProgramStructure, error) {
 // Name collision function
 //
 // Checks for any name collisions in the parser, and returns error string.
-func (p *Parser) name_collision(s string) string {
+func (p *Parser) nameCollision(s string) string {
 
 	var err string = ""
 

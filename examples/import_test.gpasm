@@ -7,4 +7,4 @@
 lda @red
 mov d0 vc
 
-int vc
+call @clear_screen
