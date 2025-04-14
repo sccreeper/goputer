@@ -194,4 +194,17 @@
 
     }
 
+    .instruction-address {
+        @apply text-gray-500;
+        @apply transition-colors;
+    }
+
+    .definition-info {
+        @apply transition-colors;
+    }
+
+    .instruction-address:target, .definition-info:target {
+        @apply text-gray-400;
+    }
+
 }

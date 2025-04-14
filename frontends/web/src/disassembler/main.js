@@ -30,7 +30,6 @@ const ButtonDownload = document.getElementById("button-download")
 const FileForm = document.getElementById("file-form")
 
 export const instructionsContainer = document.getElementById("container-instructions")
-export const jumpBlocksContainer = document.getElementById("container-jump-blocks")
 export const interruptTableContainer = document.getElementById("container-interrupt-table")
 export const definitionsContainer = document.getElementById("container-definitions")
 

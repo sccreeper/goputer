@@ -3,17 +3,22 @@ import globals from "./globals.js"
 import { clearCanvas, drawLine, drawRect, drawText, setPixel } from "./canvas_util";
 import { ShowError, ErrorTypes } from "./error";
 
-var previous_mouse_pos = {
+var previousMousePos = {
     X: 0,
     Y: 0,
 }
-var current_mouse_pos = {
+var currentMousePos = {
     X: 0,
     Y: 0,
 }
 
 //Other app logic
 
+/**
+ * 
+ * @param {MouseEvent} e 
+ * @returns {null}
+ */
 export function IOToggle(e) {
 
     if (!globals.vmIsAlive) {
@@ -26,7 +31,7 @@ export function IOToggle(e) {
         e.target.setAttribute("on", "false")
     }
 
-    globals.switch_queue.push(
+    globals.switchQueue.push(
         {
             register: e.target.getAttribute("reg"),
             enabled: (e.target.getAttribute("on") == "true") ? true : false,
@@ -40,8 +45,8 @@ export function PeekRegister() {
         return;
     } else {
         if (registerInts[peekRegInput.value] != undefined) {
-            globals.register_peek_value = peekRegInput.value;
-            peekRegHTML.textContent = GetRegisterText(registerInts[globals.register_peek_value]) 
+            globals.registerPeekValue = peekRegInput.value;
+            peekRegHTML.textContent = GetRegisterText(registerInts[globals.registerPeekValue]) 
             peekRegInput.setAttribute("valid-reg", "true");
         } else {
             peekRegInput.setAttribute("valid-reg", "false");
@@ -93,13 +98,13 @@ export function GetRegisterText(reg_int) {
         return String.fromCharCode(...t_codes)
 
     } else {
-        let hex_string = getRegister(registerInts[globals.register_peek_value]).toString(16)
+        let hex_string = getRegister(registerInts[globals.registerPeekValue]).toString(16)
         hex_string = hex_string.split("")
 
         hex_string = hex_string.reverse()
         hex_string = hex_string.join("")
 
-        return `0x${hex_string.toUpperCase().padStart(8, "0")} (${getRegister(registerInts[globals.register_peek_value])})`;
+        return `0x${hex_string.toUpperCase().padStart(8, "0")} (${getRegister(registerInts[globals.registerPeekValue])})`;
     }
     
 }
@@ -108,13 +113,13 @@ export function GetRegisterText(reg_int) {
 
 export function Compile(e) {
 
-    globals.error_div.replaceChildren();
+    globals.errorDiv.replaceChildren();
 
-    globals.compile_failed = false;
+    globals.compileFailed = false;
     compileCode(document.getElementById("code-textarea").value)
     globals.codeHasBeenCompiled = true;
 
-    if(!globals.compile_failed) {
+    if(!globals.compileFailed) {
 
         document.getElementById("run-code-button").disabled = false;
         document.getElementById("download-code-button").disabled = false;
@@ -148,9 +153,9 @@ export function Run(e) {
 export function handleMouseMove(e) {
 
     if (globals.vmIsAlive) {
-        if (globals.mouse_over_display) {
-            current_mouse_pos.X = Math.round(e.clientX -  canvas.getBoundingClientRect().left);
-            current_mouse_pos.Y = Math.round(e.clientY -  canvas.getBoundingClientRect().top);        
+        if (globals.mouseOverDisplay) {
+            currentMousePos.X = Math.round(e.clientX -  canvas.getBoundingClientRect().left);
+            currentMousePos.Y = Math.round(e.clientY -  canvas.getBoundingClientRect().top);        
         }
     }
 
@@ -159,7 +164,7 @@ export function handleMouseMove(e) {
 export function handleKeyDown(e) {
     
     if (globals.vmIsAlive) {
-        globals.keys_down.push(e.keyCode)
+        globals.keysDown.push(e.keyCode)
     }
 
 }
@@ -167,7 +172,7 @@ export function handleKeyDown(e) {
 export function handleKeyUp(e) {
     
     if (globals.vmIsAlive) {
-        globals.keys_up.push(e.keyCode)
+        globals.keysUp.push(e.keyCode)
     }
 
 }
@@ -222,7 +227,7 @@ export function Cycle() {
                 var t = getBuffer("text")
 
                 if (t[0] == 0) {
-                    globals.video_text = "";
+                    globals.videoText = "";
                 } else {
                     
                     var t1 = []
@@ -236,7 +241,7 @@ export function Cycle() {
                     });
 
                     // Convert from array of ints to chars.
-                    globals.video_text += String.fromCharCode(...t1)
+                    globals.videoText += String.fromCharCode(...t1)
 
                 }
 
@@ -246,7 +251,7 @@ export function Cycle() {
                     convertColour(getRegister(registerInts["vc"])),
                     getRegister(registerInts["vx0"]),
                     getRegister(registerInts["vy0"]),
-                    globals.video_text
+                    globals.videoText
                 )
             case interruptInts["vp"]:
                 setPixel(
@@ -257,15 +262,15 @@ export function Cycle() {
                 )
             case interruptInts["ss"]:
                 globals.oscillator.frequency.value = 0;
-                globals.audio_volume.gain.value = 0;
+                globals.audioVolume.gain.value = 0;
                 break;
             case interruptInts["sf"]:
                 globals.oscillator.type = (getRegister(registerInts["sw"]) == 0) ? "square" : "sine";
                 globals.oscillator.frequency.value = getRegister(registerInts["st"])
-                globals.audio_volume.gain.value = getRegister(registerInts["sv"]) / 255;
-                if (!globals.sound_started) {
+                globals.audioVolume.gain.value = getRegister(registerInts["sv"]) / 255;
+                if (!globals.soundStarted) {
                     globals.oscillator.start()
-                    globals.sound_started = true;
+                    globals.soundStarted = true;
                 }
 
                 break;
@@ -273,11 +278,11 @@ export function Cycle() {
             case interruptInts["iof"]:
                 //Set IO states for IO bulbs.
 
-                for (let i = 0; i < globals.io_bulb_names.length; i++) {
+                for (let i = 0; i < globals.ioBulbNames.length; i++) {
                     
-                    globals.io_bulbs[globals.io_bulb_names[i]].setAttribute(
+                    globals.ioBulbs[globals.ioBulbNames[i]].setAttribute(
                         "on",
-                        (getRegister(registerInts[globals.io_bulb_names[i]]) > 0) ? "true" : "false"
+                        (getRegister(registerInts[globals.ioBulbNames[i]]) > 0) ? "true" : "false"
                     )
 
                 }
@@ -303,13 +308,13 @@ export function Cycle() {
 
         //Mouse
 
-        if ((previous_mouse_pos.X != current_mouse_pos.X) || (previous_mouse_pos.Y != current_mouse_pos.Y)) {
+        if ((previousMousePos.X != currentMousePos.X) || (previousMousePos.Y != currentMousePos.Y)) {
             
-            setRegister(registerInts["mx"], previous_mouse_pos.X);
-            setRegister(registerInts["my"], previous_mouse_pos.Y);
+            setRegister(registerInts["mx"], previousMousePos.X);
+            setRegister(registerInts["my"], previousMousePos.Y);
 
-            previous_mouse_pos.X = current_mouse_pos.X;
-            previous_mouse_pos.Y = current_mouse_pos.Y
+            previousMousePos.X = currentMousePos.X;
+            previousMousePos.Y = currentMousePos.Y
         
             if (isSubscribed(interruptInts["mm"])) {
 
@@ -320,9 +325,9 @@ export function Cycle() {
 
         //Keyboard
 
-        if (globals.keys_down.length > 0 ) {
+        if (globals.keysDown.length > 0 ) {
             
-            setRegister(registerInts["kc"], globals.keys_down.pop())
+            setRegister(registerInts["kc"], globals.keysDown.pop())
 
             if (isSubscribed(interruptInts["kd"])) {
                 sendInterrupt(interruptInts["kd"])
@@ -330,9 +335,9 @@ export function Cycle() {
 
         }
 
-        if (globals.keys_up.length > 0) {
+        if (globals.keysUp.length > 0) {
             
-            setRegister(registerInts["kp"], globals.keys_up.pop())
+            setRegister(registerInts["kp"], globals.keysUp.pop())
 
             if (isSubscribed(interruptInts["ku"])) {
                 sendInterrupt(interruptInts["ku"])
@@ -342,7 +347,7 @@ export function Cycle() {
 
         //IO Switches
 
-        globals.switch_queue.forEach(element => {
+        globals.switchQueue.forEach(element => {
         
             setRegister(registerInts[element.register], (element.enabled) ? 1 : 0)
 
@@ -352,18 +357,18 @@ export function Cycle() {
 
         });
 
-        globals.switch_queue = [];
+        globals.switchQueue = [];
 
         //Update hardware info
 
         currentInstructionHTML.innerHTML = String(currentItn());
         programCounterHTML.innerHTML = getRegister(registerInts["prc"])
 
-        if (globals.register_peek_value != null && GetRegisterText(registerInts[globals.register_peek_value]) != globals.prev_reg_peek_value) {
+        if (globals.registerPeekValue != null && GetRegisterText(registerInts[globals.registerPeekValue]) != globals.prevRegPeekValue) {
 
-            globals.current_reg_peek_value = GetRegisterText(registerInts[globals.register_peek_value])
-            peekRegHTML.textContent = globals.current_reg_peek_value
-            globals.prev_reg_peek_value = globals.current_reg_peek_value
+            globals.currentRegPeekValue = GetRegisterText(registerInts[globals.registerPeekValue])
+            peekRegHTML.textContent = globals.currentRegPeekValue
+            globals.prevRegPeekValue = globals.currentRegPeekValue
 
         }
 

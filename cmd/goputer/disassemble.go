@@ -7,11 +7,18 @@ import (
 	"sccreeper/goputer/pkg/compiler"
 	"sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/util"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/savioxavier/termlink"
 	"github.com/urfave/cli/v2"
 )
+
+func formatInstruction(instructionName string, instructionData []string) string {
+
+	return fmt.Sprintf("%s %s", color.GreenString(instructionName), color.CyanString(strings.Join(instructionData[:], " ")))
+
+}
 
 func _disassemble(ctx *cli.Context) error {
 

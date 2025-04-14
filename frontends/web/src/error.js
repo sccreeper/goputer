@@ -48,7 +48,7 @@ export function ShowError(type, text) {
         case ErrorTypes.Error:
 
             if (text.includes("error")) {
-                globals.compile_failed = true;
+                globals.compileFailed = true;
             }
 
             error_html = generate_error_html(ErrorTypes.Error, { Header: "Error", Body: text })
@@ -69,12 +69,12 @@ export function ShowError(type, text) {
     error_container.appendChild(header)
     error_container.insertAdjacentHTML("beforeend", error_html.Body)
 
-    if (globals.error_count == 0) {
-        globals.error_div.replaceChildren();
+    if (globals.errorCount == 0) {
+        globals.errorDiv.replaceChildren();
     }
 
-    globals.error_count++;
+    globals.errorCount++;
 
-    globals.error_div.appendChild(error_container)
+    globals.errorDiv.appendChild(error_container)
 
 }

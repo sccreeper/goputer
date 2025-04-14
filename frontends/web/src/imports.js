@@ -41,7 +41,7 @@ export function NewFile(file_name) {
 
     files_container.insertBefore(tab_div, new_file);
 
-    globals.focused_file = file_name;
+    globals.focusedFile = file_name;
 
     document.getElementById("code-textarea").value = ""
 
@@ -53,12 +53,12 @@ export function NewFile(file_name) {
 export function DeleteFile(e) {
     
     let file_name = e.currentTarget.parentElement.getAttribute("data-file-name");
-    globals.focused_file = e.currentTarget.previousSibling.getAttribute("data-file-name");
+    globals.focusedFile = e.currentTarget.previousSibling.getAttribute("data-file-name");
 
     e.currentTarget.parentElement.remove()
     removeFile(file_name)
 
-    document.getElementById("code-textarea").value = getFile(globals.focused_file)
+    document.getElementById("code-textarea").value = getFile(globals.focusedFile)
     SwitchFocusedStyle();
 
 }
@@ -69,7 +69,7 @@ export function SwitchFocus(e) {
     let file_name = e.currentTarget.getAttribute("data-file-name");
     document.getElementById("code-textarea").value = getFile(file_name)
 
-    globals.focused_file = file_name;
+    globals.focusedFile = file_name;
     SwitchFocusedStyle();
 
 }
@@ -80,7 +80,7 @@ export function SwitchFocusedStyle() {
 
     for (let i = 0; i < file_elements.length; i++) {
         
-        if (file_elements[i].getAttribute("data-file-name") != globals.focused_file) {
+        if (file_elements[i].getAttribute("data-file-name") != globals.focusedFile) {
             file_elements[i].setAttribute("data-selected", "false")
         } else {
             file_elements[i].setAttribute("data-selected", "true")

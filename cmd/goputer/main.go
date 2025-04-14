@@ -3,23 +3,14 @@ package main // import "github.com/sccreeper/goputer"
 // VM & Compiler CMD front end
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"runtime"
-	"strings"
 
-	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
 
 	_ "embed"
 )
-
-func formatInstruction(i_name string, i_data []string) string {
-
-	return fmt.Sprintf("%s %s", color.GreenString(i_name), color.CyanString(strings.Join(i_data[:], " ")))
-
-}
 
 func main() {
 

@@ -12,9 +12,11 @@ module.exports = {
     "bad-error",
     "text-cyan-600",
     "text-green-500",
+    "instruction-address",
     "border-gray-400",
     "border-b",
-    "program-definition"
+    "program-definition",
+    "definition-info"
   ],
   plugins: [],
 }

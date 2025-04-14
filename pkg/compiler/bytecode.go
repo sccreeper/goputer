@@ -34,14 +34,14 @@ func GenerateBytecode(p ProgramStructure, verbose bool) []byte {
 
 	for i, d := range p.Definitions {
 
-		definitionBlockAddresses[d.Name] = definitionAddrIndex + byteIndex + StackSize
+		definitionBlockAddresses[d.Name] = definitionAddrIndex + StackSize
 		p.Definitions[i] = Definition{
 			Name:       p.Definitions[i].Name,
 			StringData: p.Definitions[i].StringData,
 			ByteData:   p.Definitions[i].ByteData,
 			Type:       p.Definitions[i].Type,
 
-			Address: definitionAddrIndex + byteIndex + StackSize,
+			Address: definitionAddrIndex + StackSize,
 		}
 
 		lengthBytes := make([]byte, 4)

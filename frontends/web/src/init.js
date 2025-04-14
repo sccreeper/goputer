@@ -15,7 +15,7 @@ await WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then
 });
 
 document.getElementById("code-textarea").addEventListener("change", (e) => {
-    updateFile(globals.focused_file, document.getElementById("code-textarea").value);
+    updateFile(globals.focusedFile, document.getElementById("code-textarea").value);
 })
 
 export const new_file = document.getElementById("new-file");
@@ -56,13 +56,13 @@ clearCanvas(renderContext, "black");
 
 //Init audio
 
-globals.audio_context = new (window.AudioContext || window.webkitAudioContext)();
-globals.oscillator = globals.audio_context.createOscillator();
-globals.audio_volume = globals.audio_context.createGain();
+globals.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+globals.oscillator = globals.audioContext.createOscillator();
+globals.audioVolume = globals.audioContext.createGain();
 
-globals.audio_volume.gain.value = 0.0;
-globals.oscillator.connect(globals.audio_volume);
-globals.audio_volume.connect(globals.audio_context.destination);
+globals.audioVolume.gain.value = 0.0;
+globals.oscillator.connect(globals.audioVolume);
+globals.audioVolume.connect(globals.audioContext.destination);
 
 //Init event listeners.
 document.getElementById("compile-code-button").addEventListener("click", Compile)
@@ -76,23 +76,23 @@ document.getElementById("stop-code-button").addEventListener("click", function (
     // Clear sound
 
     globals.oscillator.frequency.value = 0;
-    globals.audio_volume.gain.value = 0;
+    globals.audioVolume.gain.value = 0;
 
-    if (globals.sound_started) {
+    if (globals.soundStarted) {
         globals.oscillator.stop();   
     }
-    globals.sound_started = false;
+    globals.soundStarted = false;
 
     // Clear IO lights
 
-    for(let reg in globals.io_bulbs) {
-        globals.io_bulbs[reg].setAttribute("on", "false")
+    for(let reg in globals.ioBulbs) {
+        globals.ioBulbs[reg].setAttribute("on", "false")
     }
 
     // Clear other data
 
     globals.vmIsAlive = false;
-    globals.video_text = "";
+    globals.videoText = "";
 
     clearCanvas(renderContext, "black");
     canvas.setAttribute("running", "false");
@@ -101,21 +101,21 @@ document.getElementById("stop-code-button").addEventListener("click", function (
 //Init IO elements
 
 for (let i = 0; i < document.getElementById("bulb-container").children.length; i++) {
-    globals.io_bulbs[document.getElementById("bulb-container").children[i].getAttribute("reg")] = document.getElementById("bulb-container").children[i]
+    globals.ioBulbs[document.getElementById("bulb-container").children[i].getAttribute("reg")] = document.getElementById("bulb-container").children[i]
 }
 
 for (let i = 0; i < document.getElementById("switch-container").children.length; i++) {
     document.getElementById("switch-container").children[i].addEventListener("click", IOToggle)
 }
 
-canvas.addEventListener("mouseenter", () => {globals.mouse_over_display = true})
-canvas.addEventListener("mouseleave", () => {globals.mouse_over_display = false})
+canvas.addEventListener("mouseenter", () => {globals.mouseOverDisplay = true})
+canvas.addEventListener("mouseleave", () => {globals.mouseOverDisplay = false})
 canvas.addEventListener("mousemove", handleMouseMove)
 
 document.addEventListener("keydown", handleKeyDown)
 document.addEventListener("keyup", handleKeyUp)
 
-globals.error_div = document.getElementById("error-div")
+globals.errorDiv = document.getElementById("error-div")
 
 document.getElementById("error-clear-button").addEventListener("click", (e) => {
 
@@ -123,9 +123,9 @@ document.getElementById("error-clear-button").addEventListener("click", (e) => {
     p.textContent = "No notifications."
     p.classList.add("text-center", "w-full");
 
-    globals.error_count = 0;
+    globals.errorCount = 0;
 
-    globals.error_div.replaceChildren(p);
+    globals.errorDiv.replaceChildren(p);
 
 })
 
