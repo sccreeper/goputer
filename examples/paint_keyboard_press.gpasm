@@ -72,11 +72,13 @@ cndjmp @start_draw
 eq io00 r00
 cndjmp @finish_draw
 
-end
+iret
 
 // Entrypoint
 
 #intsub kd onpress
+
+#label start
 
 lda @line
 mov d0 vc

@@ -11,5 +11,8 @@
   },
   "staticFiles": {
     "staticPath": "static"
+  },
+  "dependencies": {
+    "sharp": "^0.33.5"
   }
 }

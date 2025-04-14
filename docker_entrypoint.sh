@@ -9,4 +9,4 @@ NOW RUNNING MAGE DEV IN CONTAINER
 ----------------------------
 """
 
-docker run -v "$(pwd)/build:/usr/app/build" -v "$(go env GOCACHE):/root/.cache/go-build" build_goputer
+docker run -v "$(pwd)/build:/usr/app/build" -v "$(go env GOCACHE):/root/.cache/go-build" -v "$(pwd)/.parcel-cache:/usr/app/.parcel-cache" build_goputer

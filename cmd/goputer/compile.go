@@ -74,7 +74,7 @@ func _compiler(ctx *cli.Context) error {
 		FilePath:   filepath.Base(filePath),
 		OutputJSON: UseJson,
 		JSONPath:   JsonPath,
-		Verbose:    Verbose,
+		Verbose:    BeVerbose,
 	}
 
 	os.Chdir(filepath.Dir(filePath))

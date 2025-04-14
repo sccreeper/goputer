@@ -30,7 +30,7 @@ var fileMap map[string]string
 
 func Compile() js.Func {
 
-	compile_func := js.FuncOf(func(this js.Value, args []js.Value) any {
+	compileFunc := js.FuncOf(func(this js.Value, args []js.Value) any {
 
 		p := compiler.Parser{
 			CodeString:   args[0].String(),
@@ -41,10 +41,10 @@ func Compile() js.Func {
 			FileReader:   fileReader,
 		}
 
-		program_structure, err := p.Parse()
+		programStructure, err := p.Parse()
 		util.CheckError(err)
 
-		programBytes = compiler.GenerateBytecode(program_structure)
+		programBytes = compiler.GenerateBytecode(programStructure, false)
 
 		fmt.Printf("Compiled program length: %d\n", len(programBytes))
 
@@ -52,7 +52,7 @@ func Compile() js.Func {
 
 	})
 
-	return compile_func
+	return compileFunc
 
 }
 

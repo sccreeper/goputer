@@ -40,8 +40,8 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     go mod download
 
-COPY ./ /usr/app/
-
 RUN cp /root/go/bin/mage ./mage
+
+COPY ./ /usr/app/
 
 CMD [ "./mage", "dev" ]

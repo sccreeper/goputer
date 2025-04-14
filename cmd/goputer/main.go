@@ -62,7 +62,7 @@ func main() {
 						Name:        "verbose",
 						Aliases:     []string{"v"},
 						Usage:       "Verbose log output",
-						Destination: &Verbose,
+						Destination: &BeVerbose,
 					},
 					&cli.BoolFlag{
 						Name:        "standalone",
@@ -85,6 +85,13 @@ func main() {
 				Aliases: []string{"d"},
 				Usage:   "Used to disassemble programs",
 				Action:  _disassemble,
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:        "verbose",
+						Aliases:     []string{"v"},
+						Destination: &BeVerbose,
+					},
+				},
 			},
 			{
 				Name:    "run",

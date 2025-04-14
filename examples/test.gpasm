@@ -1,16 +1,16 @@
 // Test gpasm file
 // Moves a single char to text register before looping
 
-def test_string "Hello world, this is a test of strings."
-def test_char "X"
-def vid_pos1 64
-def vid_pos2 128
+#def test_string "Hello world, this is a test of strings."
+#def test_char "X"
+#def vid_pos1 64
+#def vid_pos2 128
 //Plan9 white
-def vid_colour 0xFFFFFFFF
-def other_colour 0xFF00FFFF
+#def vid_colour 0xFFFFFFFF
+#def other_colour 0xFF00FFFF
 
 // Jump block for testing if interrupts work
-:test
+#label test
 
 lda @test_char
 clr vt
@@ -33,15 +33,14 @@ int vt
 
 iret
 
-end
-
 intsub kd test
 
-:loop
-jmp loop
-end
+#label loop
+jmp @loop
 
 // Main routine 
+
+#label start
 
 lda @vid_colour
 mov d0 vc
@@ -51,4 +50,4 @@ lda @test_string
 mov d0 vt
 int vt
 
-jmp loop
+jmp @loop

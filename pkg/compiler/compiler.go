@@ -21,7 +21,7 @@ type AssembledProgram struct {
 //
 // Mainly used by the command line.
 // Designed to work on desktop systems only.
-func Compile(rootPath string, getFile func(path string) ([]byte, error), config CompilerConfig, error_handler func(errorType ErrorType, errorText string)) (AssembledProgram, error) {
+func Compile(rootPath string, getFile func(path string) ([]byte, error), config CompilerConfig, errorHandler func(errorType ErrorType, errorText string)) (AssembledProgram, error) {
 
 	startTime := time.Now().UnixMicro()
 
@@ -46,9 +46,9 @@ func Compile(rootPath string, getFile func(path string) ([]byte, error), config 
 	p := Parser{
 		CodeString:   string(fileData),
 		FileName:     config.FilePath,
-		Verbose:      false,
+		Verbose:      config.Verbose,
 		Imported:     false,
-		ErrorHandler: error_handler,
+		ErrorHandler: errorHandler,
 		FileReader:   getFile,
 	}
 
@@ -70,7 +70,7 @@ func Compile(rootPath string, getFile func(path string) ([]byte, error), config 
 		log.Println("Bytecode generation...")
 	}
 
-	programBytes := GenerateBytecode(programData)
+	programBytes := GenerateBytecode(programData, config.Verbose)
 
 	//Output start indexes
 

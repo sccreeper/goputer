@@ -13,7 +13,7 @@ var Commit string
 var UseJson bool
 var JsonPath string
 var OutputPath string
-var Verbose bool = false
+var BeVerbose bool = false
 var IsStandalone bool
 var FrontendToUse string
 var GPExec string
@@ -23,6 +23,7 @@ var GPExec string
 var GreenBoldUnderline = color.New([]color.Attribute{color.FgGreen, color.Bold, color.Underline}...)
 var Bold = color.New([]color.Attribute{color.Bold}...)
 var Underline = color.New([]color.Attribute{color.FgWhite, color.Underline}...)
+var Grey = color.New([]color.Attribute{color.FgHiBlack}...)
 
 //Other
 

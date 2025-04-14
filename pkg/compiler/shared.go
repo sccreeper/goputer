@@ -78,7 +78,7 @@ type VFSFile struct {
 
 const (
 	InstructionLength uint32 = 5       //Instruction length in bytes
-	BlockAddrSize     uint32 = 12      // Size of the block address header
+	HeaderSize        uint32 = 16      // Size of the header (without magic string)
 	PadSize           uint32 = 4       //Padding size inbetween blocks
 	PadValue          byte   = 0xFF    //Value to pad blocks with
 	InterruptLength   uint32 = 6       //Length of interrupt in bytes (1 uint16, 1 uint32)

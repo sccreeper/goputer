@@ -2,7 +2,7 @@ package compiler
 
 import (
 	"encoding/binary"
-	"sccreeper/goputer/pkg/constants"
+	"log"
 	c "sccreeper/goputer/pkg/constants"
 )
 
@@ -13,43 +13,45 @@ const (
 // GenerateBytecode
 //
 // Takes in a ProgramStructure and returns the corresponding compiled bytecode.
-func GenerateBytecode(p ProgramStructure) []byte {
+func GenerateBytecode(p ProgramStructure, verbose bool) []byte {
 
-	byteIndex := BlockAddrSize
+	byteIndex := HeaderSize
 	finalBytes := make([]byte, 0)
 
-	byteIndex += uint32(len(constants.SubscribableInterrupts) * 6)
+	byteIndex += uint32(len(c.SubscribableInterrupts) * 6)
 
 	definitionBlockAddresses := make(map[string]uint32)
 
 	//Generate definition bytes first
 
-	definitionBytes := []byte{}
+	definitionBytes := make([]byte, 0)
 	definitionStartIndex := byteIndex
 	definitionAddrIndex := definitionStartIndex
 
+	if verbose {
+		log.Printf("Definition start address is %d", definitionStartIndex)
+	}
+
 	for i, d := range p.Definitions {
 
-		definitionBlockAddresses[d.Name] = definitionAddrIndex + StackSize
+		definitionBlockAddresses[d.Name] = definitionAddrIndex + byteIndex + StackSize
 		p.Definitions[i] = Definition{
 			Name:       p.Definitions[i].Name,
 			StringData: p.Definitions[i].StringData,
 			ByteData:   p.Definitions[i].ByteData,
 			Type:       p.Definitions[i].Type,
 
-			Address: definitionAddrIndex + StackSize,
+			Address: definitionAddrIndex + byteIndex + StackSize,
 		}
 
 		lengthBytes := make([]byte, 4)
 
 		binary.LittleEndian.PutUint32(lengthBytes, uint32(len(d.ByteData)))
 
-		dataBytes := d.ByteData
-
 		definitionBytes = append(definitionBytes, lengthBytes...)
-		definitionBytes = append(definitionBytes, dataBytes...)
+		definitionBytes = append(definitionBytes, d.ByteData...)
 
-		definitionAddrIndex += uint32(len(lengthBytes) + len(dataBytes))
+		definitionAddrIndex += uint32(len(lengthBytes) + len(d.ByteData))
 
 	}
 
@@ -65,18 +67,18 @@ func GenerateBytecode(p ProgramStructure) []byte {
 		labelAddresses[k] = (uint32(v.InstructionOffset) * InstructionLength) + byteIndex + StackSize
 	}
 
-	// Generate interrupt jump table for existing interrupts
+	// Generate interrupt jump table for all interrupts
 
 	interruptBytes := []byte{}
 
-	interruptBlockStartIndex := byteIndex
+	interruptBlockStartIndex := HeaderSize
 
-	for i := c.IntMouseMove; i < c.IntKeyboardDown+1; i++ {
+	for _, v := range c.SubscribableInterrupts {
 
 		var labelAddress uint32
-		var interrupt c.Interrupt = c.Interrupt(i)
+		var interrupt c.Interrupt = v
 
-		if val, exists := p.InterruptSubscriptions[c.InterruptIntsReversed[i]]; exists {
+		if val, exists := p.InterruptSubscriptions[c.InterruptIntsReversed[v]]; exists {
 			labelAddress = labelAddresses[val.LabelName]
 		} else {
 			labelAddress = 0
@@ -90,6 +92,10 @@ func GenerateBytecode(p ProgramStructure) []byte {
 		interruptBytes = append(interruptBytes, interruptTypeBytes...)
 		interruptBytes = append(interruptBytes, labelAdddressBytes...)
 
+	}
+
+	if verbose {
+		log.Printf("Interrupt table is %d bytes long", len(interruptBytes))
 	}
 
 	//Generate instruction bytecode
@@ -110,17 +116,20 @@ func GenerateBytecode(p ProgramStructure) []byte {
 
 	finalBytes = append(finalBytes, []byte(MagicString)...)
 
-	dataBlockStart := make([]byte, 4)
+	definitionBlockStart := make([]byte, 4)
 	interruptBlockStart := make([]byte, 4)
 	instructionBlockStart := make([]byte, 4)
+	instructionEntryPoint := make([]byte, 4)
 
-	binary.LittleEndian.PutUint32(dataBlockStart, definitionStartIndex)
+	binary.LittleEndian.PutUint32(definitionBlockStart, definitionStartIndex)
 	binary.LittleEndian.PutUint32(interruptBlockStart, interruptBlockStartIndex)
-	binary.LittleEndian.PutUint32(instructionBlockStart, labelAddresses["start"])
+	binary.LittleEndian.PutUint32(instructionBlockStart, definitionStartIndex+uint32(len(definitionBytes)))
+	binary.LittleEndian.PutUint32(instructionEntryPoint, labelAddresses["start"]-StackSize)
 
-	finalBytes = append(finalBytes, dataBlockStart...)
 	finalBytes = append(finalBytes, interruptBlockStart...)
+	finalBytes = append(finalBytes, definitionBlockStart...)
 	finalBytes = append(finalBytes, instructionBlockStart...)
+	finalBytes = append(finalBytes, instructionEntryPoint...)
 
 	finalBytes = append(finalBytes, interruptBytes...)
 

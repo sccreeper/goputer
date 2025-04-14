@@ -1,12 +1,12 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"os"
 	"sccreeper/goputer/pkg/compiler"
 	"sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/util"
-	"strings"
 
 	"github.com/fatih/color"
 	"github.com/savioxavier/termlink"
@@ -25,7 +25,7 @@ func _disassemble(ctx *cli.Context) error {
 		os.Exit(1)
 	}
 
-	program, err := compiler.Disassemble(data, false)
+	program, err := compiler.Disassemble(data, BeVerbose)
 
 	//Reverse map
 
@@ -45,24 +45,25 @@ func _disassemble(ctx *cli.Context) error {
 	Underline.Println("Block addresses:")
 	fmt.Println()
 
-	color.White("Data block: %s", Bold.Sprintf(util.ConvertHex(int(program.StartIndexes[0]))))
-	color.White("Jump blocks: %s", Bold.Sprintf(util.ConvertHex(int(program.StartIndexes[1]))))
-	color.White("Interrupt table: %s", Bold.Sprintf(util.ConvertHex(int(program.StartIndexes[2]))))
-	color.White("Instruction block: %s", Bold.Sprintf(util.ConvertHex(int(program.StartIndexes[3]))))
+	color.White("Interrupt table: %s", Bold.Sprintf(util.ConvertHex(int(program.StartIndexes[0]))))
+	color.White("Data block: %s", Bold.Sprintf(util.ConvertHex(int(program.StartIndexes[1]))))
+	color.White("Instructions: %s", Bold.Sprintf(util.ConvertHex(int(program.StartIndexes[2]))))
+	color.White("Instruction entry point: %s", Bold.Sprintf(util.ConvertHex(int(program.StartIndexes[3]))))
 
 	fmt.Println()
 	Underline.Println("Definitions:")
 	fmt.Println()
 
-	definitionByteIndex := compiler.BlockAddrSize + compiler.PadSize
+	definitionByteIndex := compiler.HeaderSize
 
 	for _, v := range program.ProgramDefinitions {
 
 		fmt.Printf(
-			"F: %s M: %s = %s\n",
+			"File address: %s Memory address: %s Length: %s = %s\n",
 			Bold.Sprintf(util.ConvertHex(int(definitionByteIndex))),
 			Bold.Sprintf(util.ConvertHex(int(definitionByteIndex+compiler.StackSize))),
-			strings.ReplaceAll(string(v), "\n", ""),
+			Bold.Sprintf("%d", len(v)),
+			hex.EncodeToString(v),
 		)
 
 		//Calculate memory address and index in file
@@ -84,35 +85,14 @@ func _disassemble(ctx *cli.Context) error {
 	}
 
 	fmt.Println()
-	Underline.Println("Jump blocks")
-	fmt.Println()
-
-	for k, v := range program.JumpBlocks {
-
-		fmt.Println()
-		Bold.Printf("Jump %s (File: %s):\n", util.ConvertHex(int(k+compiler.StackSize)), util.ConvertHex(int(k)))
-		fmt.Println()
-
-		for _, v1 := range v {
-
-			fmt.Println(
-				formatInstruction(
-					itnMap[constants.Instruction(v1.Instruction)],
-					v1.StringData,
-				),
-			)
-
-		}
-
-	}
-
-	fmt.Println()
 	Underline.Println("Instructions:")
 	fmt.Println()
 
-	for _, v := range program.Instructions {
+	for i, v := range program.Instructions {
 
-		fmt.Println(
+		fmt.Printf(
+			"%s: %s\n",
+			Grey.Sprintf(util.ConvertHex((i*int(compiler.InstructionLength))+int(program.StartIndexes[2])+int(compiler.StackSize))),
 			formatInstruction(
 				itnMap[constants.Instruction(v.Instruction)],
 				v.StringData,
