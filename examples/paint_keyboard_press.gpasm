@@ -3,10 +3,6 @@
 #def bg 0xffffffff
 #def line 0x000000ff
 
-lda @bg
-mov d0 vc
-int vc
-
 // Main hang loop
 
 #label loop
@@ -79,6 +75,10 @@ iret
 #intsub kd onpress
 
 #label start
+
+lda @bg
+mov d0 vc
+int vc
 
 lda @line
 mov d0 vc

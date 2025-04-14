@@ -62,12 +62,14 @@ func InitVM(machine *VM, vmProgram []byte, expansionsSupported bool) error {
 
 	vmProgram = vmProgram[4:]
 
-	program_start_index := binary.LittleEndian.Uint32(vmProgram[12:])
-	interrupt_start_index := binary.LittleEndian.Uint32(vmProgram[8:12])
+	var interruptStartIndex uint32 = binary.LittleEndian.Uint32(vmProgram[:4])
+	var definitionStartIndex uint32 = binary.LittleEndian.Uint32(vmProgram[4:8])
+	// instructionStart = 8:12
+	var instructionEntryPoint uint32 = binary.LittleEndian.Uint32(vmProgram[12:16])
 
 	//Init vars + registers
-	machine.Registers[c.RProgramCounter] = program_start_index + comp.StackSize
-	machine.CurrentInstruction = vmProgram[program_start_index : program_start_index+comp.InstructionLength]
+	machine.Registers[c.RProgramCounter] = instructionEntryPoint + comp.StackSize
+	machine.CurrentInstruction = vmProgram[instructionEntryPoint : instructionEntryPoint+comp.InstructionLength]
 	machine.Finished = false
 	machine.ProgramBounds = comp.StackSize + uint32(len(vmProgram[:len(vmProgram)-int(comp.PadSize)]))
 	machine.Registers[c.RVideoBrightness] = 255
@@ -85,14 +87,14 @@ func InitVM(machine *VM, vmProgram []byte, expansionsSupported bool) error {
 
 	//Interrupt table
 
-	for _, v := range util.SliceChunks(vmProgram[interrupt_start_index:program_start_index-comp.PadSize], 6) {
+	for _, v := range util.SliceChunks(vmProgram[interruptStartIndex:definitionStartIndex], 6) {
 
 		//log.Println(current_bytes)
 
 		interrupt := c.Interrupt(binary.LittleEndian.Uint16(v[:2]))
-		jump_block_addr := binary.LittleEndian.Uint32(v[2:])
+		jumpBlockAddr := binary.LittleEndian.Uint32(v[2:])
 
-		machine.InterruptTable[interrupt] = jump_block_addr
+		machine.InterruptTable[interrupt] = jumpBlockAddr
 
 	}
 

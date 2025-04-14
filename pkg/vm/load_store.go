@@ -20,7 +20,10 @@ func (m *VM) load() {
 
 		m.Registers[c.RDataPointer] = m.ArgLarge
 	} else {
-		copy(m.DataBuffer[:m.Registers[m.ArgLarge]], m.MemArray[m.Registers[c.RDataPointer]:m.Registers[c.RDataPointer]+m.Registers[m.ArgLarge]])
+		copy(m.DataBuffer[:m.Registers[m.ArgSmall1]], m.MemArray[m.Registers[m.ArgSmall0]:m.Registers[m.ArgSmall0]+m.Registers[m.ArgSmall1]])
+
+		m.Registers[c.RDataPointer] = m.Registers[m.ArgSmall0]
+		m.Registers[c.RDataLength] = m.Registers[m.ArgSmall1]
 	}
 
 }
@@ -39,7 +42,10 @@ func (m *VM) store() {
 
 		m.Registers[c.RDataPointer] = m.ArgLarge
 	} else {
-		copy(m.MemArray[m.Registers[c.RDataPointer]:m.Registers[c.RDataPointer]+m.Registers[m.ArgLarge]], m.DataBuffer[:m.Registers[m.ArgLarge]])
+		copy(m.MemArray[m.Registers[m.ArgSmall0]:m.Registers[m.ArgSmall0]+m.Registers[m.ArgSmall1]], m.DataBuffer[:m.Registers[m.ArgSmall1]])
+
+		m.Registers[c.RDataPointer] = m.Registers[m.ArgSmall0]
+		m.Registers[c.RDataLength] = m.Registers[m.ArgSmall1]
 	}
 
 }
