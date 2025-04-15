@@ -1,6 +1,29 @@
 //Simple program to test the import of other symbols
 
+#label loop
+jmp @loop
+
 #import "colours.gpasm"
+
+#def square_size 100
+
+#label draw_square
+lda @black
+mov d0 vc
+
+add r00 vx1
+mov a0 vx1
+mov a0 vy1
+
+int va
+
+add r00 vx0
+mov a0 vx0
+mov a0 vy0
+
+iret
+
+#intsub kd draw_square
 
 #label start
 
@@ -8,3 +31,8 @@ lda @red
 mov d0 vc
 
 call @clear_screen
+
+lda @square_size
+mov d0 r00
+
+jmp @loop

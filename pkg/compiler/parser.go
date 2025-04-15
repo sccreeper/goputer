@@ -29,6 +29,8 @@ var nameValueRegex *regexp.Regexp
 
 func init() {
 
+	// Regex used for validating expressions
+
 	// Match statements that follow the form "#label value"
 	compTimeStatementRegex = regexp.MustCompile(`^#([a-zA-Z]+) +(.+)$`)
 
@@ -139,8 +141,8 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 			switch statementType {
 			case "label":
 
-				if slices.Contains(p.AllNames, statementValue) {
-					p.parsingError(ErrSymbol, NameConflict)
+				if errMessage, collision := p.nameCollision(statementValue); collision {
+					p.parsingError(ErrSymbol, ErrorType(errMessage))
 				} else {
 					p.AllNames = append(p.AllNames, statementValue)
 
@@ -155,8 +157,8 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 				defName := nameValueRegex.FindStringSubmatch(statementValue)[1]
 				defStringValue := nameValueRegex.FindStringSubmatch(statementValue)[2]
 
-				if slices.Contains(p.AllNames, defName) {
-					p.parsingError(ErrSymbol, NameConflict)
+				if errMessage, collison := p.nameCollision(defName); collison {
+					p.parsingError(ErrSymbol, ErrorType(errMessage))
 				} else {
 					p.AllNames = append(p.AllNames, defName)
 
@@ -432,7 +434,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 // Method for combining the parsers program structure with another program structure.
 //
 // Used for imports.
-func (p *Parser) combine(s1 ProgramStructure) (ProgramStructure, error) {
+func (p *Parser) combine(p1 ProgramStructure) (ProgramStructure, error) {
 
 	var combined ProgramStructure
 
@@ -440,45 +442,58 @@ func (p *Parser) combine(s1 ProgramStructure) (ProgramStructure, error) {
 
 	//Combine imports
 
-	combined.ImportedFiles = append(p.ProgramStructure.ImportedFiles[:], s1.ImportedFiles...)
+	combined.ImportedFiles = append(p.ProgramStructure.ImportedFiles[:], p1.ImportedFiles...)
 
-	if slices.Contains(s1.ImportedFiles, p.FileName) {
+	if slices.Contains(p1.ImportedFiles, p.FileName) {
 
 		p.parsingError(ErrImport, CircularImport)
 
 	}
 
+	// Combine interrupt subscriptions
+
+	combined.InterruptSubscriptions = util.CombineMap[map[string]InterruptSubscription](p.ProgramStructure.InterruptSubscriptions, p1.InterruptSubscriptions)
+
 	//Merge splices & check for name conflicts
 
 	for _, v := range p.ProgramStructure.AllNames {
 
-		if slices.Contains(s1.AllNames, v) {
+		if slices.Contains(p1.AllNames, v) {
 			return ProgramStructure{}, ErrSymbol
 		}
 
 	}
 
-	if len(s1.AllNames) > 0 {
-		combined.AllNames = append(p.ProgramStructure.AllNames, s1.AllNames...)
+	if len(p1.AllNames) > 0 {
+		combined.AllNames = append(p.ProgramStructure.AllNames, p1.AllNames...)
 	} else {
 		combined.AllNames = p.ProgramStructure.AllNames
 	}
 
-	if len(s1.ProgramLabels) > 0 {
-		combined.ProgramLabels = util.CombineMap[map[string]ProgramLabel](p.ProgramStructure.ProgramLabels, s1.ProgramLabels)
+	// Update label offsets
+
+	for k, v := range p1.ProgramLabels {
+		p1.ProgramLabels[k] = ProgramLabel{
+			Name:              v.Name,
+			InstructionOffset: v.InstructionOffset + len(p.ProgramStructure.ProgramInstructions),
+		}
+	}
+
+	if len(p1.ProgramLabels) > 0 {
+		combined.ProgramLabels = util.CombineMap[map[string]ProgramLabel](p.ProgramStructure.ProgramLabels, p1.ProgramLabels)
 	} else {
 		combined.ProgramLabels = p.ProgramStructure.ProgramLabels
 	}
 
-	if len(s1.Definitions) > 0 {
-		combined.Definitions = util.CombineMap[map[string]Definition](p.ProgramStructure.Definitions, s1.Definitions)
+	if len(p1.Definitions) > 0 {
+		combined.Definitions = util.CombineMap[map[string]Definition](p.ProgramStructure.Definitions, p1.Definitions)
 	} else {
 		combined.Definitions = p.ProgramStructure.Definitions
 	}
 
 	// Combine instructions
 
-	combined.ProgramInstructions = append(s1.ProgramInstructions, p.ProgramStructure.ProgramInstructions...)
+	combined.ProgramInstructions = append(p.ProgramStructure.ProgramInstructions, p1.ProgramInstructions...)
 
 	return combined, nil
 
@@ -487,28 +502,23 @@ func (p *Parser) combine(s1 ProgramStructure) (ProgramStructure, error) {
 // Name collision function
 //
 // Checks for any name collisions in the parser, and returns error string.
-func (p *Parser) nameCollision(s string) string {
+func (p *Parser) nameCollision(s string) (errMessage string, isCollision bool) {
 
-	var err string = ""
+	isCollision = false
 
 	if _, exists := constants.InstructionInts[s]; exists {
-		err = fmt.Sprintf("name %s shares name with instruction", s)
-	}
-	if _, exists := constants.RegisterInts[s]; exists {
-		err = fmt.Sprintf("name %s shares name with register", s)
-	}
-	if _, exists := constants.InterruptInts[s]; exists {
-		err = fmt.Sprintf("name %s shares name with interrupt", s)
+		errMessage = fmt.Sprintf("name %s shares name with instruction", s)
+		isCollision = true
+	} else if _, exists := constants.RegisterInts[s]; exists {
+		errMessage = fmt.Sprintf("name %s shares name with register", s)
+		isCollision = true
+	} else if _, exists := constants.InterruptInts[s]; exists {
+		errMessage = fmt.Sprintf("name %s shares name with interrupt", s)
+		isCollision = true
+	} else if slices.Contains(p.ProgramStructure.AllNames, s) {
+		errMessage = fmt.Sprintf("%s collides with %s", s, s)
+		isCollision = true
 	}
 
-	if slices.Contains(p.ProgramStructure.AllNames, s) {
-		err = fmt.Sprintf("%s collides with %s", s, s)
-	}
-
-	if err != "" {
-		p.parsingError(ErrSymbol, ErrorType(err))
-		return ""
-	} else {
-		return err
-	}
+	return errMessage, isCollision
 }
