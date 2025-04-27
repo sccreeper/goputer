@@ -18,6 +18,7 @@ A computer emulator/virtual machine that intends to demonstrate how basic comput
 - [Build instructions](#build-instructions)
   - [Docker](#docker)
   - [Linux](#linux)
+      - [Other](#other)
 - [Testing](#testing)
 - [Credits](#credits)
   - [GP32 Frontend](#gp32-frontend)
@@ -25,7 +26,7 @@ A computer emulator/virtual machine that intends to demonstrate how basic comput
   - [Web playground/frontend.](#web-playgroundfrontend)
   - [CLI tool](#cli-tool)
   - [GUI launcher](#gui-launcher)
-  - [Other](#other)
+  - [Other](#other-1)
 - [License](#license)
 
 ---
@@ -137,6 +138,12 @@ This will build the container and then run `mage dev` inside the container, outp
 
   ```
   mesa-libGL-devel wayland-devel libxkbcommon-devel
+  ```
+
+  ###### Other
+
+  ```
+  gtk3-devel
   ```
 
   ###### Audio <!-- omit in toc -->
