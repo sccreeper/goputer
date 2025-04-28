@@ -16,20 +16,20 @@ import (
 // General purpose VM backend
 
 const (
-	_MemSize                uint32 = 65536 // 2 ^ 16
-	_SubscribableInterrupts uint16 = 22
-	RegisterCount           uint16 = 57
-	InstructionCount        uint16 = 34
-	InterruptCount          uint16 = 22
+	MemSize                uint32 = VideoBufferSize + 65536 // 2 ^ 16
+	SubscribableInterrupts uint16 = 22
+	RegisterCount          uint16 = 57
+	InstructionCount       uint16 = 34
+	InterruptCount         uint16 = 22
 )
 
 type VM struct {
-	MemArray   [_MemSize]byte
+	MemArray   [MemSize]byte
 	Registers  [RegisterCount + 1]uint32 //float32 or uint32
 	DataBuffer [128]byte
 	TextBuffer [128]byte
 
-	InterruptTable [_SubscribableInterrupts]uint32
+	InterruptTable [SubscribableInterrupts]uint32
 
 	CurrentInstruction []byte
 	Opcode             c.Instruction
@@ -54,9 +54,12 @@ type VM struct {
 // Initialize VM and registers, load code into "memory" etc.
 func InitVM(machine *VM, vmProgram []byte, expansionsSupported bool) error {
 
-	if len(vmProgram)-4 > int(_MemSize) {
+	if len(vmProgram)-4 > int(MemSize) {
 		return errors.New("program too large")
 	}
+
+	PrintChar(0)
+	PrintChar('#')
 
 	//Extract program start index
 

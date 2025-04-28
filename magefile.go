@@ -136,13 +136,13 @@ func All() {
 
 	fmt.Println("Copying examples...")
 
-	os.Mkdir("./build/examples", os.ModeDir)
+	os.Mkdir("./build/examples", os.ModePerm)
 	os.CopyFS("./build/examples", os.DirFS("./examples/."))
 
 	//Build the frontends
 	fmt.Println("Building frontends...")
 
-	os.Mkdir("./build/frontends", os.ModeDir)
+	os.Mkdir("./build/frontends", os.ModePerm)
 
 	directories, err := ioutil.ReadDir(frontendDir)
 
