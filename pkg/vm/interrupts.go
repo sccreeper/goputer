@@ -22,16 +22,21 @@ func (m *VM) Subscribed(i c.Interrupt) bool {
 
 func (m *VM) calledInterrupt() {
 
-	if c.Interrupt(m.ArgSmall0) == c.IntIOClear {
+	switch c.Interrupt(m.ArgSmall0) {
+	case c.IntVideoArea:
+		m.drawSquare()
+	default:
+		if c.Interrupt(m.ArgSmall0) == c.IntIOClear {
 
-		//Set all IO registers to zero
+			//Set all IO registers to zero
 
-		for i := c.RIO08; i == c.RIO15; i++ {
-			m.Registers[i] = 0
+			for i := c.RIO08; i == c.RIO15; i++ {
+				m.Registers[i] = 0
+			}
+
 		}
 
+		m.InterruptQueue = append(m.InterruptQueue, c.Interrupt(m.ArgSmall0))
 	}
-
-	m.InterruptQueue = append(m.InterruptQueue, c.Interrupt(m.ArgSmall0))
 
 }

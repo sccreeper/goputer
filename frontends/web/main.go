@@ -233,7 +233,7 @@ func ParserItnStr(this js.Value, args []js.Value) any {
 	case constants.IJump, constants.ICall, constants.IConditionalJump, constants.IConditionalCall:
 		arg_text = util.ConvertHex(js32.ArgLarge)
 	default:
-		if constants.InstructionArgumentCounts[js32.Opcode] == 1 && js32.Opcode != constants.ICallInterrupt {
+		if constants.InstructionArgumentCounts[js32.Opcode][0] == 1 && js32.Opcode != constants.ICallInterrupt {
 			arg_text = registerMap[js32.ArgLarge]
 		} else if js32.Opcode == constants.ICallInterrupt {
 			arg_text = interruptMap[constants.Interrupt(js32.ArgLarge)]

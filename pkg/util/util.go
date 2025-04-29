@@ -3,6 +3,8 @@ package util
 import (
 	"fmt"
 	"math/rand"
+
+	"golang.org/x/exp/constraints"
 )
 
 func CheckError(err error) {
@@ -76,4 +78,18 @@ func CombineMap[Map ~map[K]V, K comparable, V any](a map[K]V, b map[K]V) (result
 	}
 
 	return
+}
+
+type Number interface {
+	constraints.Integer | constraints.Float
+}
+
+func Clamp[T Number](number T, min T, max T) T {
+	if number < min {
+		return min
+	} else if number > max {
+		return max
+	} else {
+		return number
+	}
 }

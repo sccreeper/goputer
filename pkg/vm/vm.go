@@ -71,18 +71,18 @@ func InitVM(machine *VM, vmProgram []byte, expansionsSupported bool) error {
 	var instructionEntryPoint uint32 = binary.LittleEndian.Uint32(vmProgram[12:16])
 
 	//Init vars + registers
-	machine.Registers[c.RProgramCounter] = instructionEntryPoint + comp.StackSize
+	machine.Registers[c.RProgramCounter] = instructionEntryPoint + comp.MemOffset
 	machine.CurrentInstruction = vmProgram[instructionEntryPoint : instructionEntryPoint+comp.InstructionLength]
 	machine.Finished = false
-	machine.ProgramBounds = comp.StackSize + uint32(len(vmProgram[:len(vmProgram)-int(comp.PadSize)]))
+	machine.ProgramBounds = comp.MemOffset + uint32(len(vmProgram[:len(vmProgram)-int(comp.PadSize)]))
 	machine.Registers[c.RVideoBrightness] = 255
 	machine.ExpansionsSupported = expansionsSupported
 
-	machine.Registers[c.RCallStackZeroPointer] = comp.StackSize - comp.CallStackSize
+	machine.Registers[c.RCallStackZeroPointer] = comp.MemOffset - comp.CallStackSize
 	machine.Registers[c.RCallStackPointer] = machine.Registers[c.RCallStackZeroPointer]
 
-	machine.Registers[c.RStackZeroPointer] = 0
-	machine.Registers[c.RStackPointer] = 0
+	machine.Registers[c.RStackZeroPointer] = comp.MemOffset
+	machine.Registers[c.RStackPointer] = comp.MemOffset
 
 	machine.InterruptQueue = []c.Interrupt{}
 	machine.SubbedInterruptQueue = []c.Interrupt{}
@@ -102,7 +102,7 @@ func InitVM(machine *VM, vmProgram []byte, expansionsSupported bool) error {
 	}
 
 	//Copy program into memory
-	copy(machine.MemArray[comp.StackSize:], vmProgram[:len(vmProgram)-int(comp.PadSize)])
+	copy(machine.MemArray[comp.MemOffset:], vmProgram[:len(vmProgram)-int(comp.PadSize)])
 
 	// Load expansions
 

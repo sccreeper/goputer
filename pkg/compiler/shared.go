@@ -1,6 +1,8 @@
 package compiler
 
-import "sccreeper/goputer/pkg/constants"
+import (
+	"sccreeper/goputer/pkg/constants"
+)
 
 //File for code shared in the compiler
 
@@ -85,4 +87,5 @@ const (
 	DataStackSize     uint32 = 4 * 256 //Default stack size, 1024 bytes(256 uint32)
 	CallStackSize     uint32 = 4 * 128 //Default call stack size, 256 bytes, 64 uint32
 	StackSize         uint32 = DataStackSize + CallStackSize
+	MemOffset         uint32 = StackSize + 230400 // Hardcoded to prevent circular import
 )

@@ -7,7 +7,9 @@ import (
 
 func (m *VM) load() {
 
-	if m.ArgLarge > uint32(RegisterCount) {
+	// This means we are unable to "directly address" the first 57 bytes of memory (register address space).
+
+	if m.ArgSmall0 > RegisterCount {
 		dataLength := binary.LittleEndian.Uint32(m.MemArray[m.ArgLarge : m.ArgLarge+4])
 		m.Registers[c.RDataLength] = dataLength
 
@@ -30,7 +32,7 @@ func (m *VM) load() {
 
 func (m *VM) store() {
 
-	if m.ArgLarge > uint32(RegisterCount) {
+	if m.ArgSmall0 > RegisterCount {
 		dataLength := binary.LittleEndian.Uint32(m.MemArray[m.ArgLarge : m.ArgLarge+4])
 		m.Registers[c.RDataLength] = dataLength
 

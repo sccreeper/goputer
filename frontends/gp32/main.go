@@ -3,16 +3,14 @@ package main
 
 import (
 	"fmt"
+	"image/color"
 	"log"
-	"math"
 	"math/rand"
-	"sccreeper/goputer/frontends/gp32/colour"
 	"sccreeper/goputer/frontends/gp32/rendering"
 	"sccreeper/goputer/frontends/gp32/sound"
 	c "sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/expansions"
 	"sccreeper/goputer/pkg/vm"
-	"strings"
 	"time"
 
 	"github.com/faiface/beep/speaker"
@@ -45,7 +43,6 @@ func Run(program []byte, args []string) {
 	rl.SetTargetFPS(128)
 
 	var gp32 vm.VM
-	var textString string = ""
 
 	var ioStatus [16]bool = [16]bool{}
 	var ioToggleSwitches [8]rendering.IOSwitch = [8]rendering.IOSwitch{}
@@ -61,7 +58,8 @@ func Run(program []byte, args []string) {
 
 	}
 
-	var VideoRenderTexture rl.RenderTexture2D = rl.LoadRenderTexture(640, 480)
+	var VideoRenderTexture rl.RenderTexture2D = rl.LoadRenderTexture(320, 240)
+	var VideoIntermediate [vm.VideoBufferWidth * vm.VideoBufferHeight]color.RGBA = [vm.VideoBufferWidth * vm.VideoBufferHeight]color.RGBA{}
 	var IOStatusRenderTexture rl.RenderTexture2D = rl.LoadRenderTexture(640, int32(rendering.IOUISize))
 	var VMStatusRenderTexture rl.RenderTexture2D = rl.LoadRenderTexture(640, int32(rendering.DebugUISize))
 
@@ -117,49 +115,12 @@ func Run(program []byte, args []string) {
 
 		//Handle interrupts
 
-		rl.BeginTextureMode(VideoRenderTexture)
-
 		for len(gp32.InterruptQueue) > 0 {
 
 			var x c.Interrupt
 			x, gp32.InterruptQueue = gp32.InterruptQueue[0], gp32.InterruptQueue[1:]
 
 			switch x {
-			//Video interrupts
-
-			case c.IntVideoText:
-				if gp32.TextBuffer[0] == 0 {
-					textString = ""
-				} else {
-					strTemp := string(gp32.TextBuffer[:])
-					strTemp = strings.ReplaceAll(strTemp, "\x00", "")
-					textString += strings.ReplaceAll(strTemp, `\n`, "\n")
-					rl.DrawText(textString, int32(gp32.Registers[c.RVideoX0]), int32(gp32.Registers[c.RVideoY0]), 16, colour.ConvertColour(gp32.Registers[c.RVideoColour]))
-				}
-
-			case c.IntVideoClear:
-				rl.ClearBackground(colour.ConvertColour(gp32.Registers[c.RVideoColour]))
-			case c.IntVideoPixel:
-				rl.DrawPixel(
-					int32(gp32.Registers[c.RVideoX0]),
-					int32(gp32.Registers[c.RVideoY0]),
-					colour.ConvertColour(gp32.Registers[c.RVideoColour]))
-			case c.IntVideoLine:
-				rl.DrawLine(
-					int32(gp32.Registers[c.RVideoX0]),
-					int32(gp32.Registers[c.RVideoY0]),
-					int32(gp32.Registers[c.RVideoX1]),
-					int32(gp32.Registers[c.RVideoY1]),
-					colour.ConvertColour(gp32.Registers[c.RVideoColour]),
-				)
-			case c.IntVideoArea:
-				rl.DrawRectangle(
-					int32(gp32.Registers[c.RVideoX0]),
-					int32(gp32.Registers[c.RVideoY0]),
-					int32(gp32.Registers[c.RVideoX1]-gp32.Registers[c.RVideoX0]),
-					int32(gp32.Registers[c.RVideoY1]-gp32.Registers[c.RVideoY0]),
-					colour.ConvertColour(gp32.Registers[c.RVideoColour]),
-				)
 			// Sound interrupts
 			case c.IntSoundFlush:
 				sound.PlaySound(gp32.Registers[c.RSoundWave], gp32.Registers[c.RSoundTone], gp32.Registers[c.RSoundVolume])
@@ -182,28 +143,44 @@ func Run(program []byte, args []string) {
 
 		// Draw video brightness
 
-		var b float64
+		// var b float64
 
-		if gp32.Registers[c.RVideoBrightness] == 0 {
-			b = 0xFF
-		} else {
-			b = (1 - math.Pow(math.Pow(float64(gp32.Registers[c.RVideoBrightness]), -1)*255.0, -1)) * 255
+		// if gp32.Registers[c.RVideoBrightness] == 0 {
+		// 	b = 0xFF
+		// } else {
+		// 	b = (1 - math.Pow(math.Pow(float64(gp32.Registers[c.RVideoBrightness]), -1)*255.0, -1)) * 255
+		// }
+
+		// rl.DrawRectangle(
+		// 	0,
+		// 	0,
+		// 	640,
+		// 	480,
+		// 	rl.Color{
+		// 		R: 0,
+		// 		G: 0,
+		// 		B: 0,
+		// 		A: uint8(b),
+		// 	},
+		// )
+
+		// Update video texture
+
+		for i := 0; i < int(vm.VideoBufferSize); i += 3 {
+
+			VideoIntermediate[i/3] = color.RGBA{
+				gp32.MemArray[i],
+				gp32.MemArray[i+1],
+				gp32.MemArray[i+2],
+				255,
+			}
+
 		}
 
-		rl.DrawRectangle(
-			0,
-			0,
-			640,
-			480,
-			rl.Color{
-				R: 0,
-				G: 0,
-				B: 0,
-				A: uint8(b),
-			},
+		rl.UpdateTexture(
+			VideoRenderTexture.Texture,
+			VideoIntermediate[:],
 		)
-
-		rl.EndTextureMode()
 
 		//Draw render textures to screen
 
@@ -238,13 +215,22 @@ func Run(program []byte, args []string) {
 
 		rl.DrawLine(0, int32(rendering.IOUISize+rendering.DebugUISize+3), 640, int32(rendering.IOUISize+rendering.DebugUISize+3), rl.LightGray)
 
-		rl.DrawTextureRec(VideoRenderTexture.Texture, rl.Rectangle{
-			X:      0,
-			Y:      0,
-			Width:  640,
-			Height: -480,
-		},
-			rl.Vector2{X: 0, Y: float32(rendering.TotalYOffset)},
+		rl.DrawTexturePro(
+			VideoRenderTexture.Texture,
+			rl.Rectangle{
+				X:      0,
+				Y:      0,
+				Width:  float32(VideoRenderTexture.Texture.Width),
+				Height: float32(VideoRenderTexture.Texture.Height),
+			},
+			rl.Rectangle{
+				X:      0,
+				Y:      float32(rendering.TotalYOffset),
+				Width:  640,
+				Height: -480,
+			},
+			rl.Vector2{X: 0, Y: 0},
+			0,
 			rl.White,
 		)
 

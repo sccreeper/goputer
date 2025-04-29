@@ -351,18 +351,34 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 				p.parsingError(ErrDoesNotExist, InstructionDoesNotExist)
 			}
 
-			// Check if we have the correct number of arguments
+			var argCount []int = constants.InstructionArgumentCounts[constants.Instruction(constants.InstructionInts[lineSplit[0]])]
 
-			var correctNumArgs int = constants.InstructionArgumentCounts[constants.Instruction(constants.InstructionInts[lineSplit[0]])]
+			if !slices.Contains(argCount, len(lineSplit)-1) {
 
-			if len(lineSplit)-1 != correctNumArgs {
+				if len(argCount) > 1 {
 
-				p.parsingError(
-					ErrWrongNumArgs,
-					ErrorType(
-						fmt.Sprintf("too many arguements in call of '%s' - was expecting %d got %d", lineSplit[0], correctNumArgs, len(lineSplit)-1),
-					),
-				)
+					var argList string
+
+					for _, v := range argCount {
+						argList += strconv.Itoa(v)
+						argList += " "
+					}
+
+					p.parsingError(
+						ErrWrongNumArgs,
+						ErrorType(
+							fmt.Sprintf("instruction '%s' expects %s arguments got %d", lineSplit[0], argList, len(lineSplit)-1),
+						),
+					)
+
+				} else {
+					p.parsingError(
+						ErrWrongNumArgs,
+						ErrorType(
+							fmt.Sprintf("too many arguments in call to '%s' - was expecting %d got %d", lineSplit[0], argCount[0], len(lineSplit)-1),
+						),
+					)
+				}
 
 			}
 
