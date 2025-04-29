@@ -50,8 +50,10 @@ type CodeBlock struct {
 
 // Struct for holding program data after first stage of parsing
 type ProgramStructure struct {
-	AllNames      []string `json:"all_names"`
-	ImportedFiles []string `json:"imported_files"`
+	AllNames        []string `json:"all_names"`
+	LabelNames      []string `json:"label_names"`
+	DefinitionNames []string `json:"definition_names"`
+	ImportedFiles   []string `json:"imported_files"`
 
 	// where string = interrupt type/name
 	InterruptSubscriptions map[string]InterruptSubscription `json:"interrupt_subscriptions"`

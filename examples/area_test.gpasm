@@ -47,9 +47,7 @@ int va
 
 // Try setting an individual pixel
 
-// Address = ((320 * 3) * 2) - 1 = 2079
-
-#def pixel_start 2079
+#def pixel_start 4500
 
 lda @pixel_start
 mov d0 r00
@@ -62,3 +60,34 @@ mov a0 r01
 // <address> <length>
 
 sta r00 r01
+
+#def some_string "Hello World!"
+
+lda @full_red
+mov d0 vc
+
+clr vx0
+clr vy0
+
+lda @some_string
+mov d0 vt
+
+int vt
+
+lda @pos
+mov d0 r00
+
+#label loop_top
+
+incr vx0
+incr vy0
+
+int vt
+
+neq r00 vx0
+cndjmp @loop_top
+
+jmp @future_label
+
+#label future_label
+

@@ -105,6 +105,62 @@ func (m *VM) drawLine() {
 
 func (m *VM) drawText() {
 
+	if m.TextBuffer[0] == 0 {
+		return
+	}
+
+	var textOffsetX = m.Registers[c.RVideoX0]
+	var textOffsetY = m.Registers[c.RVideoY0]
+
+	var drawOffset = (textOffsetX * VideoBytesPerPixel) + (textOffsetY * VideoBufferWidth * VideoBytesPerPixel)
+
+	var colour [4]byte = m.getVideoColour()
+
+	for _, char := range m.TextBuffer {
+		drawOffset = (textOffsetX * VideoBytesPerPixel) + (textOffsetY * VideoBufferWidth * VideoBytesPerPixel)
+
+		if char == 0 {
+			break
+		} else if char == '\n' {
+			textOffsetX = m.Registers[c.RVideoX0]
+			textOffsetY += FontCharHeight + 1
+			continue
+		} else if char < ' ' || char > '~' { // Printable ASCII range
+			char = 127
+		}
+
+		char -= 32
+
+		for y := 0; y < int(FontCharHeight); y++ {
+			for x := 0; x < int(FontCharWidth); x++ {
+
+				if fontData[char][(y*int(FontCharWidth))+x] == 255 {
+					var pixelAddr int = int(drawOffset) + (x * int(VideoBytesPerPixel)) + (y * int(VideoBufferWidth) * int(VideoBytesPerPixel))
+
+					if colour[3] == 255 {
+
+						m.MemArray[pixelAddr] = colour[0]
+						m.MemArray[pixelAddr+1] = colour[1]
+						m.MemArray[pixelAddr+2] = colour[2]
+
+					} else {
+
+						var blendedColour [3]byte = blendPixel(colour, [3]byte(m.MemArray[pixelAddr:pixelAddr+3]))
+						m.MemArray[pixelAddr] = blendedColour[0]
+						m.MemArray[pixelAddr+1] = blendedColour[1]
+						m.MemArray[pixelAddr+2] = blendedColour[2]
+
+					}
+
+				}
+
+			}
+		}
+
+		textOffsetX += FontCharWidth + 1
+
+	}
+
 }
 
 func (m *VM) drawPolygon() {
@@ -142,7 +198,8 @@ func blendPixel(src [4]byte, dest [3]byte) [3]byte {
 }
 
 func PrintChar(char int) {
-	if char >= int(FontNumCharacters) || char < 32 {
+	// Printable ASCII range
+	if char < ' ' || char > '~' {
 		char = 127
 	}
 

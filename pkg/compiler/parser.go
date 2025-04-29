@@ -107,9 +107,29 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 		ImportedFiles:          make([]string, 0),
 		InterruptSubscriptions: make(map[string]InterruptSubscription),
 		AllNames:               make([]string, 0),
+		LabelNames:             make([]string, 0),
+		DefinitionNames:        make([]string, 0),
 		ProgramLabels:          make(map[string]ProgramLabel),
 		ProgramInstructions:    make([]Instruction, 0),
 		Definitions:            make(map[string]Definition),
+	}
+
+	// Pre-fill definitions and label names
+
+	for _, line := range p.CodeLines {
+		if compTimeStatementRegex.MatchString(line) {
+			statementType := compTimeStatementRegex.FindStringSubmatch(line)[1]
+			statementValue := compTimeStatementRegex.FindStringSubmatch(line)[2]
+
+			if statementType == "label" {
+				p.ProgramStructure.LabelNames = append(p.ProgramStructure.LabelNames, statementValue)
+			} else if statementType == "def" {
+				p.ProgramStructure.DefinitionNames = append(
+					p.ProgramStructure.DefinitionNames,
+					nameValueRegex.FindStringSubmatch(statementValue)[1],
+				)
+			}
+		}
 	}
 
 	// Begin data construction
@@ -329,7 +349,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 					p.parsingError(ErrSymbol, ErrorType(fmt.Sprintf("unknown interrupt '%s'", interruptType)))
 				}
 
-				if _, exists := p.ProgramStructure.ProgramLabels[interruptLabel]; !exists {
+				if !slices.Contains(p.ProgramStructure.LabelNames, interruptLabel) {
 					p.parsingError(ErrSymbol, ErrorType(fmt.Sprintf("unrecognized label '%s'", interruptLabel)))
 				}
 
@@ -395,7 +415,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 					// Checks definitions for valid argument.
 
-					if _, exists := p.ProgramStructure.Definitions[arg[1:]]; !exists {
+					if !slices.Contains(p.ProgramStructure.DefinitionNames, arg[1:]) {
 						p.parsingError(
 							ErrDoesNotExist,
 							ErrorType(fmt.Sprintf("definition '%s' does not exist", lineSplit[1][1:])),
@@ -404,9 +424,9 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 				} else if lineSplit[0] == "jmp" || lineSplit[0] == "cndjmp" || lineSplit[0] == "call" || lineSplit[0] == "cndcall" {
 
-					if lineSplit[1][0] == '@' {
+					if arg[0] == '@' {
 
-						if _, exists := p.ProgramStructure.ProgramLabels[lineSplit[1][1:]]; !exists {
+						if !slices.Contains(p.ProgramStructure.LabelNames, arg[1:]) {
 							p.parsingError(ErrSymbol, SymbolDoesNotExist)
 						}
 
