@@ -34,14 +34,14 @@ func GenerateBytecode(p ProgramStructure, verbose bool) []byte {
 
 	for i, d := range p.Definitions {
 
-		definitionBlockAddresses[d.Name] = definitionAddrIndex + StackSize
+		definitionBlockAddresses[d.Name] = definitionAddrIndex + MemOffset
 		p.Definitions[i] = Definition{
 			Name:       p.Definitions[i].Name,
 			StringData: p.Definitions[i].StringData,
 			ByteData:   p.Definitions[i].ByteData,
 			Type:       p.Definitions[i].Type,
 
-			Address: definitionAddrIndex + StackSize,
+			Address: definitionAddrIndex + MemOffset,
 		}
 
 		lengthBytes := make([]byte, 4)
@@ -64,7 +64,7 @@ func GenerateBytecode(p ProgramStructure, verbose bool) []byte {
 	var labelAddresses map[string]uint32 = make(map[string]uint32)
 
 	for k, v := range p.ProgramLabels {
-		labelAddresses[k] = (uint32(v.InstructionOffset) * InstructionLength) + byteIndex + StackSize
+		labelAddresses[k] = (uint32(v.InstructionOffset) * InstructionLength) + byteIndex + MemOffset
 	}
 
 	// Generate interrupt jump table for all interrupts
@@ -124,7 +124,7 @@ func GenerateBytecode(p ProgramStructure, verbose bool) []byte {
 	binary.LittleEndian.PutUint32(definitionBlockStart, definitionStartIndex)
 	binary.LittleEndian.PutUint32(interruptBlockStart, interruptBlockStartIndex)
 	binary.LittleEndian.PutUint32(instructionBlockStart, definitionStartIndex+uint32(len(definitionBytes)))
-	binary.LittleEndian.PutUint32(instructionEntryPoint, labelAddresses["start"]-StackSize)
+	binary.LittleEndian.PutUint32(instructionEntryPoint, labelAddresses["start"]-MemOffset)
 
 	finalBytes = append(finalBytes, interruptBlockStart...)
 	finalBytes = append(finalBytes, definitionBlockStart...)

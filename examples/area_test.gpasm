@@ -1,8 +1,12 @@
 //Draws a rectangle to the screen & tests some multiplication
-#def pos 64
+#def pos 32
 #def size 5
 
 #def white 0xFFFFFFFF
+#def red 0xFF000080
+#def blue 0x0000FF80
+
+#def full_red 0xFF0000FF
 
 #label start
 
@@ -22,3 +26,68 @@ mov r00 vx0
 mov r00 vy0
 
 int va
+
+lda @red
+mov d0 vc
+
+add r00 r00
+mov a0 vx1
+mov a0 vy1
+
+int va
+
+lda @blue
+mov d0 vc
+
+add r00 a0
+mov a0 vx1
+mov a0 vy1
+
+int va
+
+// Try setting an individual pixel
+
+#def pixel_start 4500
+
+lda @pixel_start
+mov d0 r00
+
+lda @full_red
+incr r02
+sub dl r02
+mov a0 r01
+
+// <address> <length>
+
+sta r00 r01
+
+#def some_string "Hello World!"
+
+lda @full_red
+mov d0 vc
+
+clr vx0
+clr vy0
+
+lda @some_string
+mov d0 vt
+
+int vt
+
+lda @pos
+mov d0 r00
+
+#label loop_top
+
+incr vx0
+incr vy0
+
+int vt
+
+neq r00 vx0
+cndjmp @loop_top
+
+jmp @future_label
+
+#label future_label
+
