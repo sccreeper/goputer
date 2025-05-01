@@ -3,8 +3,10 @@ package vm
 import (
 	_ "embed"
 	"fmt"
+	"iter"
 	"math"
 	c "sccreeper/goputer/pkg/constants"
+	"slices"
 )
 
 //go:embed assets/font.bin
@@ -102,51 +104,13 @@ func (m *VM) drawSquare() {
 
 func (m *VM) drawLine() {
 
-	// Bresenham's algorithm
+	var colour [4]byte = m.getVideoColour()
 
-	var x int = int(m.Registers[c.RVideoX0])
-	var y int = int(m.Registers[c.RVideoY0])
-
-	var dx int = int(math.Abs(float64(m.Registers[c.RVideoX1] - m.Registers[c.RVideoX0])))
-	var dy int = -int(math.Abs(float64(m.Registers[c.RVideoY1] - m.Registers[c.RVideoY0])))
-	var err int = dx + dy
-
-	var sx int = 1
-	if m.Registers[c.RVideoX0] >= m.Registers[c.RVideoX1] {
-		sx = -1
-	}
-
-	var sy int = 1
-	if m.Registers[c.RVideoY0] >= m.Registers[c.RVideoY1] {
-		sy = -1
-	}
-
-	for {
-		m.putPixel(x, y, m.getVideoColour())
-		if x == int(m.Registers[c.RVideoX1]) && y == int(m.Registers[c.RVideoY1]) {
-
-		}
-
-		var e2 int = 2 * err
-
-		if e2 >= dy {
-			if x == int(m.Registers[c.RVideoX1]) {
-				break
-			}
-
-			err += dy
-			x += sx
-		}
-
-		if e2 <= dx {
-			if y == int(m.Registers[c.RVideoY1]) {
-				break
-			}
-
-			err += dx
-			y += sy
-		}
-
+	for v := range Bresenham(
+		[2]int{int(m.Registers[c.RVideoX0]), int(m.Registers[c.RVideoY0])},
+		[2]int{int(m.Registers[c.RVideoX1]), int(m.Registers[c.RVideoY1])},
+	) {
+		m.putPixel(v[0], v[1], colour)
 	}
 
 }
@@ -193,6 +157,97 @@ func (m *VM) drawText() {
 }
 
 func (m *VM) drawPolygon() {
+
+	var numVertices int = int(m.DataBuffer[0])
+	if numVertices <= 2 || 1+(numVertices*2) >= len(m.DataBuffer) {
+		return
+	}
+
+	var vertices [][2]int = make([][2]int, 0, numVertices)
+	var yMin int = math.MaxInt
+	var yMax int = 0
+	var xMin int = math.MaxInt
+	var xMax int = 0
+
+	for i := 1; i < numVertices*2; i += 2 {
+
+		vertices = append(
+			vertices, [2]int{
+				int(m.DataBuffer[i]) + int(m.Registers[c.RVideoX0]),
+				int(m.DataBuffer[i+1]) + int(m.Registers[c.RVideoY0]),
+			},
+		)
+
+		if int(m.DataBuffer[i])+int(m.Registers[c.RVideoX0]) < xMin {
+			xMin = int(m.DataBuffer[i]) + int(m.Registers[c.RVideoX0])
+		}
+
+		if int(m.DataBuffer[i])+int(m.Registers[c.RVideoX0]) > xMax {
+			xMax = int(m.DataBuffer[i]) + int(m.Registers[c.RVideoX0])
+		}
+
+		if int(m.DataBuffer[i+1])+int(m.Registers[c.RVideoY0]) < yMin {
+			yMin = int(m.DataBuffer[i+1]) + int(m.Registers[c.RVideoY0])
+		}
+
+		if int(m.DataBuffer[i+1])+int(m.Registers[c.RVideoY0]) > yMax {
+			yMax = int(m.DataBuffer[i+1]) + int(m.Registers[c.RVideoY0])
+		}
+
+	}
+
+	// Edge buckets
+	// map[y int][]x int
+	var edges map[int][]int = make(map[int][]int)
+
+	// Calculate edges
+
+	for i := 0; i < len(vertices); i++ {
+
+		var next [2]int
+
+		if i == len(vertices)-1 {
+			next = vertices[0]
+		} else {
+			next = vertices[i+1]
+		}
+
+		for point := range Bresenham(vertices[i], next) {
+
+			if _, exists := edges[point[1]]; exists {
+				if !slices.Contains(edges[point[1]], point[0]) {
+					edges[point[1]] = append(edges[point[1]], point[0])
+				}
+			} else {
+				edges[point[1]] = make([]int, 0)
+				edges[point[1]] = append(edges[point[1]], point[0])
+			}
+
+		}
+
+	}
+
+	// Finally fill in
+
+	var colour [4]byte = m.getVideoColour()
+
+	for y := yMin; y < yMax; y++ {
+		var inShape bool = false
+
+		for x := xMin; x < xMax; x++ {
+
+			if slices.Contains(edges[y], x) {
+				if !slices.Contains(edges[y], x-1) {
+					inShape = !inShape
+				}
+			}
+
+			if inShape {
+				m.putPixel(x, y, colour)
+			}
+
+		}
+	}
 
 }
 
@@ -245,6 +300,62 @@ func blendPixel(src [4]byte, dest [3]byte) [3]byte {
 		byte((int(src[0])*int(src[3]) + int(dest[0])*invertedAlpha) / 255),
 		byte((int(src[1])*int(src[3]) + int(dest[1])*invertedAlpha) / 255),
 		byte((int(src[2])*int(src[3]) + int(dest[2])*invertedAlpha) / 255),
+	}
+
+}
+
+func Bresenham(a [2]int, b [2]int) iter.Seq[[2]int] {
+
+	var x int = int(a[0])
+	var y int = int(a[1])
+
+	var dx int = int(math.Abs(float64(b[0] - a[0])))
+	var dy int = -int(math.Abs(float64(b[1] - a[1])))
+	var err int = dx + dy
+
+	var sx int = 1
+	if a[0] >= b[0] {
+		sx = -1
+	}
+
+	var sy int = 1
+	if a[1] >= b[1] {
+		sy = -1
+	}
+
+	return func(yield func([2]int) bool) {
+
+		for {
+			if !yield([2]int{x, y}) {
+				return
+			}
+
+			if x == b[0] && y == b[1] {
+				break
+			}
+
+			var e2 int = 2 * err
+
+			if e2 >= dy {
+				if x == b[0] {
+					break
+				}
+
+				err += dy
+				x += sx
+			}
+
+			if e2 <= dx {
+				if y == b[1] {
+					break
+				}
+
+				err += dx
+				y += sy
+			}
+
+		}
+
 	}
 
 }

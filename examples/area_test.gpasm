@@ -8,6 +8,7 @@
 #def green 0x00FF00FF
 
 #def full_red 0xFF0000FF
+#def full_blue 0x0000FFFF
 
 #label start
 
@@ -131,3 +132,12 @@ int vt
 neq r00 vx0
 cndjmp @text_loop
 
+lda @full_blue
+mov d0 vc
+
+//               s x y x y x y 
+#def poly_data 0x03000080004040
+
+lda @poly_data
+
+int vp

@@ -29,6 +29,8 @@ func (m *VM) calledInterrupt() {
 		m.drawText()
 	case c.IntVideoLine:
 		m.drawLine()
+	case c.IntVideoPolygon:
+		m.drawPolygon()
 	default:
 		if c.Interrupt(m.ArgSmall0) == c.IntIOClear {
 

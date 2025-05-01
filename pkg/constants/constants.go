@@ -223,15 +223,15 @@ var RegisterInts = map[string]uint32{
 const (
 	//Interrupts
 
-	IntSoundStop  Interrupt = 0
-	IntSoundFlush Interrupt = 1
-	IntVideoArea  Interrupt = 2
-	IntVideoPixel Interrupt = 3
-	IntVideoText  Interrupt = 4
-	IntVideoClear Interrupt = 5
-	IntVideoLine  Interrupt = 6
-	IntIOFlush    Interrupt = 7
-	IntIOClear    Interrupt = 8
+	IntSoundStop    Interrupt = 0
+	IntSoundFlush   Interrupt = 1
+	IntVideoArea    Interrupt = 2
+	IntVideoPolygon Interrupt = 3
+	IntVideoText    Interrupt = 4
+	IntVideoClear   Interrupt = 5
+	IntVideoLine    Interrupt = 6
+	IntIOFlush      Interrupt = 7
+	IntIOClear      Interrupt = 8
 
 	//Subscribable interrupts
 
