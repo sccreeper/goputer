@@ -16,11 +16,10 @@ import (
 // General purpose VM backend
 
 const (
-	MemSize                uint32 = VideoBufferSize + 65536 // 2 ^ 16
-	SubscribableInterrupts uint16 = 22
-	RegisterCount          uint16 = 57
-	InstructionCount       uint16 = 34
-	InterruptCount         uint16 = 22
+	MemSize          uint32 = VideoBufferSize + 65536 // 2 ^ 16
+	RegisterCount    uint16 = 57
+	InstructionCount uint16 = 34
+	InterruptCount   uint16 = 23
 )
 
 type VM struct {
@@ -29,7 +28,7 @@ type VM struct {
 	DataBuffer [128]byte
 	TextBuffer [128]byte
 
-	InterruptTable [SubscribableInterrupts]uint32
+	InterruptTable [InterruptCount]uint32
 
 	CurrentInstruction []byte
 	Opcode             c.Instruction

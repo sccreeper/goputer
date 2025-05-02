@@ -31,44 +31,45 @@ var InterruptInts = map[string]Interrupt{
 	"ss":  0, //Stop sound
 	"sf":  1, //Flush sound registers
 	"va":  2, //Render area
-	"vp":  3, //Render pixel
+	"vp":  3, //Render polygon
 	"vt":  4, //Flush video text
 	"vc":  5, //Clear video
-	"vl":  6, //Draw a line from vx0,vy0 -> vx1,vy1
-	"iof": 7, //Flush IO registers to IO
-	"ioc": 8, //Set all IO to 0x0
+	"vi":  6, //Draw image
+	"vl":  7, //Draw a line from vx0,vy0 -> vx1,vy1
+	"iof": 8, //Flush IO registers to IO
+	"ioc": 9, //Set all IO to 0x0
 
 	//Subscribable interrupts
 
-	"mm":   9,  //Mouse move
-	"mu":   10, //Mouse up
-	"md":   11, //Mouse down
-	"io08": 12, //IO on/off 8-15
-	"io09": 13,
-	"io10": 14,
-	"io11": 15,
-	"io12": 16,
-	"io13": 17,
-	"io14": 18,
-	"io15": 19,
-	"ku":   20, //Key up
-	"kd":   21, //Key down
+	"mm":   10, //Mouse move
+	"mu":   11, //Mouse up
+	"md":   12, //Mouse down
+	"io08": 13, //IO on/off 8-15
+	"io09": 14,
+	"io10": 15,
+	"io11": 16,
+	"io12": 17,
+	"io13": 18,
+	"io14": 19,
+	"io15": 20,
+	"ku":   21, //Key up
+	"kd":   22, //Key down
 }
 
 var SubscribableInterrupts = map[string]Interrupt{
-	"mm":   9,  //Mouse move
-	"mu":   10, //Mouse up
-	"md":   11, //Mouse down
-	"io08": 12, //IO on/off 8-15
-	"io09": 13,
-	"io10": 14,
-	"io11": 15,
-	"io12": 16,
-	"io13": 17,
-	"io14": 18,
-	"io15": 19,
-	"ku":   20, //Key up
-	"kd":   21, //Key down
+	"mm":   10, //Mouse move
+	"mu":   11, //Mouse up
+	"md":   12, //Mouse down
+	"io08": 13, //IO on/off 8-15
+	"io09": 14,
+	"io10": 15,
+	"io11": 16,
+	"io12": 17,
+	"io13": 18,
+	"io14": 19,
+	"io15": 20,
+	"ku":   21, //Key up
+	"kd":   22, //Key down
 }
 
 // Array with keys in same order as map
@@ -229,26 +230,27 @@ const (
 	IntVideoPolygon Interrupt = 3
 	IntVideoText    Interrupt = 4
 	IntVideoClear   Interrupt = 5
-	IntVideoLine    Interrupt = 6
-	IntIOFlush      Interrupt = 7
-	IntIOClear      Interrupt = 8
+	IntVideoImage   Interrupt = 6
+	IntVideoLine    Interrupt = 7
+	IntIOFlush      Interrupt = 8
+	IntIOClear      Interrupt = 9
 
 	//Subscribable interrupts
 
-	IntMouseMove Interrupt = 9
-	IntMouseUp   Interrupt = 10
-	IntMouseDown Interrupt = 11
-	IntIO08      Interrupt = 12
-	IntIO09      Interrupt = 13
-	IntIO10      Interrupt = 14
-	IntIO11      Interrupt = 15
-	IntIO12      Interrupt = 16
-	IntIO13      Interrupt = 17
-	IntIO14      Interrupt = 18
-	IntIO15      Interrupt = 19
+	IntMouseMove Interrupt = 10
+	IntMouseUp   Interrupt = 11
+	IntMouseDown Interrupt = 12
+	IntIO08      Interrupt = 13
+	IntIO09      Interrupt = 14
+	IntIO10      Interrupt = 15
+	IntIO11      Interrupt = 16
+	IntIO12      Interrupt = 17
+	IntIO13      Interrupt = 18
+	IntIO14      Interrupt = 19
+	IntIO15      Interrupt = 20
 
-	IntKeyboardUp   Interrupt = 20
-	IntKeyboardDown Interrupt = 21
+	IntKeyboardUp   Interrupt = 21
+	IntKeyboardDown Interrupt = 22
 )
 
 const (

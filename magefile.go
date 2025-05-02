@@ -87,31 +87,31 @@ func All() {
 	hash, err := exec.Command("git", "rev-parse", "HEAD").Output()
 	util.CheckError(err)
 
-	normal_ldflags := fmt.Sprintf("-X main.Commit=%s", hash)
+	normalLdFlags := fmt.Sprintf("-X main.Commit=%s", hash)
 
 	previousDir, err := os.Getwd()
 	util.CheckError(err)
 
 	os.Chdir("./cmd/goputer/")
 
-	sh.Run("go", "build", "-ldflags", normal_ldflags, "-o", "goputer")
+	sh.Run("go", "build", "-ldflags", normalLdFlags, "-o", "goputer")
 
 	os.Chdir(previousDir)
 
 	copyFile("./cmd/goputer/goputer", "./build/goputer")
 
+	ldStripFlags := "-s -w"
+
 	//Build launcher
 
 	fmt.Println("Building launcher...")
-
-	launcherLdFlags := "-s -w"
 
 	previousDir, err = os.Getwd()
 	util.CheckError(err)
 
 	os.Chdir("./cmd/gplauncher")
 
-	sh.Run("go", "build", "-ldflags", launcherLdFlags, "-o", "gplauncher")
+	sh.Run("go", "build", "-ldflags", ldStripFlags, "-o", "gplauncher")
 
 	os.Chdir(previousDir)
 
@@ -126,11 +126,26 @@ func All() {
 
 	os.Chdir("./cmd/ide")
 
-	sh.Run("go", "build", "-ldflags", launcherLdFlags, "-o", "ide")
+	sh.Run("go", "build", "-ldflags", ldStripFlags, "-o", "ide")
 
 	os.Chdir(previousDir)
 
 	copyFile("./cmd/ide/ide", "./build/ide")
+
+	// Build image converter
+	fmt.Println("Building gpimg...")
+
+	previousDir, err = os.Getwd()
+	util.CheckError(err)
+
+	os.Chdir("./cmd/gpimg")
+
+	sh.Run("go", "build", "-ldflags", ldStripFlags, "-o", "gpimg")
+
+	os.Chdir(previousDir)
+
+	copyFile("./cmd/gpimg/gpimg", "./build/gpimg")
+	copyFile("./.github/logo-32.png", "./build/logo.png")
 
 	//Copy the examples
 

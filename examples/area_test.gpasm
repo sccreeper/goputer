@@ -10,6 +10,8 @@
 #def full_red 0xFF0000FF
 #def full_blue 0x0000FFFF
 
+#def logo file:"logo.bin"
+
 #label start
 
 // Draw squares
@@ -135,9 +137,18 @@ cndjmp @text_loop
 lda @full_blue
 mov d0 vc
 
+// Polygon
+
 //               s x y x y x y 
 #def poly_data 0x03000080004040
 
 lda @poly_data
 
 int vp
+
+// Image
+
+lda @logo
+mov dp d0
+
+int vi

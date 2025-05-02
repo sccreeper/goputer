@@ -2,6 +2,7 @@ package vm
 
 import (
 	_ "embed"
+	"encoding/binary"
 	"fmt"
 	"iter"
 	"math"
@@ -252,6 +253,25 @@ func (m *VM) drawPolygon() {
 }
 
 func (m *VM) drawImage() {
+
+	var imgAddress uint32 = binary.LittleEndian.Uint32(m.DataBuffer[:4])
+
+	var imgWidth int = int(binary.LittleEndian.Uint16(m.MemArray[imgAddress : imgAddress+2]))
+	var imgHeight int = int(binary.LittleEndian.Uint16(m.MemArray[imgAddress+2 : imgAddress+4]))
+
+	for y := 0; y < imgHeight; y++ {
+		for x := 0; x < imgWidth; x++ {
+
+			var offset int = int(imgAddress) + 4 + (x * 4) + (y * imgWidth * 4)
+
+			m.putPixel(
+				x+int(m.Registers[c.RVideoX0]),
+				y+int(m.Registers[c.RVideoY0]),
+				[4]byte(m.MemArray[offset:offset+4]),
+			)
+
+		}
+	}
 
 }
 
