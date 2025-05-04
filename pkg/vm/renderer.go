@@ -260,23 +260,50 @@ func (m *VM) drawImage() {
 	var imgWidth int = int(binary.LittleEndian.Uint16(m.MemArray[imgAddress : imgAddress+2]))
 	var imgHeight int = int(binary.LittleEndian.Uint16(m.MemArray[imgAddress+2 : imgAddress+4]))
 
+	var imgFlags byte = m.MemArray[imgAddress+4]
+
 	imgData, err := gpimg.Decode(m, int(m.Registers[c.RDataLength]), int(imgAddress))
 	if err != nil {
 		return
 	}
 
-	for y := 0; y < imgHeight; y++ {
-		for x := 0; x < imgWidth; x++ {
+	if imgFlags&gpimg.FlagBgOpaque != 0 {
 
-			var offset int = (x * 4) + (y * imgWidth * 4)
+		for y := 0; y < imgHeight; y++ {
+			for x := 0; x < imgWidth; x++ {
 
-			m.putPixel(
-				x+int(m.Registers[c.RVideoX0]),
-				y+int(m.Registers[c.RVideoY0]),
-				[4]byte(imgData[offset:offset+4]),
-			)
+				var offset int = (x * 4) + (y * imgWidth * 4)
 
+				m.putPixel(
+					x+int(m.Registers[c.RVideoX0]),
+					y+int(m.Registers[c.RVideoY0]),
+					[4]byte{
+						imgData[offset],
+						imgData[offset+1],
+						imgData[offset+2],
+						255,
+					},
+				)
+
+			}
 		}
+
+	} else {
+
+		for y := 0; y < imgHeight; y++ {
+			for x := 0; x < imgWidth; x++ {
+
+				var offset int = (x * 4) + (y * imgWidth * 4)
+
+				m.putPixel(
+					x+int(m.Registers[c.RVideoX0]),
+					y+int(m.Registers[c.RVideoY0]),
+					[4]byte(imgData[offset:offset+4]),
+				)
+
+			}
+		}
+
 	}
 
 }
