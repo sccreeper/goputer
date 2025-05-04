@@ -15,7 +15,6 @@ func (m *VM) load() {
 
 		if dataLength > 128 {
 			copy(m.DataBuffer[:], m.MemArray[m.ArgLarge+4:m.ArgLarge+128+4])
-			m.Registers[c.RDataLength] = 128
 		} else {
 			copy(m.DataBuffer[:dataLength], m.MemArray[m.ArgLarge+4:m.ArgLarge+dataLength+4])
 		}

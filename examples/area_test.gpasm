@@ -10,7 +10,8 @@
 #def full_red 0xFF0000FF
 #def full_blue 0x0000FFFF
 
-#def logo file:"logo.bin"
+#def logo_rle file:"logo_rle.bin"
+#def logo_default file:"logo_default.bin"
 
 #label start
 
@@ -148,7 +149,18 @@ int vp
 
 // Image
 
-lda @logo
+lda @logo_rle
+mov dp d0
+
+int vi
+
+lda @pos
+mov d0 r00
+add r00 r00
+mov a0 vx0
+mov a0 vy0
+
+lda @logo_default
 mov dp d0
 
 int vi

@@ -1,20 +1,18 @@
 package main
 
 import (
-	"encoding/binary"
 	"errors"
 	"fmt"
-	"image"
 	_ "image/jpeg"
 	_ "image/png"
 	"log"
+	"maps"
 	"os"
-	"sccreeper/goputer/pkg/vm"
+	gpimg "sccreeper/goputer/pkg/gpimg"
+	"slices"
 
 	"github.com/urfave/cli/v2"
 )
-
-var ErrImgTooLarge error = fmt.Errorf("image is too large must be at most %dx%d", vm.VideoBufferWidth, vm.VideoBufferHeight)
 
 func convertImage(ctx *cli.Context) error {
 
@@ -27,13 +25,13 @@ func convertImage(ctx *cli.Context) error {
 	// Open/create files
 
 	_, err := os.Stat(outputPath)
-	if errors.Is(err, os.ErrExist) && !ctx.Bool("overwrite") {
+	if err == nil && !ctx.Bool("overwrite") {
 		return err
-	} else if errors.Is(err, os.ErrExist) && ctx.Bool("overwrite") {
+	} else if err == nil && ctx.Bool("overwrite") {
 		os.Remove(outputPath)
 	}
 
-	outputFile, err = os.OpenFile(outputPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	outputFile, err = os.OpenFile(outputPath, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		return err
 	}
@@ -45,58 +43,40 @@ func convertImage(ctx *cli.Context) error {
 	}
 	defer inputFile.Close()
 
-	// Load image
+	// Validate and encode flags
 
-	img, _, err := image.Decode(inputFile)
-	if err != nil {
-		return err
+	var flags byte
+	var flagArgs []string = ctx.StringSlice("format")
+	if flagArgs == nil {
+		return errors.New("no format flags")
 	}
 
-	if img.Bounds().Dx() > int(vm.VideoBufferWidth) || img.Bounds().Dy() > int(vm.VideoBufferHeight) {
-		return ErrImgTooLarge
-	}
-
-	// Write width and height as 4 bytes
-
-	var size [4]byte = [4]byte{}
-
-	binary.LittleEndian.PutUint16(
-		size[:2],
-		uint16(img.Bounds().Dx()),
-	)
-
-	binary.LittleEndian.PutUint16(
-		size[2:],
-		uint16(img.Bounds().Dy()),
-	)
-
-	_, err = outputFile.Write(size[:])
-	if err != nil {
-		return err
-	}
-
-	// Write rest of image
-
-	for y := range img.Bounds().Dy() {
-		for x := range img.Bounds().Dx() {
-
-			red, green, blue, alpha := img.At(x, y).RGBA()
-
-			_, err = outputFile.Write(
-				[]byte{
-					byte(red / 257),
-					byte(green / 257),
-					byte(blue / 257),
-					byte(alpha / 257),
-				}[:],
-			)
-
-			if err != nil {
-				return err
-			}
-
+	for _, v := range flagArgs {
+		if !slices.Contains(gpimg.FlagNames, v) {
+			return fmt.Errorf("unrecognised format flag '%s'", v)
 		}
 	}
+
+	var hasCompressionFlag bool = false
+	for v := range maps.Keys(gpimg.CompressionFlags) {
+
+		var contains bool = slices.Contains(flagArgs, v)
+		if contains && hasCompressionFlag {
+			return errors.New("can't have more than one compression format")
+		} else if contains && !hasCompressionFlag {
+			hasCompressionFlag = true
+		}
+	}
+
+	// Finally encode flags
+
+	for _, v := range flagArgs {
+
+		flags |= gpimg.AllFlags[v]
+
+	}
+
+	gpimg.Encode(inputFile, outputFile, flags)
 
 	return nil
 }
@@ -106,12 +86,17 @@ func main() {
 		Name:        "gpimg",
 		Usage:       "Convert images",
 		Description: "Used for converting images to the format used by goputer",
-		UsageText:   "gpimg -i in.png -o out.bin",
+		UsageText:   "gpimg -i in.png -o out.bin --format rle --format opaque",
 		Action:      convertImage,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:  "overwrite",
 				Usage: "overwrite destination file if it already exists",
+			},
+			&cli.StringSliceFlag{
+				Name:  "format",
+				Usage: "opaque, rle, nocompression",
+				Value: cli.NewStringSlice("nocompression", "opaque"),
 			},
 			&cli.StringFlag{
 				Name:     "input",

@@ -6,7 +6,6 @@ import (
 	"log"
 	"math"
 	comp "sccreeper/goputer/pkg/compiler"
-	"sccreeper/goputer/pkg/constants"
 	c "sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/expansions"
 	"sccreeper/goputer/pkg/util"
@@ -151,7 +150,7 @@ func (m *VM) Cycle() {
 	if !m.HandlingInterrupt && len(m.SubbedInterruptQueue) > 0 {
 
 		// Pop from queue
-		var i constants.Interrupt
+		var i c.Interrupt
 		i, m.SubbedInterruptQueue = m.SubbedInterruptQueue[0], m.SubbedInterruptQueue[1:]
 
 		// Frontends should do the checking but this is just to be sure.
