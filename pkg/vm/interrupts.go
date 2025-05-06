@@ -24,7 +24,7 @@ func (m *VM) calledInterrupt() {
 
 	switch c.Interrupt(m.ArgSmall0) {
 	case c.IntVideoArea:
-		m.drawSquare()
+		m.drawArea()
 	case c.IntVideoText:
 		m.drawText()
 	case c.IntVideoLine:
@@ -33,6 +33,8 @@ func (m *VM) calledInterrupt() {
 		m.drawPolygon()
 	case c.IntVideoImage:
 		m.drawImage()
+	case c.IntVideoClear:
+		m.clearVideo()
 	default:
 		if c.Interrupt(m.ArgSmall0) == c.IntIOClear {
 

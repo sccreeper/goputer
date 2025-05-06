@@ -293,10 +293,10 @@ func Run(program []byte, args []string) {
 
 		if uint32(rl.GetMouseX()) != previousMouse.MouseX && uint32(CorrectedMouseY()) != previousMouse.MouseY {
 
-			gp32.Registers[c.RMouseX] = uint32(rl.GetMouseX())
+			gp32.Registers[c.RMouseX] = uint32(rl.GetMouseX()) / 2
 			gp32.Registers[c.RMouseY] = uint32(CorrectedMouseY())
 
-			previousMouse.MouseX = uint32(rl.GetMouseX())
+			previousMouse.MouseX = uint32(rl.GetMouseX()) / 2
 			previousMouse.MouseY = uint32(CorrectedMouseY())
 
 			if gp32.Subscribed(c.IntMouseMove) {
@@ -373,6 +373,6 @@ func Run(program []byte, args []string) {
 
 func CorrectedMouseY() int32 {
 
-	return rl.GetMouseY() - int32(rendering.TotalYOffset)
+	return (rl.GetMouseY() - int32(rendering.TotalYOffset)) / 2
 
 }

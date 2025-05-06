@@ -10,10 +10,18 @@
 #def full_red 0xFF0000FF
 #def full_blue 0x0000FFFF
 
+#def gray 0x484848FF
+
 #def logo_rle file:"logo_rle.bin"
 #def logo_default file:"logo_default.bin"
 
 #label start
+
+// Clear screen
+
+lda @gray
+mov d0 vc
+int vc
 
 // Draw squares
 

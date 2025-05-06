@@ -49,7 +49,7 @@ func init() {
 
 }
 
-func (m *VM) drawSquare() {
+func (m *VM) drawArea() {
 
 	// Do the first line
 
@@ -67,21 +67,21 @@ func (m *VM) drawSquare() {
 		// Do the first row
 
 		for x := 0; x < int(m.Registers[c.RVideoX1]-m.Registers[c.RVideoX0]); x++ {
-			var pixelAddr int = int(areaStart) + (x * int(VideoBytesPerPixel))
+			var offset int = int(areaStart) + (x * int(VideoBytesPerPixel))
 
-			m.MemArray[pixelAddr] = colour[0]
-			m.MemArray[pixelAddr+1] = colour[1]
-			m.MemArray[pixelAddr+2] = colour[2]
+			m.MemArray[offset] = colour[0]
+			m.MemArray[offset+1] = colour[1]
+			m.MemArray[offset+2] = colour[2]
 		}
 
 		// Copy each row thereafter
 
 		for y := 1; y < int(m.Registers[c.RVideoY1]-m.Registers[c.RVideoY0]); y++ {
-			var pixelAddrStart = int(areaStart) + (y * int(VideoBufferWidth) * int(VideoBytesPerPixel))
+			var offset = int(areaStart) + (y * int(VideoBufferWidth) * int(VideoBytesPerPixel))
 
 			copy(
-				m.MemArray[pixelAddrStart:pixelAddrStart+(int(VideoBufferWidth*VideoBytesPerPixel))],
-				m.MemArray[areaStart:areaStart+(VideoBufferWidth*VideoBytesPerPixel)],
+				m.MemArray[offset:offset+(int(VideoBufferWidth*VideoBytesPerPixel))],
+				m.MemArray[areaStart:areaStart+((m.Registers[c.RVideoX1]-m.Registers[c.RVideoX0])*VideoBytesPerPixel)],
 			)
 		}
 
@@ -303,6 +303,29 @@ func (m *VM) drawImage() {
 
 			}
 		}
+
+	}
+
+}
+
+func (m *VM) clearVideo() {
+
+	// Set first row
+
+	var colour [4]byte = m.getVideoColour()
+
+	for x := range int(VideoBufferWidth) {
+		m.putPixel(x, 0, colour)
+	}
+
+	for y := 1; y < int(VideoBufferHeight); y++ {
+
+		var offset int = y * int(VideoBufferWidth) * int(VideoBytesPerPixel)
+
+		copy(
+			m.MemArray[offset:offset+int(VideoBufferWidth)*int(VideoBytesPerPixel)],
+			m.MemArray[:VideoBufferWidth*VideoBytesPerPixel],
+		)
 
 	}
 
