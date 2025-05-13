@@ -1,6 +1,8 @@
 package compiler
 
-import "sccreeper/goputer/pkg/constants"
+import (
+	"sccreeper/goputer/pkg/constants"
+)
 
 //File for code shared in the compiler
 
@@ -48,8 +50,10 @@ type CodeBlock struct {
 
 // Struct for holding program data after first stage of parsing
 type ProgramStructure struct {
-	AllNames      []string `json:"all_names"`
-	ImportedFiles []string `json:"imported_files"`
+	AllNames        []string `json:"all_names"`
+	LabelNames      []string `json:"label_names"`
+	DefinitionNames []string `json:"definition_names"`
+	ImportedFiles   []string `json:"imported_files"`
 
 	// where string = interrupt type/name
 	InterruptSubscriptions map[string]InterruptSubscription `json:"interrupt_subscriptions"`
@@ -85,4 +89,5 @@ const (
 	DataStackSize     uint32 = 4 * 256 //Default stack size, 1024 bytes(256 uint32)
 	CallStackSize     uint32 = 4 * 128 //Default call stack size, 256 bytes, 64 uint32
 	StackSize         uint32 = DataStackSize + CallStackSize
+	MemOffset         uint32 = StackSize + 230400 // Hardcoded to prevent circular import
 )

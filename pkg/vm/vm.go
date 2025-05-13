@@ -6,7 +6,6 @@ import (
 	"log"
 	"math"
 	comp "sccreeper/goputer/pkg/compiler"
-	"sccreeper/goputer/pkg/constants"
 	c "sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/expansions"
 	"sccreeper/goputer/pkg/util"
@@ -16,20 +15,19 @@ import (
 // General purpose VM backend
 
 const (
-	_MemSize                uint32 = 65536 // 2 ^ 16
-	_SubscribableInterrupts uint16 = 22
-	RegisterCount           uint16 = 57
-	InstructionCount        uint16 = 34
-	InterruptCount          uint16 = 22
+	MemSize          uint32 = VideoBufferSize + 65536 // 2 ^ 16
+	RegisterCount    uint16 = 57
+	InstructionCount uint16 = 34
+	InterruptCount   uint16 = 23
 )
 
 type VM struct {
-	MemArray   [_MemSize]byte
+	MemArray   [MemSize]byte
 	Registers  [RegisterCount + 1]uint32 //float32 or uint32
 	DataBuffer [128]byte
 	TextBuffer [128]byte
 
-	InterruptTable [_SubscribableInterrupts]uint32
+	InterruptTable [InterruptCount]uint32
 
 	CurrentInstruction []byte
 	Opcode             c.Instruction
@@ -54,9 +52,12 @@ type VM struct {
 // Initialize VM and registers, load code into "memory" etc.
 func InitVM(machine *VM, vmProgram []byte, expansionsSupported bool) error {
 
-	if len(vmProgram)-4 > int(_MemSize) {
+	if len(vmProgram)-4 > int(MemSize) {
 		return errors.New("program too large")
 	}
+
+	PrintChar(0)
+	PrintChar('#')
 
 	//Extract program start index
 
@@ -68,18 +69,18 @@ func InitVM(machine *VM, vmProgram []byte, expansionsSupported bool) error {
 	var instructionEntryPoint uint32 = binary.LittleEndian.Uint32(vmProgram[12:16])
 
 	//Init vars + registers
-	machine.Registers[c.RProgramCounter] = instructionEntryPoint + comp.StackSize
+	machine.Registers[c.RProgramCounter] = instructionEntryPoint + comp.MemOffset
 	machine.CurrentInstruction = vmProgram[instructionEntryPoint : instructionEntryPoint+comp.InstructionLength]
 	machine.Finished = false
-	machine.ProgramBounds = comp.StackSize + uint32(len(vmProgram[:len(vmProgram)-int(comp.PadSize)]))
+	machine.ProgramBounds = comp.MemOffset + uint32(len(vmProgram[:len(vmProgram)-int(comp.PadSize)]))
 	machine.Registers[c.RVideoBrightness] = 255
 	machine.ExpansionsSupported = expansionsSupported
 
-	machine.Registers[c.RCallStackZeroPointer] = comp.StackSize - comp.CallStackSize
+	machine.Registers[c.RCallStackZeroPointer] = comp.MemOffset - comp.CallStackSize
 	machine.Registers[c.RCallStackPointer] = machine.Registers[c.RCallStackZeroPointer]
 
-	machine.Registers[c.RStackZeroPointer] = 0
-	machine.Registers[c.RStackPointer] = 0
+	machine.Registers[c.RStackZeroPointer] = comp.MemOffset
+	machine.Registers[c.RStackPointer] = comp.MemOffset
 
 	machine.InterruptQueue = []c.Interrupt{}
 	machine.SubbedInterruptQueue = []c.Interrupt{}
@@ -99,7 +100,7 @@ func InitVM(machine *VM, vmProgram []byte, expansionsSupported bool) error {
 	}
 
 	//Copy program into memory
-	copy(machine.MemArray[comp.StackSize:], vmProgram[:len(vmProgram)-int(comp.PadSize)])
+	copy(machine.MemArray[comp.MemOffset:], vmProgram[:len(vmProgram)-int(comp.PadSize)])
 
 	// Load expansions
 
@@ -149,7 +150,7 @@ func (m *VM) Cycle() {
 	if !m.HandlingInterrupt && len(m.SubbedInterruptQueue) > 0 {
 
 		// Pop from queue
-		var i constants.Interrupt
+		var i c.Interrupt
 		i, m.SubbedInterruptQueue = m.SubbedInterruptQueue[0], m.SubbedInterruptQueue[1:]
 
 		// Frontends should do the checking but this is just to be sure.

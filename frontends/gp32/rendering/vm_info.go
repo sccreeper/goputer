@@ -52,9 +52,9 @@ func RenderVMDebug(m *vm.VM) {
 	case constants.IJump, constants.ICall, constants.IConditionalJump, constants.IConditionalCall:
 		argText = util.ConvertHex(m.ArgLarge)
 	default:
-		if constants.InstructionArgumentCounts[m.Opcode] == 1 && m.Opcode != constants.ICallInterrupt {
+		if constants.InstructionArgumentCounts[m.Opcode][0] == 1 && m.Opcode != constants.ICallInterrupt {
 			argText = registerMap[m.ArgLarge]
-		} else if constants.InstructionArgumentCounts[m.Opcode] == 0 {
+		} else if constants.InstructionArgumentCounts[m.Opcode][0] == 0 {
 			argText = ""
 		} else if m.Opcode == constants.ICallInterrupt {
 			argText = interuptMap[constants.Interrupt(m.ArgLarge)]

@@ -31,44 +31,45 @@ var InterruptInts = map[string]Interrupt{
 	"ss":  0, //Stop sound
 	"sf":  1, //Flush sound registers
 	"va":  2, //Render area
-	"vp":  3, //Render pixel
+	"vp":  3, //Render polygon
 	"vt":  4, //Flush video text
 	"vc":  5, //Clear video
-	"vl":  6, //Draw a line from vx0,vy0 -> vx1,vy1
-	"iof": 7, //Flush IO registers to IO
-	"ioc": 8, //Set all IO to 0x0
+	"vi":  6, //Draw image
+	"vl":  7, //Draw a line from vx0,vy0 -> vx1,vy1
+	"iof": 8, //Flush IO registers to IO
+	"ioc": 9, //Set all IO to 0x0
 
 	//Subscribable interrupts
 
-	"mm":   9,  //Mouse move
-	"mu":   10, //Mouse up
-	"md":   11, //Mouse down
-	"io08": 12, //IO on/off 8-15
-	"io09": 13,
-	"io10": 14,
-	"io11": 15,
-	"io12": 16,
-	"io13": 17,
-	"io14": 18,
-	"io15": 19,
-	"ku":   20, //Key up
-	"kd":   21, //Key down
+	"mm":   10, //Mouse move
+	"mu":   11, //Mouse up
+	"md":   12, //Mouse down
+	"io08": 13, //IO on/off 8-15
+	"io09": 14,
+	"io10": 15,
+	"io11": 16,
+	"io12": 17,
+	"io13": 18,
+	"io14": 19,
+	"io15": 20,
+	"ku":   21, //Key up
+	"kd":   22, //Key down
 }
 
 var SubscribableInterrupts = map[string]Interrupt{
-	"mm":   9,  //Mouse move
-	"mu":   10, //Mouse up
-	"md":   11, //Mouse down
-	"io08": 12, //IO on/off 8-15
-	"io09": 13,
-	"io10": 14,
-	"io11": 15,
-	"io12": 16,
-	"io13": 17,
-	"io14": 18,
-	"io15": 19,
-	"ku":   20, //Key up
-	"kd":   21, //Key down
+	"mm":   10, //Mouse move
+	"mu":   11, //Mouse up
+	"md":   12, //Mouse down
+	"io08": 13, //IO on/off 8-15
+	"io09": 14,
+	"io10": 15,
+	"io11": 16,
+	"io12": 17,
+	"io13": 18,
+	"io14": 19,
+	"io15": 20,
+	"ku":   21, //Key up
+	"kd":   22, //Key down
 }
 
 // Array with keys in same order as map
@@ -223,32 +224,33 @@ var RegisterInts = map[string]uint32{
 const (
 	//Interrupts
 
-	IntSoundStop  Interrupt = 0
-	IntSoundFlush Interrupt = 1
-	IntVideoArea  Interrupt = 2
-	IntVideoPixel Interrupt = 3
-	IntVideoText  Interrupt = 4
-	IntVideoClear Interrupt = 5
-	IntVideoLine  Interrupt = 6
-	IntIOFlush    Interrupt = 7
-	IntIOClear    Interrupt = 8
+	IntSoundStop    Interrupt = 0
+	IntSoundFlush   Interrupt = 1
+	IntVideoArea    Interrupt = 2
+	IntVideoPolygon Interrupt = 3
+	IntVideoText    Interrupt = 4
+	IntVideoClear   Interrupt = 5
+	IntVideoImage   Interrupt = 6
+	IntVideoLine    Interrupt = 7
+	IntIOFlush      Interrupt = 8
+	IntIOClear      Interrupt = 9
 
 	//Subscribable interrupts
 
-	IntMouseMove Interrupt = 9
-	IntMouseUp   Interrupt = 10
-	IntMouseDown Interrupt = 11
-	IntIO08      Interrupt = 12
-	IntIO09      Interrupt = 13
-	IntIO10      Interrupt = 14
-	IntIO11      Interrupt = 15
-	IntIO12      Interrupt = 16
-	IntIO13      Interrupt = 17
-	IntIO14      Interrupt = 18
-	IntIO15      Interrupt = 19
+	IntMouseMove Interrupt = 10
+	IntMouseUp   Interrupt = 11
+	IntMouseDown Interrupt = 12
+	IntIO08      Interrupt = 13
+	IntIO09      Interrupt = 14
+	IntIO10      Interrupt = 15
+	IntIO11      Interrupt = 16
+	IntIO12      Interrupt = 17
+	IntIO13      Interrupt = 18
+	IntIO14      Interrupt = 19
+	IntIO15      Interrupt = 20
 
-	IntKeyboardUp   Interrupt = 20
-	IntKeyboardDown Interrupt = 21
+	IntKeyboardUp   Interrupt = 21
+	IntKeyboardDown Interrupt = 22
 )
 
 const (
@@ -310,44 +312,44 @@ const (
 	IInterruptCallReturn Instruction = 33
 )
 
-var InstructionArgumentCounts map[Instruction]int = map[Instruction]int{
+var InstructionArgumentCounts map[Instruction][]int = map[Instruction][]int{
 
-	IJump:                    1,
-	IConditionalJump:         1,
-	IInvert:                  1,
-	ICallInterrupt:           1,
-	ILoad:                    1,
-	IStore:                   1,
-	IIncrement:               1,
-	IDecrement:               1,
-	IHalt:                    1,
-	ISquareRoot:              1,
-	ICall:                    1,
-	IConditionalCall:         1,
-	IClear:                   1,
-	IPush:                    1,
-	IPop:                     1,
-	IExpansionModuleInteract: 1,
+	IJump:                    {1},
+	IConditionalJump:         {1},
+	IInvert:                  {1},
+	ICallInterrupt:           {1},
+	ILoad:                    {1, 2},
+	IStore:                   {1, 2},
+	IIncrement:               {1},
+	IDecrement:               {1},
+	IHalt:                    {1},
+	ISquareRoot:              {1},
+	ICall:                    {1},
+	IConditionalCall:         {1},
+	IClear:                   {1},
+	IPush:                    {1},
+	IPop:                     {1},
+	IExpansionModuleInteract: {1},
 
-	IMove:        2,
-	IAdd:         2,
-	IMultiply:    2,
-	IDivide:      2,
-	ISubtract:    2,
-	IGreaterThan: 2,
-	ILessThan:    2,
-	IOr:          2,
-	IXor:         2,
-	IAnd:         2,
-	IEquals:      2,
-	INotEquals:   2,
-	IShiftLeft:   2,
-	IShiftRight:  2,
-	IPower:       2,
-	IModulo:      2,
+	IMove:        {2},
+	IAdd:         {2},
+	IMultiply:    {2},
+	IDivide:      {2},
+	ISubtract:    {2},
+	IGreaterThan: {2},
+	ILessThan:    {2},
+	IOr:          {2},
+	IXor:         {2},
+	IAnd:         {2},
+	IEquals:      {2},
+	INotEquals:   {2},
+	IShiftLeft:   {2},
+	IShiftRight:  {2},
+	IPower:       {2},
+	IModulo:      {2},
 
-	ICallReturn:          0,
-	IInterruptCallReturn: 0,
+	ICallReturn:          {0},
+	IInterruptCallReturn: {0},
 }
 
 const (

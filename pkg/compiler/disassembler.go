@@ -42,7 +42,7 @@ func decodeInstruction(b []byte) Instruction {
 	var itnData []uint32
 
 	// Get instruction arguments
-	for i := 0; i < constants.InstructionArgumentCounts[itn]; i += 2 {
+	for i := 0; i < constants.InstructionArgumentCounts[itn][0]; i += 2 {
 		itnData = append(itnData, uint32(binary.LittleEndian.Uint16(itnDataBytes[i:i+2])))
 	}
 

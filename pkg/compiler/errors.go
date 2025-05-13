@@ -64,6 +64,10 @@ func (p *Parser) parsingError(e error, errorType ErrorType) {
 		errorText += fmt.Sprintf("%s %s\n", RedError.Sprint("Invalid argument:"), errorType)
 	case ErrImport:
 		errorText += fmt.Sprintf("%s %s\n", RedError.Sprint("Import error:"), errorType)
+	case ErrWrongNumArgs:
+		errorText += fmt.Sprintf("%s %s\n", RedError.Sprint("Wrong number of arguements:"), errorType)
+	default:
+		errorText += string(errorType)
 	}
 
 	p.ErrorHandler(errorType, errorText)
