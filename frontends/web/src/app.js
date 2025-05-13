@@ -1,6 +1,5 @@
-import { renderContext, canvas, currentInstructionHTML, programCounterHTML, peekRegHTML, peekRegInput } from "./init";
+import { glContext, canvas, currentInstructionHTML, programCounterHTML, peekRegHTML, peekRegInput } from "./init";
 import globals from "./globals.js"
-import { clearCanvas, drawLine, drawRect, drawText, setPixel } from "./canvas_util";
 import { ShowError, ErrorTypes } from "./error";
 
 var previousMousePos = {
@@ -199,67 +198,6 @@ export function Cycle() {
         var x = getInterrupt()
 
         switch (x) {
-            case interruptInts["va"]:
-                drawRect(
-                    renderContext,
-                    convertColour(getRegister(registerInts["vc"])),
-                    getRegister(registerInts["vx0"]),
-                    getRegister(registerInts["vy0"]),
-                    getRegister(registerInts["vx1"]),
-                    getRegister(registerInts["vy1"]),
-                    )
-                break;
-
-            case interruptInts["vc"]:
-                clearCanvas(renderContext, convertColour(getRegister(registerInts["vc"])))
-                break;
-            case interruptInts["vl"]:
-                drawLine(
-                    renderContext,
-                    convertColour(getRegister(registerInts["vc"])),
-                    getRegister(registerInts["vx0"]),
-                    getRegister(registerInts["vy0"]),
-                    getRegister(registerInts["vx1"]),
-                    getRegister(registerInts["vy1"])
-                )
-            case interruptInts["vt"]:
-                
-                var t = getBuffer("text")
-
-                if (t[0] == 0) {
-                    globals.videoText = "";
-                } else {
-                    
-                    var t1 = []
-
-                    t.forEach(element => {
-                        
-                        if (element != 0) {
-                            t1.push(element)
-                        }
-
-                    });
-
-                    // Convert from array of ints to chars.
-                    globals.videoText += String.fromCharCode(...t1)
-
-                }
-
-
-                drawText(
-                    renderContext,
-                    convertColour(getRegister(registerInts["vc"])),
-                    getRegister(registerInts["vx0"]),
-                    getRegister(registerInts["vy0"]),
-                    globals.videoText
-                )
-            case interruptInts["vp"]:
-                setPixel(
-                    renderContext,
-                    convertColour(getRegister(registerInts["vc"])),
-                    getRegister(registerInts["vx0"]),
-                    getRegister(registerInts["vy0"])
-                )
             case interruptInts["ss"]:
                 globals.oscillator.frequency.value = 0;
                 globals.audioVolume.gain.value = 0;
@@ -291,18 +229,25 @@ export function Cycle() {
                 break;
         }
 
+        // Video
+        updateFramebuffer();
+
+
         // Video brightness
 
-        let col = "";
+        /**
+         * @type {number}
+         */
+        let col = 0.0;
 
         // Avoid divide by zero error.
         if (getRegister(registerInts["vb"]) == 0) {
-            col = "rgba(0, 0, 0, 1)";
+            col = 1.0;
         } else {
-            col = `rgba(0, 0, 0, ${1 - Math.pow((Math.pow(getRegister(registerInts["vb"]), -1)) * 255, -1)})`;
+            col = 1 - Math.pow((Math.pow(getRegister(registerInts["vb"]), -1)) * 255, -1);
         }
 
-        drawRect(renderContext, col, 0, 0, 640, 480);
+        glContext.clearColor(0.0, 0.0, 0.0, col);
 
         // Handle subscribed interrupts
 
@@ -372,7 +317,7 @@ export function Cycle() {
 
         }
 
-        //Finally cycle VM.
+        //Finally cycle VM & update graphics.
 
         cycleVM();
 

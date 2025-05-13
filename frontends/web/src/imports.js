@@ -1,5 +1,5 @@
 import globals from "./globals"
-import { files_container, new_file } from "./init"
+import { filesContainer, new_file } from "./init"
 
 
 // Creation of a file from the UI.
@@ -39,7 +39,7 @@ export function NewFile(file_name) {
 
     tab_div.appendChild(delete_file_i)
 
-    files_container.insertBefore(tab_div, new_file);
+    filesContainer.insertBefore(tab_div, new_file);
 
     globals.focusedFile = file_name;
 
@@ -76,7 +76,7 @@ export function SwitchFocus(e) {
 
 export function SwitchFocusedStyle() {
     
-    let file_elements = files_container.children
+    let file_elements = filesContainer.children
 
     for (let i = 0; i < file_elements.length; i++) {
         

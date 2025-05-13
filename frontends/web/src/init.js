@@ -1,9 +1,9 @@
 import { Compile, handleKeyDown, handleKeyUp, handleMouseMove, IOToggle, PeekRegister, Run } from "./app";
-import { clearCanvas } from "./canvas_util";
 import globals from "./globals";
 import { DownloadProgram, GetSharedCode, ShareCode } from "./sharing";
 import { ExamplesInit } from "./examples";
 import { NewFileUI, SwitchFocus } from "./imports";
+import { glInit } from "./gl_util";
 
 //Cycles per second
 export const CPS = 240;
@@ -23,7 +23,7 @@ new_file.addEventListener("click", NewFileUI)
 
 document.getElementById("main-gpasm").addEventListener("click", SwitchFocus)
 
-export const files_container = document.getElementById("code-names-container");
+export const filesContainer = document.getElementById("code-names-container");
 
 //Set the version
 
@@ -49,10 +49,12 @@ const programCounterHTML = document.getElementById("program-counter");
 const currentInstructionHTML = document.getElementById("current-instruction");
 
 //Init Canvas
+/**
+ * @type {HTMLCanvasElement}
+ */
 const canvas = document.getElementById("render-canvas")
-const renderContext = canvas.getContext('2d');
-
-clearCanvas(renderContext, "black");
+const gl = canvas.getContext("webgl2") ?? alert("Your browser does not support WebGL. goputer will not work.");
+glInit(gl);
 
 //Init audio
 
@@ -94,7 +96,6 @@ document.getElementById("stop-code-button").addEventListener("click", function (
     globals.vmIsAlive = false;
     globals.videoText = "";
 
-    clearCanvas(renderContext, "black");
     canvas.setAttribute("running", "false");
 })
 
@@ -131,7 +132,7 @@ document.getElementById("error-clear-button").addEventListener("click", (e) => {
 
 // Populate register keys
 
-var peek_reg_datalist = document.getElementById("peek-reg-datalist");
+var peekRegDatalist = document.getElementById("peek-reg-datalist");
 
 const peekRegHTML = document.getElementById("peek-reg-value");
 
@@ -139,7 +140,7 @@ Object.keys(registerInts).forEach(element => {
     
     let el = document.createElement("option")
     el.value = element;
-    peek_reg_datalist.appendChild(el);
+    peekRegDatalist.appendChild(el);
 
 });
 
@@ -149,4 +150,4 @@ peekRegInput.addEventListener("input", PeekRegister);
 
 GetSharedCode();
 
-export {canvas, renderContext, programCounterHTML, currentInstructionHTML, peekRegHTML, peekRegInput}
+export {canvas, gl as glContext, programCounterHTML, currentInstructionHTML, peekRegHTML, peekRegInput}

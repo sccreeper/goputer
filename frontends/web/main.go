@@ -19,6 +19,7 @@ import (
 var js32 vm.VM
 
 var programBytes []byte
+var frameBuffer [vm.VideoBufferWidth * vm.VideoBufferHeight * 4]byte = [vm.VideoBufferWidth * vm.VideoBufferHeight * 4]byte{}
 
 var itnMap map[uint32]string
 var registerMap map[uint32]string
@@ -215,6 +216,25 @@ func IsFinished(this js.Value, args []js.Value) any {
 
 }
 
+func UpdateFrameBuffer(this js.Value, args []js.Value) any {
+
+	for i := 0; i < int(vm.VideoBufferSize); i += 3 {
+
+		frameBuffer[i] = js32.MemArray[i]
+		frameBuffer[i+1] = js32.MemArray[i+1]
+		frameBuffer[i+2] = js32.MemArray[i+2]
+		frameBuffer[i+3] = 255
+
+	}
+
+	// Call WebGL functions
+
+	js.CopyBytesToJS(js.Global().Get("globals.frameBufferData"), frameBuffer[:])
+
+	return js.ValueOf(nil)
+
+}
+
 func Cycle(this js.Value, args []js.Value) any {
 
 	js32.Cycle()
@@ -353,6 +373,8 @@ func main() {
 	js.Global().Set("getProgramBytes", js.FuncOf(GetProgramBytes))
 
 	js.Global().Set("disassembleCode", js.FuncOf(Disassemble))
+
+	js.Global().Set("updateFramebuffer", js.FuncOf(UpdateFrameBuffer))
 
 	fileMap = make(map[string]string)
 	fileMap["main.gpasm"] = ""

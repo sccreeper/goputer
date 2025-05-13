@@ -1,7 +1,9 @@
 {
   "devDependencies": {
+    "@parcel/transformer-glsl": "^2.14.4",
     "@parcel/transformer-toml": "^2.14.4",
     "bootstrap-icons": "^1.11.3",
+    "gl-matrix": "^3.4.3",
     "microtip": "0.2.2",
     "parcel": "^2.14.4",
     "parcel-reporter-static-files-copy": "^1.5.3",
