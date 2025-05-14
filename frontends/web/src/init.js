@@ -3,7 +3,7 @@ import globals from "./globals";
 import { DownloadProgram, GetSharedCode, ShareCode } from "./sharing";
 import { ExamplesInit } from "./examples";
 import { NewFileUI, SwitchFocus } from "./imports";
-import { glInit } from "./gl_util";
+import { glInit } from "./gl/index";
 
 //Cycles per second
 export const CPS = 240;
