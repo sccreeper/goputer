@@ -12,6 +12,9 @@ var currentMousePos = {
     Y: 0,
 }
 
+var executionStartTime = 0
+var cyclesCompleted = 0
+
 //Other app logic
 
 /**
@@ -144,6 +147,8 @@ export function Run(e) {
         globals.runInterval = setInterval(Cycle, Math.round(1000 / globals.FPS));
         globals.vmInited = true;
 
+        executionStartTime = Date.now()
+
         canvas.setAttribute("running", "true");
         
     }
@@ -181,6 +186,12 @@ export function handleKeyUp(e) {
 export function Cycle() {
     
     if (isFinished()) {
+
+        console.log(`Time elapsed: ${Date.now()-executionStartTime}ms`)
+        console.log(`Average time per cycle: ${(Date.now()-executionStartTime)/cyclesCompleted}ms`)
+
+        executionStartTime = 0
+        cyclesCompleted = 0
         
         clearInterval(globals.runInterval);
         canvas.setAttribute("running", "false");
@@ -321,6 +332,7 @@ export function Cycle() {
         //Finally cycle VM & update graphics.
 
         cycleVM();
+        cyclesCompleted++
 
     }
 

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"image/color"
 	"log"
-	"math/rand"
 	"sccreeper/goputer/frontends/gp32/rendering"
 	"sccreeper/goputer/frontends/gp32/sound"
 	c "sccreeper/goputer/pkg/constants"
@@ -34,13 +33,10 @@ func Run(program []byte, args []string) {
 
 	//Init
 
-	rand.Seed(time.Now().UnixNano())
-
 	log.Println("GP32 frontend starting...")
 	fmt.Println()
 
 	rl.InitWindow(640, 480+int32(rendering.TotalYOffset), fmt.Sprintf("gp32 - %s", args[0]))
-	rl.SetTargetFPS(128)
 
 	var gp32 vm.VM
 
@@ -90,6 +86,9 @@ func Run(program []byte, args []string) {
 	expansions.SetAttribute("goputer.sys", "name", "gp32")
 
 	sound.SoundInit()
+
+	var startTime int64 = time.Now().UnixMilli()
+	var cyclesCompleted int = 0
 
 	//Start rendering
 
@@ -361,7 +360,13 @@ func Run(program []byte, args []string) {
 
 		rl.EndDrawing()
 
+		cyclesCompleted++
+
 	}
+
+	fmt.Printf("Cycles completed: %d\n", cyclesCompleted)
+	fmt.Printf("Time elapsed: %dms\n", time.Now().UnixMilli()-startTime)
+	fmt.Printf("Mean time per cycle: %fms\n", float64(time.Now().UnixMilli()-startTime)/float64(cyclesCompleted))
 
 	for !rl.WindowShouldClose() {
 		rl.BeginDrawing()
