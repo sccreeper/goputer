@@ -26,6 +26,7 @@ export default {
     currentRegPeekValue: null,
     prevRegPeekValue: null,
     focusedFile: "main.gpasm",
+    textureData: new Uint8Array(320*240*3)
 
 }
 
