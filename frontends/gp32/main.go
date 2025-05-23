@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image/color"
 	"log"
+	"math"
 	"sccreeper/goputer/frontends/gp32/rendering"
 	"sccreeper/goputer/frontends/gp32/sound"
 	c "sccreeper/goputer/pkg/constants"
@@ -140,29 +141,6 @@ func Run(program []byte, args []string) {
 			}
 		}
 
-		// Draw video brightness
-
-		// var b float64
-
-		// if gp32.Registers[c.RVideoBrightness] == 0 {
-		// 	b = 0xFF
-		// } else {
-		// 	b = (1 - math.Pow(math.Pow(float64(gp32.Registers[c.RVideoBrightness]), -1)*255.0, -1)) * 255
-		// }
-
-		// rl.DrawRectangle(
-		// 	0,
-		// 	0,
-		// 	640,
-		// 	480,
-		// 	rl.Color{
-		// 		R: 0,
-		// 		G: 0,
-		// 		B: 0,
-		// 		A: uint8(b),
-		// 	},
-		// )
-
 		// Update video texture
 
 		for i := 0; i < int(vm.VideoBufferSize); i += 3 {
@@ -180,6 +158,33 @@ func Run(program []byte, args []string) {
 			VideoRenderTexture.Texture,
 			VideoIntermediate[:],
 		)
+
+		rl.BeginTextureMode(VideoRenderTexture)
+
+		// Draw video brightness
+
+		var b float64
+
+		if gp32.Registers[c.RVideoBrightness] == 0 {
+			b = 0xFF
+		} else {
+			b = (1 - math.Pow(math.Pow(float64(gp32.Registers[c.RVideoBrightness]), -1)*255.0, -1)) * 255
+		}
+
+		rl.DrawRectangle(
+			0,
+			0,
+			int32(vm.VideoBufferWidth),
+			int32(vm.VideoBufferHeight),
+			rl.Color{
+				R: 0,
+				G: 0,
+				B: 0,
+				A: uint8(b),
+			},
+		)
+
+		rl.EndTextureMode()
 
 		//Draw render textures to screen
 
