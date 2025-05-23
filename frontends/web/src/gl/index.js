@@ -13,6 +13,16 @@ import globals from "../globals";
 var drawTexture = null;
 
 /**
+ * @type {ProgramInfo}
+ */
+var programInfo = null;
+
+/**
+ * @type {{position: WebGLBuffer, textureCoord: WebGLBuffer}}
+ */
+var buffers = null;
+
+/**
  * @typedef {Object} ProgramInfo
  * @property {WebGLProgram} program
  * @property {{vertexPosition: GLint, textureCoord: GLint}} attribLocations
@@ -25,21 +35,21 @@ var drawTexture = null;
  * 
  * @param {WebGL2RenderingContext} gl 
  */
-export function glInit(gl) {
+function glInit(gl) {
 
     // Clear canvas
     gl.clearColor(0.0, 0.0, 0.0, 1.0)
     gl.clear(gl.COLOR_BUFFER_BIT)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
 
-    globals.textureData.fill(255)
-    drawTexture = createTexture(gl, globals.textureData, 320, 240, gl.RGB)
+    window.textureData.fill(0)
+    drawTexture = createTexture(gl, window.textureData, 320, 240, gl.RGB)
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
     
     // Load shaders
     const shaderProgram = initShaderProgram(gl, vertexSource, fragmentSource);
 
-    const programInfo = {
+    programInfo = {
         program: shaderProgram,
         attribLocations: {
             vertexPosition: gl.getAttribLocation(shaderProgram, "aVertexPosition"),
@@ -50,7 +60,7 @@ export function glInit(gl) {
         }
     }
 
-    const buffers = initBuffers(gl)
+    buffers = initBuffers(gl)
 
     drawScene(gl, programInfo, buffers, drawTexture)
 
@@ -74,6 +84,19 @@ function drawScene(gl, programInfo, buffers, texture) {
     setPositionAttribute(gl, buffers, programInfo)
     setTextureAttribute(gl, buffers, programInfo)
 
+    gl.bindTexture(gl.TEXTURE_2D, texture)
+    gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGB,
+        320,
+        240,
+        0,
+        gl.RGB,
+        gl.UNSIGNED_BYTE,
+        window.textureData
+    )
+
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, texture)
 
@@ -85,6 +108,10 @@ function drawScene(gl, programInfo, buffers, texture) {
         const vertexCount = 4;
         gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount)
     }
+}
+
+function drawSceneSimple(gl) {
+    drawScene(gl, programInfo, buffers, drawTexture)
 }
 
 /**
@@ -113,3 +140,5 @@ function setTextureAttribute(gl, buffers, programInfo) {
     
     gl.enableVertexAttribArray(programInfo.attribLocations.textureCoord);
 }
+
+export {glInit, drawSceneSimple}

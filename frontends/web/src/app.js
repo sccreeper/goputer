@@ -1,6 +1,7 @@
 import { glContext, canvas, currentInstructionHTML, programCounterHTML, peekRegHTML, peekRegInput } from "./init";
 import globals from "./globals.js"
 import { ShowError, ErrorTypes } from "./error";
+import { drawSceneSimple } from "./gl/index.js";
 
 var previousMousePos = {
     X: 0,
@@ -231,7 +232,7 @@ export function Cycle() {
 
         // Video
         updateFramebuffer();
-
+        drawSceneSimple(glContext)
 
         // Video brightness
 
