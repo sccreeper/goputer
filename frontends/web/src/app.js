@@ -267,8 +267,8 @@ export function Cycle() {
 
         if ((previousMousePos.X != currentMousePos.X) || (previousMousePos.Y != currentMousePos.Y)) {
             
-            setRegister(registerInts["mx"], previousMousePos.X);
-            setRegister(registerInts["my"], previousMousePos.Y);
+            setRegister(registerInts["mx"], Math.floor(previousMousePos.X / 2));
+            setRegister(registerInts["my"], Math.floor(previousMousePos.Y / 2));
 
             previousMousePos.X = currentMousePos.X;
             previousMousePos.Y = currentMousePos.Y
