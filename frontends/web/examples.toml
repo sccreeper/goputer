@@ -1,10 +1,12 @@
 examples = [
     { name="Video Area", description="Draws a white rectangle to the screen", path="area_test", program_text="""
 //Draws a rectangle to the screen
-def pos 64
-def size 5
+#def pos 64
+#def size 2
 
-def white 0xFFFFFFFF
+#def white 0xFFFFFFFF
+
+#label start
 
 lda @white
 mov d0 vc
@@ -27,8 +29,10 @@ int va
     { name="Hello World", description="Basic hello world example", path="hello_world", program_text="""
 // Simple hello world example
 
-def hw "Hello World"
-def white 0xFFFFFFFF
+#def hw "Hello World"
+#def white 0xFFFFFFFF
+
+#label start
 
 lda @hw
 mov d0 vt
@@ -42,7 +46,7 @@ int vt
 
 // Turning IO outputs on/off with switches.
 
-:handle_io
+#label handle_io
 
 mov io08 io00
 mov io09 io01
@@ -57,22 +61,21 @@ int iof
 
 iret
 
-end
+#intsub io08 handle_io
+#intsub io09 handle_io
+#intsub io10 handle_io
+#intsub io11 handle_io
+#intsub io12 handle_io
+#intsub io13 handle_io
+#intsub io14 handle_io
+#intsub io15 handle_io
 
-intsub io08 handle_io
-intsub io09 handle_io
-intsub io10 handle_io
-intsub io11 handle_io
-intsub io12 handle_io
-intsub io13 handle_io
-intsub io14 handle_io
-intsub io15 handle_io
+#label hang_loop
+jmp @hang_loop
 
-:hang_loop
-jmp hang_loop
-end
+#label start
 
-jmp hang_loop
+jmp @hang_loop
  
 """},
     { name="Paint", description="Simple paint program", path="line_paint", program_text="""
@@ -80,10 +83,10 @@ jmp hang_loop
 //r00 = mx previous
 //r01 = my previous
 
-def white 0xFFFFFFFF
-def black 0x000000FF
+#def white 0xFFFFFFFF
+#def black 0x000000FF
 
-:handle_mouse_move
+#label handle_mouse_move
 
 mov mx vx1
 mov my vy1
@@ -98,9 +101,8 @@ mov my r01
 
 iret
 
-end
+#label clear_bg
 
-:clear_bg
 lda @white
 mov d0 vc
 int vc
@@ -110,14 +112,13 @@ mov d0 vc
 
 iret
 
-end
+#intsub mm handle_mouse_move
+#intsub kd clear_bg
 
-intsub mm handle_mouse_move
-intsub kd clear_bg
+#label loop
+jmp @loop
 
-:loop
-jmp loop
-end
+#label start
 
 lda @white
 mov d0 vc
@@ -126,23 +127,25 @@ int vc
 lda @black
 mov d0 vc
 
-jmp loop
+jmp @loop
 
 """},
     { name="Sound", description="Increasing sound frequency", path="sound", program_text="""
 //Outputs a sine wave and increases frequency over time.
-def x 10
-def t 50
-def vol 16
+#def x 10
+#def t 50
+#def vol 16
 
-:loop
+#label loop
+
 add r00 r02
 mov a0 r00
 mov r00 st
 int sf
 hlt r01
-jmp loop
-end
+jmp @loop
+
+#label start
 
 lda @x
 mov d0 r00
@@ -154,13 +157,15 @@ mov d0 r01
 lda @vol
 mov d0 sv
 
-jmp loop
+jmp @loop
 """},
 { name="System Module", description="Grabs the name of the frontend from the system module", path="sys_module", program_text="""
 // Interacts with the system module
 
-def white 0xFFFFFFFF
-def name_string "Name: "
+#def white 0xFFFFFFFF
+#def name_string "Name: "
+
+#label start
 
 lda @white
 mov d0 vc
@@ -179,22 +184,17 @@ int vt
 {name="Paint keyboard", description="Like paint but uses keyboard presses for drawing", path="paint_keyboard_press", program_text="""
 //Paint that uses clicks
 
-def bg 0xffffffff
-def line 0x000000ff
-
-lda @bg
-mov d0 vc
-int vc
+#def bg 0xffffffff
+#def line 0x000000ff
 
 // Main hang loop
 
-:loop
-jmp loop
-end
+#label loop
+jmp @loop
 
 // Cleanup
 
-:end_draw
+#label end_draw
 
 clr a0
 clr io00
@@ -202,23 +202,19 @@ int iof
 
 ret
 
-end
-
 // Two main draw calls
 
-:draw_line
+#label draw_line
 int vl
 ret
-end
 
-:draw_square
+#label draw_square
 int va
 ret
-end
 
 // Decide wether to draw square or line
 
-:finish_draw
+#label finish_draw
 
 mov mx vx1
 mov my vy1
@@ -226,18 +222,16 @@ mov my vy1
 clr a0
 
 eq io08 r00
-cndcall draw_square
+cndcall @draw_square
 
 neq io08 r00
-cndcall draw_line
+cndcall @draw_line
 
-call end_draw
+call @end_draw
 
 iret
 
-end
-
-:start_draw
+#label start_draw
 
 mov mx vx0
 mov my vy0
@@ -248,29 +242,33 @@ int iof
 
 iret
 
-end
-
 // Handle initial keyboard press
 
-:onpress
+#label onpress
 
 neq io00 r00
-cndjmp start_draw
+cndjmp @start_draw
 
 eq io00 r00
-cndjmp finish_draw
+cndjmp @finish_draw
 
-end
+iret
 
 // Entrypoint
 
-intsub kd onpress
+#label start
+
+lda @bg
+mov d0 vc
+int vc
+
+#intsub kd onpress
 
 lda @line
 mov d0 vc
 
 incr r00
 
-jmp loop
+jmp @loop
 """}
 ]
