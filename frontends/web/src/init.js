@@ -149,6 +149,14 @@ var peekRegDatalist = document.getElementById("peek-reg-datalist");
 
 const peekRegHTML = document.getElementById("peek-reg-value");
 
+peekRegHTML.addEventListener("click", e => {
+    if (peekRegHTML.style.height != "auto") {
+        peekRegHTML.style.height = "auto"
+    } else {
+        peekRegHTML.style.height = "2rem"
+    }
+})
+
 Object.keys(registerInts).forEach(element => {
     
     let el = document.createElement("option")
@@ -160,6 +168,7 @@ Object.keys(registerInts).forEach(element => {
 const peekRegInput = document.getElementById("peek-reg");
 peekRegInput.value = "";
 peekRegInput.addEventListener("input", PeekRegister);
+document.getElementById("peek-format-select").addEventListener("change", PeekRegister)
 
 GetSharedCode();
 

@@ -140,7 +140,7 @@
 
     }
 
-    .datalist-default {
+    .datalist-default, select {
         @apply bg-gray-800;
         @apply border-b;
         @apply border-gray-400;

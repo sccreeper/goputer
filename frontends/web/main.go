@@ -133,35 +133,30 @@ func GetRegister(this js.Value, args []js.Value) any {
 
 }
 
+func GetRegisterBytes(this js.Value, args []js.Value) any {
+
+	src := make([]byte, 4)
+	binary.LittleEndian.PutUint32(src, js32.Registers[constants.Register(args[0].Int())])
+
+	js.CopyBytesToJS(args[1], src)
+
+	return js.ValueOf(nil)
+
+}
+
 func GetBuffer(this js.Value, args []js.Value) any {
 
 	if args[0].String() == "text" {
 
-		//Convert buffer
+		js.CopyBytesToJS(args[1], js32.TextBuffer[:])
 
-		converted := make([]interface{}, 0)
-
-		for _, v := range js32.TextBuffer {
-
-			converted = append(converted, int(v))
-
-		}
-
-		return js.ValueOf(converted)
+		return js.ValueOf(nil)
 
 	} else if args[0].String() == "data" {
 
-		//Convert buffer
+		js.CopyBytesToJS(args[1], js32.DataBuffer[:])
 
-		converted := make([]interface{}, 0)
-
-		for _, v := range js32.DataBuffer {
-
-			converted = append(converted, int(v))
-
-		}
-
-		return js.ValueOf(converted)
+		return js.ValueOf(nil)
 
 	} else {
 
@@ -344,6 +339,7 @@ func main() {
 
 	js.Global().Set("setRegister", js.FuncOf(SetRegister))
 	js.Global().Set("getRegister", js.FuncOf(GetRegister))
+	js.Global().Set("getRegisterBytes", js.FuncOf(GetRegisterBytes))
 	js.Global().Set("getBuffer", js.FuncOf(GetBuffer))
 
 	js.Global().Set("getInterrupt", js.FuncOf(GetInterrupt))

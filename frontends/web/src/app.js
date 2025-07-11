@@ -48,9 +48,15 @@ export function PeekRegister() {
         return;
     } else {
         if (registerInts[peekRegInput.value] != undefined) {
+            
             globals.registerPeekValue = peekRegInput.value;
-            peekRegHTML.textContent = GetRegisterText(registerInts[globals.registerPeekValue]) 
+            peekRegHTML.textContent = GetRegisterText(
+                registerInts[globals.registerPeekValue], 
+                document.getElementById("peek-format-select").value
+            ) 
+            
             peekRegInput.setAttribute("valid-reg", "true");
+        
         } else {
             peekRegInput.setAttribute("valid-reg", "false");
         }
@@ -58,56 +64,89 @@ export function PeekRegister() {
     }
 }
 
-// Used in conjunction with PeekRegister
-export function GetRegisterText(reg_int) {
+/**
+ * Used in conjunction with PeekRegister
+ * @param {number} regInt 
+ * @param {string} format 
+ * @returns {string}
+ */
+export function GetRegisterText(regInt, format) {
+    
 
-    if (reg_int == registerInts["d0"]) {
+    let bytes = new Uint8Array(
+        regInt == registerInts["d0"] || regInt == registerInts["vt"] ? 128 : 4
+    );
+
+    if (regInt == registerInts["d0"] || regInt == registerInts["vt"]) {
         
-        let data = getBuffer("data");
-        let data_string = "";
-
-        let last_val_zero = true;
-
-        data.forEach(element => {
-
-            if (element != 0) {
-                last_val_zero = false;
-                data_string += element.toString() + " ";
-            } else if (element == 0 && !last_val_zero) {
-                last_val_zero = true;
-                data_string += ".. "
-            }
-
-        });
-
-        return data_string;
-
-
-    } else if (reg_int == registerInts["vt"]) {
-        
-        let t_buff = getBuffer("text");
-        
-        var t_codes = []
-
-        t_buff.forEach(element => {
-            
-            if (element != 0) {
-                t_codes.push(element)
-            }
-
-        });
-
-        // Convert from array of ints to chars.
-        return String.fromCharCode(...t_codes)
+        if (regInt == registerInts["d0"]) {
+            getBuffer("data", bytes)
+        } else {
+            getBuffer("text", bytes)
+        }
 
     } else {
-        let hex_string = getRegister(registerInts[globals.registerPeekValue]).toString(16)
-        hex_string = hex_string.split("")
 
-        hex_string = hex_string.reverse()
-        hex_string = hex_string.join("")
+        getRegisterBytes(registerInts[globals.registerPeekValue], bytes)
+    }
 
-        return `0x${hex_string.toUpperCase().padStart(8, "0")} (${getRegister(registerInts[globals.registerPeekValue])})`;
+    let result = ""
+
+    switch (format) {
+        case "hex":
+
+            bytes.forEach(element => {
+                result += element.toString(16).padStart(2, "0")
+            });
+
+            return `0x${result}`
+
+        
+        case "binary":
+
+            bytes.forEach(element => {
+                result += element.toString(2).padStart(8, "0")
+                result += " "
+            });
+
+            return result
+            
+        case "text":
+            
+            for (let i = 0; i < bytes.length; i++) {
+                
+                if (bytes[i] == 0) {
+                    continue
+                } else {
+                    result += String.fromCharCode(bytes[i])
+                }
+                
+            }
+
+            if (result.length == 0) {
+                return "No string found"
+            }
+
+            return result
+
+        case "decimal":
+
+            if (regInt == registerInts["d0"] || regInt == registerInts["vt"]) {
+                
+                bytes.forEach(element => {
+                    result += element.toString() + " "
+                });
+
+                return result
+
+            } else {
+
+                return getRegister(regInt).toString()
+
+            }
+
+        default:
+            break;
     }
     
 }

@@ -34,7 +34,7 @@
         <div class="content-div mr-4 row-span-2">
             <div class="m-4">
                 <h1 class="sub-heading">Program code</h1>
-                
+
 
                 <div class="font-normal w-full rounded-lg bg-gray-800 text-white">
 
@@ -177,9 +177,17 @@
                                 <input list="peek-reg-datalist" placeholder="Peek reg/buff" id="peek-reg"
                                     class="datalist-default" valid-reg="true" />
                                 <datalist id="peek-reg-datalist"></datalist>
+
+                                <select id="peek-format-select">
+                                    <option value="hex">Hex</option>
+                                    <option value="binary">Binary</option>
+                                    <option value="text">Text</option>
+                                    <option value="decimal">Decimal</option>
+                                </select>
                             </td>
                             <td>
-                                <div class="table-code h-8 overflow-y-auto" id="peek-reg-value">Empty</div>
+                                <div class="table-code h-8 overflow-y-auto cursor-pointer" id="peek-reg-value"
+                                    title="Click to expand">Empty</div>
                             </td>
                         </tr>
                     </table>
