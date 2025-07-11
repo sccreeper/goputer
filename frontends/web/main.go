@@ -276,15 +276,18 @@ func Disassemble(this js.Value, args []js.Value) any {
 
 func GetProgramBytes(this js.Value, args []js.Value) any {
 
-	// Convert to []interface{}
+	return js.ValueOf(programBytes)
 
-	interface_program_bytes := make([]interface{}, 0)
+}
 
-	for _, v := range programBytes {
-		interface_program_bytes = append(interface_program_bytes, v)
-	}
+func SetProgramBytes(this js.Value, args []js.Value) any {
 
-	return js.ValueOf(interface_program_bytes)
+	programBytes = make([]byte, args[1].Int())
+
+	bytesCopied := js.CopyBytesToGo(programBytes, args[0])
+	fmt.Println(bytesCopied)
+
+	return js.ValueOf(nil)
 
 }
 
@@ -359,6 +362,7 @@ func main() {
 	js.Global().Set("getFiles", js.FuncOf(GetFiles))
 
 	js.Global().Set("getProgramBytes", js.FuncOf(GetProgramBytes))
+	js.Global().Set("setProgramBytes", js.FuncOf(SetProgramBytes))
 
 	js.Global().Set("disassembleCode", js.FuncOf(Disassemble))
 

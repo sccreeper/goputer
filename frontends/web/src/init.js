@@ -1,6 +1,6 @@
 import { Compile, handleKeyDown, handleKeyUp, handleMouseMove, IOToggle, PeekRegister, Run } from "./app";
 import globals from "./globals";
-import { DownloadProgram, GetSharedCode, ShareCode } from "./sharing";
+import { DownloadProgram, GetSharedCode, ShareCode, UploadBinary } from "./sharing";
 import { ExamplesInit } from "./examples";
 import { NewFileUI, SwitchFocus } from "./imports";
 import { glInit } from "./gl/index";
@@ -71,6 +71,7 @@ document.getElementById("compile-code-button").addEventListener("click", Compile
 document.getElementById("run-code-button").addEventListener("click", Run)
 document.getElementById("download-code-button").addEventListener("click", DownloadProgram)
 document.getElementById("share-code-button").addEventListener("click", ShareCode)
+document.getElementById("upload-binary-button").addEventListener("click", UploadBinary)
 
 document.getElementById("stop-code-button").addEventListener("click", function (e) {  
     clearInterval(globals.runInterval);
@@ -96,10 +97,19 @@ document.getElementById("stop-code-button").addEventListener("click", function (
     globals.vmIsAlive = false;
     globals.videoText = "";
 
+    // Clear canvas
+
     gl.clearColor(0.0, 0.0, 0.0, 1.0)
     gl.clear(gl.COLOR_BUFFER_BIT)
 
     canvas.setAttribute("running", "false");
+
+    // Show editor again
+    document.getElementById("code-editor").style.visibility = "visible"
+    document.getElementById("binary-message").style.visibility = "hidden"
+    document.getElementById("compile-code-button").disabled = false
+    document.getElementById("share-code-button").disabled = false
+
 })
 
 //Init IO elements

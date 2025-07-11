@@ -83,3 +83,41 @@ export function DownloadProgram(e) {
     link.click();
 
 }
+
+export function UploadBinary(e) {
+
+    let uploadForm = document.createElement("input")
+    uploadForm.type = "file"
+    uploadForm.accept = ".gp"
+    uploadForm.multiple = false
+
+    uploadForm.addEventListener("change", async (e) => {
+    
+        let file = uploadForm.files[0]
+
+        let fileBytes = new Uint8Array(await file.arrayBuffer())
+        console.log(`Read file with ${fileBytes.length} byte(s)`)
+
+        setProgramBytes(fileBytes, fileBytes.length)
+
+        document.getElementById("run-code-button").disabled = false
+        document.getElementById("download-code-button").disabled = false
+        document.getElementById("code-textarea").disabled = true
+
+        globals.codeHasBeenCompiled = true
+        globals.compileFailed = false
+
+        // Hide code editor
+
+        document.getElementById("code-editor").style.visibility = "hidden"
+        document.getElementById("binary-message").style.display = "block"
+        document.getElementById("compile-code-button").disabled = true
+        document.getElementById("share-code-button").disabled = true
+
+        ShowError(ErrorTypes.Success, "Binary uploaded successfully")
+
+    })
+
+    uploadForm.click()
+    
+}

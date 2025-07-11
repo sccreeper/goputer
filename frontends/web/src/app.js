@@ -137,7 +137,7 @@ export function Run(e) {
 
     if (!globals.codeHasBeenCompiled) {
 
-        ShowError(ErrorTypes.Error, "No code has been compiled!")
+        ShowError(ErrorTypes.Error, "No code has been uploaded or compiled!")
 
     } else {
 

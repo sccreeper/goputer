@@ -207,4 +207,11 @@
         @apply text-gray-400;
     }
 
+    #binary-message {
+        @apply hidden;
+        @apply text-center;
+        @apply -top-56;
+        @apply relative;
+    }
+
 }
