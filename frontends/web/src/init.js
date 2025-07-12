@@ -1,4 +1,4 @@
-import { Compile, handleKeyDown, handleKeyUp, handleMouseMove, IOToggle, PeekRegister, Run } from "./app";
+import { Compile, handleKeyDown, handleKeyUp, handleMouseMove, IOToggle, PeekRegister, Run, SaveVideo } from "./app";
 import globals from "./globals";
 import { DownloadProgram, GetSharedCode, ShareCode, UploadBinary } from "./sharing";
 import { ExamplesInit } from "./examples";
@@ -53,7 +53,7 @@ const currentInstructionHTML = document.getElementById("current-instruction");
  * @type {HTMLCanvasElement}
  */
 const canvas = document.getElementById("render-canvas")
-const gl = canvas.getContext("webgl2") ?? alert("Your browser does not support WebGL. goputer will not work.");
+const gl = canvas.getContext("webgl2", {preserveDrawingBuffer: true}) ?? alert("Your browser does not support WebGL. goputer will not work.");
 glInit(gl);
 
 //Init audio
@@ -72,6 +72,7 @@ document.getElementById("run-code-button").addEventListener("click", Run)
 document.getElementById("download-code-button").addEventListener("click", DownloadProgram)
 document.getElementById("share-code-button").addEventListener("click", ShareCode)
 document.getElementById("upload-binary-button").addEventListener("click", UploadBinary)
+document.getElementById("save-video-button").addEventListener("click", SaveVideo)
 
 document.getElementById("stop-code-button").addEventListener("click", function (e) {  
     clearInterval(globals.runInterval);

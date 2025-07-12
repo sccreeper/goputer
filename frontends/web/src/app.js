@@ -376,3 +376,16 @@ export function Cycle() {
     }
 
 }
+
+/**
+ * Save current canvas state as a PNG
+ * @param {MouseEvent} e 
+ */
+export function SaveVideo(e) {
+
+    let downloadLink = document.createElement("a")
+    downloadLink.href = canvas.toDataURL("image/png") 
+    downloadLink.download = "video.png"
+    downloadLink.click()
+
+}

@@ -34,6 +34,16 @@
         @apply bg-blue-800;
     }
 
+    .text-button {
+        @apply text-gray-400;
+        @apply cursor-pointer;
+        @apply transition-colors;
+    }
+
+    .text-button:hover {
+        @apply text-blue-600;
+    }
+
     .content-div {
         @apply bg-gray-700;
         @apply rounded-xl;
