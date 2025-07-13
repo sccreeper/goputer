@@ -4,6 +4,7 @@ import { DownloadProgram, GetSharedCode, ShareCode, UploadBinary } from "./shari
 import { ExamplesInit } from "./examples";
 import { NewFileUI, SwitchFocus } from "./imports";
 import { glInit } from "./gl/index";
+import { ToggleRecording } from "./recording";
 
 //Cycles per second
 export const CPS = 240;
@@ -73,6 +74,7 @@ document.getElementById("download-code-button").addEventListener("click", Downlo
 document.getElementById("share-code-button").addEventListener("click", ShareCode)
 document.getElementById("upload-binary-button").addEventListener("click", UploadBinary)
 document.getElementById("save-video-button").addEventListener("click", SaveVideo)
+document.getElementById("record-video-button").addEventListener("click", ToggleRecording)
 
 document.getElementById("stop-code-button").addEventListener("click", function (e) {  
     clearInterval(globals.runInterval);

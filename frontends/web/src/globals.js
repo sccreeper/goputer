@@ -1,5 +1,4 @@
 import { ShowError } from "./error"
-
 export default {
 
     codeHasBeenCompiled: false,
@@ -7,9 +6,17 @@ export default {
     vmInited: false,
     runInterval: null,
     FPS: 512,
-    vmWorker: null,
+    /**
+     * @type {AudioContext}
+     */
     audioContext: null,
+    /**
+     * @type {OscillatorNode}
+     */
     oscillator: null,
+    /**
+     * @type {GainNode}
+     */
     audioVolume: null,
     soundStarted: false,
     mouseOverDisplay: false,
