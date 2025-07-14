@@ -24,7 +24,7 @@ var itnMap map[uint32]string
 var registerMap map[uint32]string
 var interruptMap map[constants.Interrupt]string
 
-var fileMap map[string]string
+var fileMap map[string][]byte
 
 //Custom compile and run methods.
 
@@ -33,7 +33,7 @@ func Compile() js.Func {
 	compileFunc := js.FuncOf(func(this js.Value, args []js.Value) any {
 
 		p := compiler.Parser{
-			CodeString:   args[0].String(),
+			CodeString:   string(fileMap["main.gpasm"]),
 			FileName:     "main.gpasm",
 			Verbose:      false,
 			Imported:     false,
@@ -65,14 +65,19 @@ func fileReader(path string) ([]byte, error) {
 }
 
 func UpdateFile(this js.Value, args []js.Value) any {
-	fileMap[args[0].String()] = args[1].String()
+	fileMap[args[0].String()] = make([]byte, args[2].Int())
+	bytesCopied := js.CopyBytesToGo(fileMap[args[0].String()], args[1])
+
+	fmt.Printf("Updated file %s with %d byte(s)\n", args[0].String(), bytesCopied)
 
 	return js.ValueOf(nil)
 }
 
 func GetFile(this js.Value, args []js.Value) any {
 
-	return js.ValueOf(fileMap[args[0].String()])
+	js.CopyBytesToJS(args[1], fileMap[args[0].String()])
+
+	return js.ValueOf(nil)
 
 }
 
@@ -94,6 +99,10 @@ func GetFiles(this js.Value, args []js.Value) any {
 
 	return js.ValueOf(keys)
 
+}
+
+func NumFiles(this js.Value, args []js.Value) any {
+	return js.ValueOf(len(fileMap))
 }
 
 func HandleError(error_type compiler.ErrorType, error_text string) {
@@ -279,8 +288,7 @@ func SetProgramBytes(this js.Value, args []js.Value) any {
 
 	programBytes = make([]byte, args[1].Int())
 
-	bytesCopied := js.CopyBytesToGo(programBytes, args[0])
-	fmt.Println(bytesCopied)
+	js.CopyBytesToGo(programBytes, args[0])
 
 	return js.ValueOf(nil)
 
@@ -356,6 +364,7 @@ func main() {
 	js.Global().Set("removeFile", js.FuncOf(RemoveFile))
 	js.Global().Set("getFile", js.FuncOf(GetFile))
 	js.Global().Set("getFiles", js.FuncOf(GetFiles))
+	js.Global().Set("numFiles", js.FuncOf(NumFiles))
 
 	js.Global().Set("getProgramBytes", js.FuncOf(GetProgramBytes))
 	js.Global().Set("setProgramBytes", js.FuncOf(SetProgramBytes))
@@ -364,8 +373,8 @@ func main() {
 
 	js.Global().Set("updateFramebuffer", js.FuncOf(UpdateFrameBuffer))
 
-	fileMap = make(map[string]string)
-	fileMap["main.gpasm"] = ""
+	fileMap = make(map[string][]byte)
+	fileMap["main.gpasm"] = []byte("")
 
 	//Convert constants maps into [string]interface maps
 

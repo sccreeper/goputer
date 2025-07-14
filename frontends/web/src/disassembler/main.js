@@ -1,3 +1,4 @@
+import { goputer } from "../goputer";
 import { DisplayDisassembledCode } from "./display";
 import shared from "./shared";
 
@@ -66,9 +67,9 @@ ButtonDisassemble.addEventListener("click", (e) => {
         return
     }
 
-    let code_string = disassembleCode(uploadedBytes)
+    let code = goputer.disassembleCode(uploadedBytes)
     
-    DisplayDisassembledCode(code_string)
+    DisplayDisassembledCode(code)
 
     file_disassembled = true;
 

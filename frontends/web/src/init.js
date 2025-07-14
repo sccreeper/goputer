@@ -5,6 +5,7 @@ import { ExamplesInit } from "./examples";
 import { NewFileUI, SwitchFocus } from "./imports";
 import { glInit } from "./gl/index";
 import { ToggleRecording } from "./recording";
+import { goputer } from "./goputer";
 
 //Cycles per second
 export const CPS = 240;
@@ -15,12 +16,16 @@ await WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then
     go.run(result.instance);
 });
 
-document.getElementById("code-textarea").addEventListener("change", (e) => {
-    updateFile(globals.focusedFile, document.getElementById("code-textarea").value);
+document.getElementById("code-textarea").addEventListener("input", (e) => {
+
+    let encoder = new TextEncoder();
+    let encoded = encoder.encode(document.getElementById("code-textarea").value);
+
+    goputer.files.update(globals.focusedFile, encoded, encoded.length);
 })
 
-export const new_file = document.getElementById("new-file");
-new_file.addEventListener("click", NewFileUI)
+export const newFile = document.getElementById("new-file");
+newFile.addEventListener("click", NewFileUI)
 
 document.getElementById("main-gpasm").addEventListener("click", SwitchFocus)
 

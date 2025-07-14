@@ -1,5 +1,6 @@
 // Display disassembled code in UI.
 
+import { goputer } from "../goputer";
 import { instructionsContainer, definitionsContainer, interruptTableContainer } from "./main";
 import shared from "./shared";
 
@@ -53,9 +54,8 @@ function GenerateInstructionHTML(instructionObj, offset) {
 
 }
 
-export function DisplayDisassembledCode(codeJSONString) {
+export function DisplayDisassembledCode(codeObject) {
 
-    let codeObject = JSON.parse(codeJSONString)
     shared.file_json = JSON.stringify(codeObject, null, 3);
 
     // Display instructions
@@ -95,7 +95,7 @@ export function DisplayDisassembledCode(codeJSONString) {
 
         let interruptAddress = document.createElement("td")
         interruptAddress.classList.add("font-fira")
-        interruptAddress.textContent = convertHex(value, false)
+        interruptAddress.textContent = goputer.util.convertHex(value, false)
         interruptRow.appendChild(interruptAddress)
 
         interruptTable.appendChild(interruptRow)

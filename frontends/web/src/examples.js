@@ -21,7 +21,7 @@ export function ExamplesInit() {
         example_desc.textContent = element.description
         example_container.appendChild(example_desc)
 
-        example_container.addEventListener("click", load_example)
+        example_container.addEventListener("click", loadExample)
 
         examplesDiv.appendChild(example_container)
 
@@ -29,10 +29,20 @@ export function ExamplesInit() {
 
 }
 
-async function load_example(e) {
+async function loadExample(e) {
 
     document.getElementById("code-textarea").value = "Loading...";
 
     document.getElementById("code-textarea").value = examples_obj[e.currentTarget.getAttribute("data-path")]
+
+    document.getElementById("code-textarea").dispatchEvent(
+        new InputEvent(
+            "input",
+            {
+                bubbles: true,
+                cancelable: true
+            }
+        )
+    )
 
 }

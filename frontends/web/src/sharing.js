@@ -1,5 +1,6 @@
 import { ErrorTypes, ShowError } from "./error";
 import globals from "./globals";
+import { goputer } from "./goputer";
 import { NewFile } from "./imports";
 
 // Extracts shared code from URL
@@ -9,17 +10,21 @@ export function GetSharedCode() {
         return;
     }
 
-    let base64_string = window.location.search;
-    base64_string = base64_string.substring(3, base64_string.length);
+    let base64Sting = window.location.search;
+    base64Sting = base64Sting.substring(3, base64Sting.length);
 
-    let code_json = JSON.parse(atob(base64_string))
+    let codeJson = JSON.parse(atob(base64Sting))
 
-    for (const [key, value] of Object.entries(code_json)) {
+    for (const [key, value] of Object.entries(codeJson)) {
 
         if (key != "main.gpasm") {
             NewFile(key)
         }
-        updateFile(key, atob(value))
+
+        let encoder = new TextEncoder()
+        let encoded = encoder.encode(atob(value))
+
+        goputer.files.update(key, encoded, encoded.length)
         document.getElementById("code-textarea").value = atob(value);
 
     }
@@ -31,12 +36,12 @@ export function GetSharedCode() {
 // Converts text area to base64 and copies shareable URL to clipboard.
 export function ShareCode(e) {
 
-    let files = getFiles()
+    let files = goputer.files.fileNames
 
     var files_object = {}
 
     files.forEach(element => {
-        files_object[element] = btoa(getFile(element))
+        files_object[element] = btoa(goputer.files.get(element))
     });
 
     let code_json = JSON.stringify(files_object)
@@ -59,12 +64,12 @@ export function DownloadProgram(e) {
 
     // Convert method return value to bytes first.
 
-    let program_bytes_array = getProgramBytes()
+    let programBytesArray = goputer.getProgramBytes()
 
-    let program_bytes = new Uint8Array(program_bytes_array.length)
+    let programBytes = new Uint8Array(programBytesArray.length)
 
-    for (let i = 0; i < program_bytes_array.length; i++) {
-        program_bytes[i] = program_bytes_array[i]
+    for (let i = 0; i < programBytesArray.length; i++) {
+        programBytes[i] = programBytesArray[i]
     }
 
     let date = new Date()
@@ -73,7 +78,7 @@ export function DownloadProgram(e) {
         return
     }
 
-    let blob = new Blob([program_bytes], { type: "application/octet-stream" })
+    let blob = new Blob([programBytes], { type: "application/octet-stream" })
     let link = document.createElement("a")
     link.href = window.URL.createObjectURL(blob)
 
@@ -98,7 +103,7 @@ export function UploadBinary(e) {
         let fileBytes = new Uint8Array(await file.arrayBuffer())
         console.log(`Read file with ${fileBytes.length} byte(s)`)
 
-        setProgramBytes(fileBytes, fileBytes.length)
+        goputer.setProgramBytes(fileBytes, fileBytes.length)
 
         document.getElementById("run-code-button").disabled = false
         document.getElementById("download-code-button").disabled = false

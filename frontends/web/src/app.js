@@ -2,6 +2,7 @@ import { glContext, canvas, currentInstructionHTML, programCounterHTML, peekRegH
 import globals from "./globals.js"
 import { ShowError, ErrorTypes } from "./error";
 import { drawSceneSimple } from "./gl/index.js";
+import { goputer } from "./goputer.js";
 
 var previousMousePos = {
     X: 0,
@@ -80,14 +81,15 @@ export function GetRegisterText(regInt, format) {
     if (regInt == registerInts["d0"] || regInt == registerInts["vt"]) {
         
         if (regInt == registerInts["d0"]) {
-            getBuffer("data", bytes)
+            goputer.getBuffer("data", bytes)
         } else {
-            getBuffer("text", bytes)
+            goputer.getBuffer("text", bytes)
         }
 
     } else {
 
-        getRegisterBytes(registerInts[globals.registerPeekValue], bytes)
+        goputer.getRegisterBytes(registerInts[globals.registerPeekValue], bytes)
+    
     }
 
     let result = ""
@@ -158,7 +160,7 @@ export function Compile(e) {
     globals.errorDiv.replaceChildren();
 
     globals.compileFailed = false;
-    compileCode(document.getElementById("code-textarea").value)
+    goputer.compileCode()
     globals.codeHasBeenCompiled = true;
 
     if(!globals.compileFailed) {
@@ -180,7 +182,7 @@ export function Run(e) {
 
     } else {
 
-        initVM();
+        goputer.initVm();
 
         globals.vmIsAlive = true;
         globals.runInterval = setInterval(Cycle, Math.round(1000 / globals.FPS));
@@ -224,7 +226,7 @@ export function handleKeyUp(e) {
 //Performs one cycle of the VM & Updates UI
 export function Cycle() {
     
-    if (isFinished()) {
+    if (goputer.isFinished) {
 
         console.log(`Time elapsed: ${Date.now()-executionStartTime}ms`)
         console.log(`Average time per cycle: ${(Date.now()-executionStartTime)/cyclesCompleted}ms`)
@@ -246,7 +248,7 @@ export function Cycle() {
 
         //Handle called interrupts.
 
-        var x = getInterrupt()
+        var x = goputer.getInterrupt()
 
         switch (x) {
             case interruptInts["ss"]:
@@ -281,7 +283,7 @@ export function Cycle() {
         }
 
         // Video
-        updateFramebuffer();
+        goputer.updateFramebuffer();
         drawSceneSimple(glContext)
 
         // Video brightness
@@ -306,15 +308,15 @@ export function Cycle() {
 
         if ((previousMousePos.X != currentMousePos.X) || (previousMousePos.Y != currentMousePos.Y)) {
             
-            setRegister(registerInts["mx"], Math.floor(previousMousePos.X / 2));
-            setRegister(registerInts["my"], Math.floor(previousMousePos.Y / 2));
+            goputer.setRegister(registerInts["mx"], Math.floor(previousMousePos.X / 2));
+            goputer.setRegister(registerInts["my"], Math.floor(previousMousePos.Y / 2));
 
             previousMousePos.X = currentMousePos.X;
             previousMousePos.Y = currentMousePos.Y
         
-            if (isSubscribed(interruptInts["mm"])) {
+            if (goputer.isSubscribed(interruptInts["mm"])) {
 
-                sendInterrupt(interruptInts["mm"]);
+                goputer.sendInterrupt(interruptInts["mm"]);
             }
 
         }
@@ -323,20 +325,20 @@ export function Cycle() {
 
         if (globals.keysDown.length > 0 ) {
             
-            setRegister(registerInts["kc"], globals.keysDown.pop())
+            goputer.setRegister(registerInts["kc"], globals.keysDown.pop())
 
-            if (isSubscribed(interruptInts["kd"])) {
-                sendInterrupt(interruptInts["kd"])
+            if (goputer.isSubscribed(interruptInts["kd"])) {
+                goputer.sendInterrupt(interruptInts["kd"])
             }
 
         }
 
         if (globals.keysUp.length > 0) {
             
-            setRegister(registerInts["kp"], globals.keysUp.pop())
+            goputer.setRegister(registerInts["kp"], globals.keysUp.pop())
 
-            if (isSubscribed(interruptInts["ku"])) {
-                sendInterrupt(interruptInts["ku"])
+            if (goputer.isSubscribed(interruptInts["ku"])) {
+                goputer.sendInterrupt(interruptInts["ku"])
             }
 
         }
@@ -345,10 +347,10 @@ export function Cycle() {
 
         globals.switchQueue.forEach(element => {
         
-            setRegister(registerInts[element.register], (element.enabled) ? 1 : 0)
+            goputer.setRegister(registerInts[element.register], (element.enabled) ? 1 : 0)
 
-            if (isSubscribed(interruptInts[element.register])) {
-                sendInterrupt(interruptInts[element.register])
+            if (goputer.isSubscribed(interruptInts[element.register])) {
+                goputer.sendInterrupt(interruptInts[element.register])
             }
 
         });
@@ -357,7 +359,7 @@ export function Cycle() {
 
         //Update hardware info
 
-        currentInstructionHTML.innerHTML = String(currentItn());
+        currentInstructionHTML.innerHTML = String(goputer.currentItn);
         programCounterHTML.innerHTML = getRegister(registerInts["prc"])
 
         if (globals.registerPeekValue != null && GetRegisterText(registerInts[globals.registerPeekValue]) != globals.prevRegPeekValue) {
@@ -370,7 +372,7 @@ export function Cycle() {
 
         //Finally cycle VM & update graphics.
 
-        cycleVM();
+        goputer.cycleVm();
         cyclesCompleted++
 
     }
