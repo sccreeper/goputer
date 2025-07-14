@@ -16,7 +16,8 @@ module.exports = {
     "border-gray-400",
     "border-b",
     "program-definition",
-    "definition-info"
+    "definition-info",
+    "delete-file-button"
   ],
   plugins: [],
 }

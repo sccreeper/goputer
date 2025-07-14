@@ -188,6 +188,7 @@
         @apply border-gray-500;
         @apply text-center;
         @apply inline-block;
+        @apply cursor-pointer;
     }
 
     .code-name[data-selected=true] {
@@ -196,6 +197,10 @@
 
     .code-name > * {
         @apply inline-block;
+    }
+
+    .delete-file-button {
+        @apply cursor-pointer;
     }
 
     .program-definition {

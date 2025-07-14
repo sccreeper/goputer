@@ -81,6 +81,10 @@ func GetFile(this js.Value, args []js.Value) any {
 
 }
 
+func GetFileSize(this js.Value, args []js.Value) any {
+	return js.ValueOf(len(fileMap[args[0].String()]))
+}
+
 func RemoveFile(this js.Value, args []js.Value) any {
 
 	delete(fileMap, args[0].String())
@@ -365,6 +369,7 @@ func main() {
 	js.Global().Set("getFile", js.FuncOf(GetFile))
 	js.Global().Set("getFiles", js.FuncOf(GetFiles))
 	js.Global().Set("numFiles", js.FuncOf(NumFiles))
+	js.Global().Set("getFileSize", js.FuncOf(GetFileSize))
 
 	js.Global().Set("getProgramBytes", js.FuncOf(GetProgramBytes))
 	js.Global().Set("setProgramBytes", js.FuncOf(SetProgramBytes))

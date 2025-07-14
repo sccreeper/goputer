@@ -500,10 +500,24 @@ func (p *Parser) combine(p1 ProgramStructure) (ProgramStructure, error) {
 
 	}
 
+	// Combine names
+
 	if len(p1.AllNames) > 0 {
 		combined.AllNames = append(p.ProgramStructure.AllNames, p1.AllNames...)
 	} else {
 		combined.AllNames = p.ProgramStructure.AllNames
+	}
+
+	if len(p1.DefinitionNames) > 0 {
+		combined.DefinitionNames = append(p.ProgramStructure.DefinitionNames, p1.DefinitionNames...)
+	} else {
+		combined.AllNames = p.ProgramStructure.DefinitionNames
+	}
+
+	if len(p1.LabelNames) > 0 {
+		combined.LabelNames = append(p.ProgramStructure.LabelNames, p1.LabelNames...)
+	} else {
+		combined.LabelNames = p.ProgramStructure.LabelNames
 	}
 
 	// Update label offsets

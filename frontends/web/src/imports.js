@@ -23,34 +23,33 @@ export function NewFile(fileName) {
 
     goputer.files.update(fileName, new Uint8Array(), 0)
 
-    let tab_div = document.createElement("div")
-    tab_div.classList.add("code-name")
-    tab_div.setAttribute("data-selected", "true")
-    tab_div.setAttribute("data-file-name", fileName)
+    let tabDiv = document.createElement("div")
+    tabDiv.classList.add("code-name")
+    tabDiv.setAttribute("data-selected", "true")
+    tabDiv.setAttribute("data-file-name", fileName)
 
-    tab_div.addEventListener("click", SwitchFocus)
+    tabDiv.addEventListener("click", SwitchFocus)
 
-    let file_name_p = document.createElement("p")
-    file_name_p.textContent = fileName;
+    let fileNameP = document.createElement("p")
+    fileNameP.textContent = fileName;
 
-    tab_div.appendChild(file_name_p)
+    tabDiv.appendChild(fileNameP)
 
-    let delete_file_i = document.createElement("i")
-    delete_file_i.classList.add("bi", "bi-x")
-    delete_file_i.title = "Delete file"
+    let deleteFileI = document.createElement("i")
+    deleteFileI.classList.add("bi", "bi-x", "delete-file-button")
+    deleteFileI.title = "Delete file"
 
-    delete_file_i.addEventListener("click", DeleteFile)
+    deleteFileI.addEventListener("click", DeleteFile)
 
-    tab_div.appendChild(delete_file_i)
+    tabDiv.appendChild(deleteFileI)
 
-    filesContainer.insertBefore(tab_div, newFile);
+    filesContainer.insertBefore(tabDiv, newFile);
 
     globals.focusedFile = fileName;
 
     document.getElementById("code-textarea").value = ""
 
     SwitchFocusedStyle();
-
 
 }
 
@@ -68,10 +67,20 @@ export function DeleteFile(e) {
 }
 
 // Switch focus from one file to another
+/**
+ * 
+ * @param {MouseEvent} e 
+ */
 export function SwitchFocus(e) {
-    
+
     let fileName = e.currentTarget.getAttribute("data-file-name");
-    document.getElementById("code-textarea").value = goputer.files.get(fileName)
+    let dest = new Uint8Array(goputer.files.size(fileName))
+    goputer.files.get(fileName, dest)
+
+    let textDecoder = new TextDecoder()
+    let decodedText = textDecoder.decode(dest)
+
+    document.getElementById("code-textarea").value = decodedText
 
     globals.focusedFile = fileName;
     SwitchFocusedStyle();
@@ -80,14 +89,14 @@ export function SwitchFocus(e) {
 
 export function SwitchFocusedStyle() {
     
-    let file_elements = filesContainer.children
+    let fileElements = filesContainer.children
 
-    for (let i = 0; i < file_elements.length; i++) {
+    for (let i = 0; i < fileElements.length; i++) {
         
-        if (file_elements[i].getAttribute("data-file-name") != globals.focusedFile) {
-            file_elements[i].setAttribute("data-selected", "false")
+        if (fileElements[i].getAttribute("data-file-name") != globals.focusedFile) {
+            fileElements[i].setAttribute("data-selected", "false")
         } else {
-            file_elements[i].setAttribute("data-selected", "true")
+            fileElements[i].setAttribute("data-selected", "true")
         }
         
     }

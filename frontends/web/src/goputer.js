@@ -112,6 +112,15 @@ export const goputer = {
             getFile(key, dest)
         },
 
+        /**
+         * Get the size of a file in bytes. Useful for allocating `Uint8Array`.
+         * @param {String} key 
+         * @returns {number}
+         */
+        size(key) {
+            return getFileSize(key)
+        },
+
         /** @type {number} */
         get numFiles() {
             return numFiles()
