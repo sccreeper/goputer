@@ -1,4 +1,4 @@
-import { Output, Mp4OutputFormat, BufferTarget, CanvasSource } from "mediabunny";
+import { Output, Mp4OutputFormat, BufferTarget, CanvasSource, MediaStreamAudioTrackSource } from "mediabunny";
 import { canvas } from "./init";
 import globals from "./globals";
 
@@ -31,6 +31,20 @@ export async function ToggleRecording(e) {
                 bitrate: 500_000
             }
         )
+
+        // see: https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrackProcessor#browser_compatibility
+
+        if (!navigator.userAgent.toLowerCase().includes("firefox")) {
+            let audioSource = new MediaStreamAudioTrackSource(
+                globals.audioMediaStreamDestination.stream.getTracks()[0],
+                {
+                    codec: "aac",
+                    bitrate: 96_000
+                }
+            )
+
+            output.addAudioTrack(audioSource)
+        }
 
         output.addVideoTrack(videoSource)
 

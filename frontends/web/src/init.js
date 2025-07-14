@@ -62,10 +62,12 @@ glInit(gl);
 globals.audioContext = new (window.AudioContext || window.webkitAudioContext)();
 globals.oscillator = globals.audioContext.createOscillator();
 globals.audioVolume = globals.audioContext.createGain();
+globals.audioMediaStreamDestination = globals.audioContext.createMediaStreamDestination();
 
 globals.audioVolume.gain.value = 0.0;
 globals.oscillator.connect(globals.audioVolume);
 globals.audioVolume.connect(globals.audioContext.destination);
+globals.audioVolume.connect(globals.audioMediaStreamDestination);
 
 //Init event listeners.
 document.getElementById("compile-code-button").addEventListener("click", Compile)

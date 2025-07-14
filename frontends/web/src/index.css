@@ -171,6 +171,7 @@
         @apply p-2;
         @apply border-gray-400;
         @apply border-b;
+        @apply cursor-pointer;
     }
 
     .example-container h3 {

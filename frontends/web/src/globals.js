@@ -18,6 +18,10 @@ export default {
      * @type {GainNode}
      */
     audioVolume: null,
+    /**
+     * @type {MediaStreamAudioDestinationNode}
+     */
+    audioMediaStreamDestination: null,
     soundStarted: false,
     mouseOverDisplay: false,
     keysDown: [],
