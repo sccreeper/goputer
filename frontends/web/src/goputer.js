@@ -114,11 +114,20 @@ export const goputer = {
 
         /**
          * Get the size of a file in bytes. Useful for allocating `Uint8Array`.
-         * @param {String} key 
+         * @param {string} key 
          * @returns {number}
          */
         size(key) {
             return getFileSize(key)
+        },
+
+        /**
+         * Does this file exist in the map
+         * @param {string} key
+         * @returns {boolean} 
+         */
+        exists(key) {
+            return doesFileExist(key)
         },
 
         /** @type {number} */

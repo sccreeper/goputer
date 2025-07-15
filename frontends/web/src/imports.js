@@ -1,7 +1,7 @@
+import { CodeTabElement } from "./editor/code_tab"
 import globals from "./globals"
 import { goputer } from "./goputer"
 import { filesContainer, newFile } from "./init"
-
 
 // Creation of a file from the UI.
 export function NewFileUI(e) {
@@ -23,27 +23,33 @@ export function NewFile(fileName) {
 
     goputer.files.update(fileName, new Uint8Array(), 0)
 
-    let tabDiv = document.createElement("div")
-    tabDiv.classList.add("code-name")
-    tabDiv.setAttribute("data-selected", "true")
-    tabDiv.setAttribute("data-file-name", fileName)
+    /** @type {CodeTabElement} */
+    let newTab = document.createElement("code-tab")
+    newTab.filename = fileName
 
-    tabDiv.addEventListener("click", SwitchFocus)
+    if (fileName === "main.gpasm") {
+        newTab.deletable = false
+        newTab.renamable = false
+    }
+    newTab.type = "text"
 
-    let fileNameP = document.createElement("p")
-    fileNameP.textContent = fileName;
+    newTab.addEventListener(
+        "fileselect",
+        /** @param {CustomEvent} e  */
+        (e) => {
+            SwitchFocus(e.detail)
+        }
+    )
 
-    tabDiv.appendChild(fileNameP)
+    newTab.addEventListener(
+        "filedelete",
+        /** @param {CustomEvent} e  */
+        (e) => {
+            DeleteFile(e.detail)
+        }
+    )
 
-    let deleteFileI = document.createElement("i")
-    deleteFileI.classList.add("bi", "bi-x", "delete-file-button")
-    deleteFileI.title = "Delete file"
-
-    deleteFileI.addEventListener("click", DeleteFile)
-
-    tabDiv.appendChild(deleteFileI)
-
-    filesContainer.insertBefore(tabDiv, newFile);
+    filesContainer.insertBefore(newTab, newFile);
 
     globals.focusedFile = fileName;
 
@@ -53,27 +59,19 @@ export function NewFile(fileName) {
 
 }
 
-export function DeleteFile(e) {
-    
-    let fileName = e.currentTarget.parentElement.getAttribute("data-file-name");
-    globals.focusedFile = e.currentTarget.previousSibling.getAttribute("data-file-name");
+export function DeleteFile(fileName) {
 
-    e.currentTarget.parentElement.remove()
-    goputer.files.remove(fileName)
-
-    document.getElementById("code-textarea").value = goputer.files.get(globals.focusedFile)
-    SwitchFocusedStyle();
+    SwitchFocus("main.gpasm")
 
 }
 
 // Switch focus from one file to another
 /**
  * 
- * @param {MouseEvent} e 
+ * @param {string} fileName 
  */
-export function SwitchFocus(e) {
+export function SwitchFocus(fileName) {
 
-    let fileName = e.currentTarget.getAttribute("data-file-name");
     let dest = new Uint8Array(goputer.files.size(fileName))
     goputer.files.get(fileName, dest)
 
@@ -93,10 +91,10 @@ export function SwitchFocusedStyle() {
 
     for (let i = 0; i < fileElements.length; i++) {
         
-        if (fileElements[i].getAttribute("data-file-name") != globals.focusedFile) {
-            fileElements[i].setAttribute("data-selected", "false")
+        if (fileElements[i].getAttribute("filename") != globals.focusedFile) {
+            fileElements[i].setAttribute("selected", "false")
         } else {
-            fileElements[i].setAttribute("data-selected", "true")
+            fileElements[i].setAttribute("selected", "true")
         }
         
     }

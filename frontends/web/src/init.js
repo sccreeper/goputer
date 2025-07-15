@@ -2,7 +2,7 @@ import { Compile, handleKeyDown, handleKeyUp, handleMouseMove, IOToggle, PeekReg
 import globals from "./globals";
 import { DownloadProgram, GetSharedCode, ShareCode, UploadBinary } from "./sharing";
 import { ExamplesInit } from "./examples";
-import { NewFileUI, SwitchFocus } from "./imports";
+import { NewFile, NewFileUI, SwitchFocus } from "./imports";
 import { glInit } from "./gl/index";
 import { ToggleRecording } from "./recording";
 import { goputer } from "./goputer";
@@ -27,9 +27,9 @@ document.getElementById("code-textarea").addEventListener("input", (e) => {
 export const newFile = document.getElementById("new-file");
 newFile.addEventListener("click", NewFileUI)
 
-document.getElementById("main-gpasm").addEventListener("click", SwitchFocus)
-
 export const filesContainer = document.getElementById("code-names-container");
+
+NewFile("main.gpasm")
 
 //Set the version
 

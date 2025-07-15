@@ -66,9 +66,7 @@ func fileReader(path string) ([]byte, error) {
 
 func UpdateFile(this js.Value, args []js.Value) any {
 	fileMap[args[0].String()] = make([]byte, args[2].Int())
-	bytesCopied := js.CopyBytesToGo(fileMap[args[0].String()], args[1])
-
-	fmt.Printf("Updated file %s with %d byte(s)\n", args[0].String(), bytesCopied)
+	js.CopyBytesToGo(fileMap[args[0].String()], args[1])
 
 	return js.ValueOf(nil)
 }
@@ -83,6 +81,14 @@ func GetFile(this js.Value, args []js.Value) any {
 
 func GetFileSize(this js.Value, args []js.Value) any {
 	return js.ValueOf(len(fileMap[args[0].String()]))
+}
+
+func DoesFileExist(this js.Value, args []js.Value) any {
+
+	_, exists := fileMap[args[0].String()]
+
+	return js.ValueOf(exists)
+
 }
 
 func RemoveFile(this js.Value, args []js.Value) any {
@@ -370,6 +376,7 @@ func main() {
 	js.Global().Set("getFiles", js.FuncOf(GetFiles))
 	js.Global().Set("numFiles", js.FuncOf(NumFiles))
 	js.Global().Set("getFileSize", js.FuncOf(GetFileSize))
+	js.Global().Set("doesFileExist", js.FuncOf(DoesFileExist))
 
 	js.Global().Set("getProgramBytes", js.FuncOf(GetProgramBytes))
 	js.Global().Set("setProgramBytes", js.FuncOf(SetProgramBytes))

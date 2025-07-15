@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+
+    * {
+        font-family: 'Heebo', sans-serif;
+        @apply text-white;
+    }
+
+    .code-name {
+        @apply w-fit;
+        @apply border-r;
+        @apply pr-2;
+        @apply pl-2;
+        @apply h-full;
+        @apply border-gray-500;
+        @apply text-center;
+        @apply inline-block;
+        @apply cursor-pointer;
+    }
+
+    :host([selected=true]) .code-name {
+        @apply font-bold;
+    }
+
+    .code-name > * {
+        @apply inline-block;
+    }
+
+    .delete-file-button {
+        @apply cursor-pointer;
+        @apply transition-colors;
+        @apply text-gray-400;
+    }
+
+    .delete-file-button:hover {
+        @apply text-blue-600;
+    }
+
+}
+
