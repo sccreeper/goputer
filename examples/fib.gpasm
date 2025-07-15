@@ -1,0 +1,41 @@
+// Iterative fib
+// Result is stored in r02
+// Target is 46 because this results in the largest value that can be stored
+// in a 32 bit register.
+
+#def aim 46
+#def two 2
+
+#label start
+
+lda @two
+mov d0 r00
+
+lda @aim
+mov d0 r15
+lt r15 r00
+cndjmp @end
+
+// Loop
+
+incr r03
+
+clr r00
+incr r01
+
+#label main_loop
+
+add r00 r01
+mov a0 r00
+
+mov r00 r02
+mov r01 r00
+mov r02 r01
+
+sub r15 r03
+mov a0 r15
+
+gt r15 r04
+cndjmp @main_loop
+
+#label end
