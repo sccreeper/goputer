@@ -25,6 +25,7 @@ type FrontendBuildConfig struct {
 	Build struct {
 		Command   []string `toml:"command"`
 		OutputDir string   `toml:"output_dir"`
+		Artifact  string   `toml:"artifact"`
 	} `toml:"build"`
 }
 
@@ -73,7 +74,7 @@ func copyFile(src string, dest string) error {
 }
 
 // Builds, clears directory beforehand & copies examples
-func All() {
+func All(includeList string) {
 
 	if _, err := os.Stat("./build"); !os.IsExist(err) {
 		os.RemoveAll("./build")
@@ -165,10 +166,6 @@ func All() {
 
 	for _, v := range directories {
 
-		fmt.Printf("Building frontend %s...\n", v.Name())
-
-		util.CheckError(err)
-
 		//Build plugin and copy output folder
 
 		buildToml, err := os.ReadFile(fmt.Sprintf("./frontends/%s/frontend.toml", v.Name()))
@@ -176,6 +173,13 @@ func All() {
 
 		var buildConfig FrontendBuildConfig
 		toml.Unmarshal(buildToml, &buildConfig)
+
+		if !slices.Contains(strings.Split(includeList, ","), buildConfig.Build.Artifact) {
+			fmt.Printf("Skipping artifact %s\n", buildConfig.Build.Artifact)
+			continue
+		}
+
+		fmt.Printf("Building frontend %s...\n", v.Name())
 
 		previousDir, err := os.Getwd()
 		util.CheckError(err)
@@ -229,6 +233,9 @@ func All() {
 				expConfig.Info.ID,
 				runtime.GOOS,
 				strings.Join(expConfig.Info.SupportedPlatforms, ", "))
+		} else if !slices.Contains(strings.Split(includeList, ","), expConfig.Build.Artifact) {
+			fmt.Printf("Skipping artifact %s\n", expConfig.Build.Artifact)
+			continue
 		}
 
 		fmt.Printf("Building expansion '%s' (%s)...\n", expConfig.Info.Name, expConfig.Info.ID)
@@ -260,8 +267,8 @@ func All() {
 }
 
 // Builds the examples as well as main All command
-func Dev() {
-	mg.Deps(All)
+func Dev(includeList string) {
+	mg.Deps(mg.F(All, includeList))
 
 	compPath, err := os.Getwd()
 	util.CheckError(err)
@@ -292,4 +299,9 @@ func Dev() {
 
 func Clean() {
 	sh.Rm("./build/")
+}
+
+// Build everything, no exclusions
+func Build() {
+	mg.Deps(mg.F(Dev, "frontend.goputerpy,frontend.gp32,frontend.web,expansion.goputer.sys"))
 }

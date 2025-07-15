@@ -36,6 +36,7 @@ type ExpansionManifest struct {
 	Build struct {
 		Command   []string `toml:"command"`
 		OutputDir string   `toml:"output_dir"`
+		Artifact  string   `toml:"artifact"`
 	}
 }
 

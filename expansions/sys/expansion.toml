@@ -21,3 +21,4 @@ attributes = ["name", "display_width", "display_height", "memory", "expansions"]
 
 command = ["sh", "build.sh"]
 output_dir = "build"
+artifact = "expansion.goputer.sys"

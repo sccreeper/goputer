@@ -41,4 +41,4 @@ RUN cp /root/go/bin/mage ./mage
 
 COPY ./ /usr/app/
 
-CMD [ "./mage", "dev" ]
+CMD [ "./mage", "build" ]

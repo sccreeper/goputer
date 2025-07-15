@@ -10,3 +10,4 @@ is_plugin = true
 
 command = ["sh", "cmd.sh"]
 output_dir = "build"
+artifact = "frontend.goputerpy"
