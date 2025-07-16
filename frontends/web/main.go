@@ -24,7 +24,20 @@ var itnMap map[uint32]string
 var registerMap map[uint32]string
 var interruptMap map[constants.Interrupt]string
 
-var fileMap map[string][]byte
+type FileType string
+
+const (
+	textFile  FileType = "text"
+	imageFile FileType = "image"
+	binFile   FileType = "bin"
+)
+
+type File struct {
+	Type FileType
+	Data []byte
+}
+
+var fileMap map[string]File
 
 //Custom compile and run methods.
 
@@ -33,7 +46,7 @@ func Compile() js.Func {
 	compileFunc := js.FuncOf(func(this js.Value, args []js.Value) any {
 
 		p := compiler.Parser{
-			CodeString:   string(fileMap["main.gpasm"]),
+			CodeString:   string(fileMap["main.gpasm"].Data),
 			FileName:     "main.gpasm",
 			Verbose:      false,
 			Imported:     false,
@@ -58,29 +71,32 @@ func Compile() js.Func {
 
 func fileReader(path string) ([]byte, error) {
 	if val, exists := fileMap[path]; exists {
-		return []byte(val), nil
+		return []byte(val.Data), nil
 	} else {
 		return nil, compiler.ErrFile
 	}
 }
 
 func UpdateFile(this js.Value, args []js.Value) any {
-	fileMap[args[0].String()] = make([]byte, args[2].Int())
-	js.CopyBytesToGo(fileMap[args[0].String()], args[1])
+	fileMap[args[0].String()] = File{
+		Data: make([]byte, args[2].Int()),
+		Type: FileType(args[3].String()),
+	}
+	js.CopyBytesToGo(fileMap[args[0].String()].Data, args[1])
 
 	return js.ValueOf(nil)
 }
 
 func GetFile(this js.Value, args []js.Value) any {
 
-	js.CopyBytesToJS(args[1], fileMap[args[0].String()])
+	js.CopyBytesToJS(args[1], fileMap[args[0].String()].Data)
 
 	return js.ValueOf(nil)
 
 }
 
 func GetFileSize(this js.Value, args []js.Value) any {
-	return js.ValueOf(len(fileMap[args[0].String()]))
+	return js.ValueOf(len(fileMap[args[0].String()].Data))
 }
 
 func DoesFileExist(this js.Value, args []js.Value) any {
@@ -89,6 +105,10 @@ func DoesFileExist(this js.Value, args []js.Value) any {
 
 	return js.ValueOf(exists)
 
+}
+
+func GetFileType(this js.Value, args []js.Value) any {
+	return js.ValueOf(string(fileMap[args[0].String()].Type))
 }
 
 func RemoveFile(this js.Value, args []js.Value) any {
@@ -377,6 +397,7 @@ func main() {
 	js.Global().Set("numFiles", js.FuncOf(NumFiles))
 	js.Global().Set("getFileSize", js.FuncOf(GetFileSize))
 	js.Global().Set("doesFileExist", js.FuncOf(DoesFileExist))
+	js.Global().Set("getFileType", js.FuncOf(GetFileType))
 
 	js.Global().Set("getProgramBytes", js.FuncOf(GetProgramBytes))
 	js.Global().Set("setProgramBytes", js.FuncOf(SetProgramBytes))
@@ -385,8 +406,11 @@ func main() {
 
 	js.Global().Set("updateFramebuffer", js.FuncOf(UpdateFrameBuffer))
 
-	fileMap = make(map[string][]byte)
-	fileMap["main.gpasm"] = []byte("")
+	fileMap = make(map[string]File)
+	fileMap["main.gpasm"] = File{
+		Type: textFile,
+		Data: []byte(""),
+	}
 
 	//Convert constants maps into [string]interface maps
 

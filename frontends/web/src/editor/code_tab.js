@@ -164,7 +164,7 @@ export class CodeTabElement extends HTMLElement {
         goputer.files.remove(this.filename)
 
         NewFile(newFilename)
-        goputer.files.update(newFilename, fileData, fileData.length)
+        goputer.files.update(newFilename, fileData, fileData.length, )
         SwitchFocus(newFilename)
 
         const renameEvent = new CustomEvent("filerename", {detail: {oldName: this.filename, newName: newFilename }})

@@ -87,12 +87,13 @@ export const goputer = {
     files: {
         /**
          * Overwrite the contents of a specific file. Key doesn't have to be preexisting and as such this method can be used to create new files.
-         * @param {string} key
+         * @param {string} key typically the name of the file
          * @param {Uint8Array} data 
-         * @param {number} size
+         * @param {number} size length of the data
+         * @param {import("./editor/code_tab").FileType} type 1 of 3 specified types
          */
-        update(key, data, size) {
-            updateFile(key, data, size)
+        update(key, data, size, type) {
+            updateFile(key, data, size, type)
         },
         
         /**
@@ -128,6 +129,15 @@ export const goputer = {
          */
         exists(key) {
             return doesFileExist(key)
+        },
+
+        /**
+         * Get the type of a specific file, image, binary, or text.
+         * @param {string} key 
+         * @returns {import("./editor/code_tab").FileType}
+         */
+        type(key) {
+            return getFileType(key)
         },
 
         /** @type {number} */

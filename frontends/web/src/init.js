@@ -2,34 +2,22 @@ import { Compile, handleKeyDown, handleKeyUp, handleMouseMove, IOToggle, PeekReg
 import globals from "./globals";
 import { DownloadProgram, GetSharedCode, ShareCode, UploadBinary } from "./sharing";
 import { ExamplesInit } from "./examples";
-import { NewFile, NewFileUI, SwitchFocus } from "./imports";
 import { glInit } from "./gl/index";
 import { ToggleRecording } from "./recording";
-import { goputer } from "./goputer";
+import { NewFile } from "./imports";
 
-//Cycles per second
-export const CPS = 240;
-
-//Init Go WASM
+//Init Go WASM before anything else
 const go = new Go();
 await WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
     go.run(result.instance);
 });
 
-document.getElementById("code-textarea").addEventListener("input", (e) => {
-
-    let encoder = new TextEncoder();
-    let encoded = encoder.encode(document.getElementById("code-textarea").value);
-
-    goputer.files.update(globals.focusedFile, encoded, encoded.length);
-})
-
-export const newFile = document.getElementById("new-file");
-newFile.addEventListener("click", NewFileUI)
-
-export const filesContainer = document.getElementById("code-names-container");
+// Editor init
 
 NewFile("main.gpasm")
+
+//Cycles per second
+export const CPS = 240;
 
 //Set the version
 
@@ -45,6 +33,8 @@ fetch("/ver")
     document.getElementById("build-date").textContent = time;
 
 })
+
+// Examples init
 
 export const examplesDiv = document.getElementById("examples-div");
 
@@ -74,7 +64,8 @@ globals.oscillator.connect(globals.audioVolume);
 globals.audioVolume.connect(globals.audioContext.destination);
 globals.audioVolume.connect(globals.audioMediaStreamDestination);
 
-//Init event listeners.
+//Init event listeners for general button UI.
+
 document.getElementById("compile-code-button").addEventListener("click", Compile)
 document.getElementById("run-code-button").addEventListener("click", Run)
 document.getElementById("download-code-button").addEventListener("click", DownloadProgram)
@@ -139,6 +130,8 @@ canvas.addEventListener("mousemove", handleMouseMove)
 document.addEventListener("keydown", handleKeyDown)
 document.addEventListener("keyup", handleKeyUp)
 
+// Error messages
+
 globals.errorDiv = document.getElementById("error-div")
 
 document.getElementById("error-clear-button").addEventListener("click", (e) => {
@@ -179,6 +172,8 @@ const peekRegInput = document.getElementById("peek-reg");
 peekRegInput.value = "";
 peekRegInput.addEventListener("input", PeekRegister);
 document.getElementById("peek-format-select").addEventListener("change", PeekRegister)
+
+// Add any shared code from URL to editor
 
 GetSharedCode();
 

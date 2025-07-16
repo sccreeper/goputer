@@ -235,6 +235,7 @@ func All(includeList string) {
 				strings.Join(expConfig.Info.SupportedPlatforms, ", "))
 		} else if !slices.Contains(strings.Split(includeList, ","), expConfig.Build.Artifact) {
 			fmt.Printf("Skipping artifact %s\n", expConfig.Build.Artifact)
+			os.Chdir(previousDir)
 			continue
 		}
 

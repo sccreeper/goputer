@@ -150,7 +150,7 @@
 
     }
 
-    .datalist-default, select {
+    .datalist-default, select, input {
         @apply bg-gray-800;
         @apply border-b;
         @apply border-gray-400;
@@ -204,6 +204,52 @@
         @apply text-center;
         @apply -top-56;
         @apply relative;
+    }
+
+    #code-editor {
+        @apply h-[460px];
+    }
+
+    #bin-display {
+        @apply h-[90%];
+        @apply hidden;
+        @apply break-words;
+    }
+
+    #bin-display-data {
+        @apply ml-2;
+        @apply overflow-y-scroll;
+        @apply snap-y;
+        @apply h-[90%];
+        @apply scroll-auto;
+    }
+
+    #bin-display-data div > span:first-child {
+        @apply text-gray-400;
+        @apply mr-2;
+        @apply pr-2;
+        @apply pb-2;
+        @apply border-r;
+        @apply border-gray-600;
+    }
+
+    #bin-display-data div {
+        @apply snap-start;
+    }
+
+    #bin-display-menu {
+        @apply sticky;
+        @apply top-0;
+        @apply bg-gray-800;
+        @apply border-b;
+        @apply border-gray-400;
+        @apply pb-1;
+    }
+
+    #img-display {
+        @apply h-[90%];
+        @apply hidden;
+
     }
 
 }

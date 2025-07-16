@@ -24,7 +24,7 @@ export function GetSharedCode() {
         let encoder = new TextEncoder()
         let encoded = encoder.encode(atob(value))
 
-        goputer.files.update(key, encoded, encoded.length)
+        goputer.files.update(key, encoded, encoded.length, "text")
         document.getElementById("code-textarea").value = atob(value);
 
     }
