@@ -1,3 +1,4 @@
+import { db, fileTableName } from "./db";
 import { CodeTabElement } from "./editor/code_tab"
 import globals from "./globals"
 import { goputer } from "./goputer"
@@ -35,8 +36,34 @@ const imageDisplayInfo = document.getElementById("img-display-info");
 /** @type {HTMLInputElement} */
 const imageDisplayTrueSize = document.getElementById("img-display-true-size");
 
+/** @type {HTMLButtonElement} */
+const deleteAllButton = document.getElementById("delete-all-button");
+
 /** @type {Map<string, {blob: Blob, objectUrl: string, dimensions: number[]}>} */
 export const imageMap = new Map();
+
+deleteAllButton.addEventListener("click", (e) => {
+
+    if (confirm("Are you sure you want permanently to delete all files?")) {
+        
+        goputer.files.fileNames.forEach(fileName => {
+
+            if (goputer.files.type(fileName) == "image") {
+                window.URL.revokeObjectURL(imageMap.get(fileName).objectUrl)
+            }
+
+            goputer.files.remove(fileName)
+
+            document.querySelector(`code-tab[filename="${fileName}"]`).remove()
+        });
+
+        imageMap.clear()
+        NewFile("main.gpasm")
+        SwitchFocus("main.gpasm")
+
+    }
+
+});
 
 imageDisplayTrueSize.addEventListener("change", 
     /** @param {Event} e  */
@@ -127,7 +154,6 @@ codeEditorDiv.addEventListener("drop",
                     const imgObjectUrl = window.URL.createObjectURL(f)
 
                     const loadedImage = new Image()
-                    loadedImage.src = imgObjectUrl
 
                     loadedImage.onload = (e) => {
                         imageMap.set(
@@ -141,6 +167,8 @@ codeEditorDiv.addEventListener("drop",
                         SwitchFocus(filename) 
                     }
 
+                    loadedImage.src = imgObjectUrl
+
 
                     break;
                 default:
@@ -149,8 +177,10 @@ codeEditorDiv.addEventListener("drop",
             }
 
             goputer.files.update(filename, await f.bytes(), f.size, fileType, true)
-            SwitchFocus(filename)
 
+            if (fileType != "image") {
+                SwitchFocus(filename)                
+            }
         }
     }
 )
@@ -162,22 +192,26 @@ codeEditorDiv.addEventListener("dragover", (e) => {
 // Creation of a file from the UI.
 export function NewFileUI(e) {
     
-    let file_name = prompt("New file name:", `new_${goputer.files.numFiles+1}.gpasm`)
+    let fileName = prompt("New file name:", `new_${goputer.files.numFiles+1}.gpasm`)
 
-    if (file_name == null || file_name == "" || file_name == ".gpasm") {
-        file_name = `new_${goputer.files.numFiles+1}.gpasm`
+    if (fileName == null || fileName == "" || fileName == ".gpasm") {
+        fileName = `new_${goputer.files.numFiles+1}.gpasm`
     }
 
-    NewFile(file_name)
+    NewFile(fileName)
+    SwitchFocus(fileName)
 }
 
 /**
  * Initializes a new file
  * @param {String} fileName 
+ * @param {boolean} [doCreation=true] - defaults to true
  */
-export function NewFile(fileName) {
+export function NewFile(fileName, doCreation = true) {
 
-    goputer.files.update(fileName, new Uint8Array(), 0, "text")
+    if (doCreation) {
+        goputer.files.update(fileName, new Uint8Array(), 0, "text", true)   
+    }
 
     /** @type {CodeTabElement} */
     let newTab = document.createElement("code-tab")

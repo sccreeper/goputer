@@ -1,5 +1,7 @@
 // Wrapper around all goputer functions in global scope, with the addition of JSDoc typing
 
+import { databaseVersion, db, fileTableName } from "./db"
+
 /**
  * @typedef {"r00" | "r01" | "r02" | "r03" | "r04" | "r05" | "r06" | "r07" |
  *           "r08" | "r09" | "r10" | "r11" | "r12" | "r13" | "r14" | "r15" |
@@ -92,8 +94,59 @@ export const goputer = {
          * @param {number} size length of the data
          * @param {import("./editor/code_tab").FileType} type 1 of 3 specified types
          */
-        update(key, data, size, type, isNew = false) {
+        update(key, data, size, type, isNew = false, writeToDb = true) {
+
+            if (writeToDb) {
+                if (isNew) {
+                    db.table(fileTableName).put(
+                        {
+                            name: key,
+                            data: data,
+                            type: type,
+                        }
+                    )
+                } else {
+                    db.table(fileTableName).update(
+                        key,
+                        {
+                            name: key,
+                            data: data,
+                            type: type,
+                        },
+                    )
+                }   
+            }
+
             updateFile(key, data, size, type, isNew)
+        },
+
+        /**
+         * 
+         * @param {string} key 
+         * @param {string} newKey 
+         */
+        rename(key, newKey) {
+            let fileSize = this.size(key)
+            let fileType = this.type(key)
+            let fileData = new Uint8Array(fileSize)
+            
+            this.get(key, fileData)
+            this.remove(key)
+    
+            if (fileType == "image") {
+                let imageMapData = imageMap.get(key)
+                imageMap.delete(key)
+                imageMap.set(newKey, imageMapData)   
+            }
+            
+            /** @type {import("dexie").Table} */
+            (db.files).put({
+                name: newKey,
+                data: fileData,
+                type: fileType
+            })
+       
+            updateFile(newKey, fileData, fileSize, fileType, false)
         },
         
         /**
@@ -101,6 +154,8 @@ export const goputer = {
          * @param {string} key 
          */
         remove(key) {
+            db.table(fileTableName).delete(key)
+
             removeFile(key)
         },
 

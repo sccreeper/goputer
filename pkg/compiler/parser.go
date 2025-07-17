@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"os"
 	"regexp"
 	"sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/util"
@@ -246,7 +245,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 								specialValue = specialValue[1 : len(specialValue)-1]
 
-								b, err := os.ReadFile(specialValue)
+								b, err := p.FileReader(specialValue)
 								if err != nil {
 									panic(err)
 								}

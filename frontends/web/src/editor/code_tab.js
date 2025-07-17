@@ -129,10 +129,12 @@ export class CodeTabElement extends HTMLElement {
             const deleteEvent = new CustomEvent("filedelete", {detail: this.filename, composed: true})
             this.dispatchEvent(deleteEvent)
 
-            goputer.files.remove(this.filename)
-            window.URL.revokeObjectURL(imageMap.get(this.filename).objectUrl)
-            imageMap.delete(this.filename)
+            if (goputer.files.type(this.filename) == "image") {
+                window.URL.revokeObjectURL(imageMap.get(this.filename).objectUrl)
+                imageMap.delete(this.filename)
+            }
 
+            goputer.files.remove(this.filename)
             this.remove()
 
         }
@@ -160,19 +162,8 @@ export class CodeTabElement extends HTMLElement {
             return
         }
 
-        let fileSize = goputer.files.size(this.filename)
-        let fileType = goputer.files.type(this.filename)
-        let fileData = new Uint8Array(fileSize)
-        
-        goputer.files.get(this.filename, fileData)
-        goputer.files.remove(this.filename)
-
-        let imageMapData = imageMap.get(this.filename)
-        imageMap.delete(this.filename)
-        imageMap.set(newFilename, imageMapData)
-
-        NewFile(newFilename)        
-        goputer.files.update(newFilename, fileData, fileData.length, fileType)
+        goputer.files.rename(this.filename, newFilename)
+        NewFile(newFilename, false)
         SwitchFocus(newFilename)
 
         const renameEvent = new CustomEvent("filerename", {detail: {oldName: this.filename, newName: newFilename }})

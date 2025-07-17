@@ -4,7 +4,9 @@ import { DownloadProgram, GetSharedCode, ShareCode, UploadBinary } from "./shari
 import { ExamplesInit } from "./examples";
 import { glInit } from "./gl/index";
 import { ToggleRecording } from "./recording";
-import { NewFile } from "./imports";
+import { imageMap, NewFile, SwitchFocus } from "./imports";
+import { db, fileTableName } from "./db";
+import { goputer } from "./goputer";
 
 //Init Go WASM before anything else
 const go = new Go();
@@ -14,7 +16,57 @@ await WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then
 
 // Editor init
 
-NewFile("main.gpasm")
+let files = await db.table(fileTableName).toArray()
+
+if (files.length != 0) {
+    files.forEach(element => {
+
+        NewFile(element.name, false)
+
+        if (element.type == "image") {
+            
+            const imgBlob = new Blob([element.data])
+            const imgUrl = window.URL.createObjectURL(imgBlob)
+
+            const image = new Image()
+            
+            image.onload = (e) => {
+                imageMap.set(
+                    element.name,
+                    {
+                        blob: imgBlob,
+                        objectUrl: imgUrl,
+                        dimensions: [image.width, image.height]
+                    }
+                )
+            }
+
+            image.src = imgUrl
+
+        }
+        
+        goputer.files.update(
+            element.name,
+            element.data,
+            element.data.length,
+            element.type,
+            true,
+            false,
+        )
+
+    });
+
+    // Make sure main.gpasm is at beginning
+
+    const mainTab = document.querySelector(`code-tab[filename="main.gpasm"]`)
+    document.getElementById("code-names-container").prepend(mainTab)
+
+    SwitchFocus("main.gpasm");   
+} else {
+    NewFile("main.gpasm");
+}
+
+
 
 //Cycles per second
 export const CPS = 240;
