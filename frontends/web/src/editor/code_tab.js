@@ -1,6 +1,6 @@
 import * as tabStyles from "url:./tab.css";
 import { goputer } from "../goputer";
-import { NewFile, SwitchFocus } from "../imports";
+import { imageMap, NewFile, SwitchFocus } from "../imports";
 
 /**
  * @typedef {"text"|"image"|"bin"} FileType
@@ -130,6 +130,8 @@ export class CodeTabElement extends HTMLElement {
             this.dispatchEvent(deleteEvent)
 
             goputer.files.remove(this.filename)
+            window.URL.revokeObjectURL(imageMap.get(this.filename).objectUrl)
+            imageMap.delete(this.filename)
 
             this.remove()
 
@@ -159,12 +161,18 @@ export class CodeTabElement extends HTMLElement {
         }
 
         let fileSize = goputer.files.size(this.filename)
+        let fileType = goputer.files.type(this.filename)
         let fileData = new Uint8Array(fileSize)
+        
         goputer.files.get(this.filename, fileData)
         goputer.files.remove(this.filename)
 
-        NewFile(newFilename)
-        goputer.files.update(newFilename, fileData, fileData.length, )
+        let imageMapData = imageMap.get(this.filename)
+        imageMap.delete(this.filename)
+        imageMap.set(newFilename, imageMapData)
+
+        NewFile(newFilename)        
+        goputer.files.update(newFilename, fileData, fileData.length, fileType)
         SwitchFocus(newFilename)
 
         const renameEvent = new CustomEvent("filerename", {detail: {oldName: this.filename, newName: newFilename }})

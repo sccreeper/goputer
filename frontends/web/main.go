@@ -4,6 +4,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
@@ -11,9 +12,13 @@ import (
 	"math"
 	"sccreeper/goputer/pkg/compiler"
 	"sccreeper/goputer/pkg/constants"
+	"sccreeper/goputer/pkg/gpimg"
 	"sccreeper/goputer/pkg/util"
 	"sccreeper/goputer/pkg/vm"
 	"syscall/js"
+
+	_ "image/jpeg"
+	_ "image/png"
 )
 
 var js32 vm.VM
@@ -33,8 +38,9 @@ const (
 )
 
 type File struct {
-	Type FileType
-	Data []byte
+	Type    FileType
+	Data    []byte
+	Encoded bool
 }
 
 var fileMap map[string]File
@@ -78,11 +84,31 @@ func fileReader(path string) ([]byte, error) {
 }
 
 func UpdateFile(this js.Value, args []js.Value) any {
+
+	fileData := make([]byte, args[2].Int())
+	js.CopyBytesToGo(fileData, args[1])
+
+	// Wether to encode/re-encode
+	if args[4].Bool() && FileType(args[3].String()) == imageFile {
+
+		bytesSource := bytes.NewReader(fileData)
+		bytesDest := util.NewMemWriteSeeker()
+
+		err := gpimg.Encode(
+			bytesSource,
+			bytesDest,
+			gpimg.FlagRLECompression,
+		)
+		util.CheckError(err)
+
+		fileData = bytesDest.Bytes()
+
+	}
+
 	fileMap[args[0].String()] = File{
-		Data: make([]byte, args[2].Int()),
+		Data: fileData,
 		Type: FileType(args[3].String()),
 	}
-	js.CopyBytesToGo(fileMap[args[0].String()].Data, args[1])
 
 	return js.ValueOf(nil)
 }

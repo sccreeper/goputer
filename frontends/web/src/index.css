@@ -250,6 +250,16 @@
         @apply h-[90%];
         @apply hidden;
 
+        @apply justify-center;
+        @apply items-center;
+        @apply text-center;
+
+    }
+
+    #img-display-img {
+        @apply m-auto;
+        @apply h-full;
+        image-rendering: pixelated;
     }
 
 }

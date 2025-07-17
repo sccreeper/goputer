@@ -9,6 +9,9 @@ import (
 	"slices"
 )
 
+const ImageMaxWidth int = 320
+const ImageMaxHeight int = 240
+
 // In this case
 func Encode(in io.Reader, out io.WriteSeeker, flags byte) error {
 	// Load image
@@ -21,7 +24,7 @@ func Encode(in io.Reader, out io.WriteSeeker, flags byte) error {
 	img := image.NewRGBA(imgFile.Bounds())
 	draw.Draw(img, imgFile.Bounds(), imgFile, imgFile.Bounds().Min, draw.Src)
 
-	if img.Bounds().Dx() > 320 || img.Bounds().Dy() > 240 {
+	if img.Bounds().Dx() > ImageMaxWidth || img.Bounds().Dy() > ImageMaxHeight {
 		return ErrImgTooLarge
 	}
 

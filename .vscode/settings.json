@@ -3,5 +3,16 @@
         "raylib.h": "c",
         "cstring": "c",
         "typeinfo": "c"
-    }
+    },
+    
+    "go.lintTool": "golangci-lint",
+    "go.lintOnSave": "workspace",
+    "go.formatTool": "custom",
+    "go.alternateTools": {
+        "customFormatter": "golangci-lint"
+    },
+    "go.formatFlags": [
+        "fmt",
+        "--stdin"
+    ]
 }

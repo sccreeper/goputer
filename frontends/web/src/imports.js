@@ -10,6 +10,11 @@ const filesContainer = document.getElementById("code-names-container");
 const newFile = document.getElementById("new-file");
 newFile.addEventListener("click", NewFileUI)
 
+// Editor elements
+
+/** @type {HTMLDivElement} */
+const codeEditorDiv = document.getElementById("code-editor")
+
 /** @type {HTMLTextAreaElement} */
 const codeArea = document.getElementById("code-textarea");
 
@@ -20,6 +25,29 @@ const binDisplayData = document.getElementById("bin-display-data");
 
 /** @type {HTMLInputElement} */
 const binDisplayInput = document.getElementById("bin-display-offset-input");
+
+/** @type {HTMLDivElement} */
+const imageDisplay = document.getElementById("img-display");
+/** @type {HTMLImageElement} */
+const imageDisplayImage = document.getElementById("img-display-img");
+/** @type {HTMLParagraphElement} */
+const imageDisplayInfo = document.getElementById("img-display-info");
+/** @type {HTMLInputElement} */
+const imageDisplayTrueSize = document.getElementById("img-display-true-size");
+
+/** @type {Map<string, {blob: Blob, objectUrl: string, dimensions: number[]}>} */
+export const imageMap = new Map();
+
+imageDisplayTrueSize.addEventListener("change", 
+    /** @param {Event} e  */
+    (e) => {
+        if (imageDisplayTrueSize.checked) {
+            imageDisplayImage.style.height = "auto";
+        } else {
+            imageDisplayImage.style.height = "100%";
+        }
+    }
+)
 
 binDisplayInput.addEventListener("input", 
     /** @param {Event} e  */
@@ -64,7 +92,7 @@ codeArea.addEventListener("input", (e) => {
     goputer.files.update(globals.focusedFile, encoded, encoded.length, "text");
 })
 
-codeArea.addEventListener("drop", 
+codeEditorDiv.addEventListener("drop", 
     /** @type {DragEvent} */
     async (e) => {
         e.preventDefault();
@@ -95,20 +123,39 @@ codeArea.addEventListener("drop",
                 case "png":
                 case "jpg":
                     fileType = "image"
+
+                    const imgObjectUrl = window.URL.createObjectURL(f)
+
+                    const loadedImage = new Image()
+                    loadedImage.src = imgObjectUrl
+
+                    loadedImage.onload = (e) => {
+                        imageMap.set(
+                            filename,
+                            {
+                                blob: f,
+                                objectUrl: imgObjectUrl,
+                                dimensions: [loadedImage.width, loadedImage.height]
+                            },
+                        ) 
+                        SwitchFocus(filename) 
+                    }
+
+
                     break;
                 default:
                     fileType = "bin"
                     break;
             }
 
-            goputer.files.update(filename, await f.bytes(), f.size, fileType)
+            goputer.files.update(filename, await f.bytes(), f.size, fileType, true)
             SwitchFocus(filename)
 
         }
     }
 )
 
-codeArea.addEventListener("dragover", (e) => {
+codeEditorDiv.addEventListener("dragover", (e) => {
     e.preventDefault()
 })
 
@@ -187,6 +234,7 @@ export function SwitchFocus(fileName) {
     switch (goputer.files.type(fileName)) {
         case "text":
             binDisplay.style.display = "none";
+            imageDisplay.style.display = "none";
             codeArea.style.display = "block";
 
             let textDecoder = new TextDecoder()
@@ -195,9 +243,18 @@ export function SwitchFocus(fileName) {
 
             break;
         case "image":
+            codeArea.style.display = "none";
+            binDisplay.style.display = "none";
+            imageDisplay.style.display = "grid";
+
+            imageDisplayImage.src = imageMap.get(fileName).objectUrl
+            imageDisplayInfo.innerText = `Dimensions: ${imageMap.get(fileName).dimensions[0]}x${imageMap.get(fileName).dimensions[1]}
+Original size: ${imageMap.get(fileName).blob.size} bytes Encoded size: ${goputer.files.size(fileName)} bytes`
+
             break;
         case "bin":
             codeArea.style.display = "none";
+            imageDisplay.style.display = "none";
             binDisplay.style.display = "block";
 
             binDisplayData.replaceChildren();

@@ -92,8 +92,8 @@ export const goputer = {
          * @param {number} size length of the data
          * @param {import("./editor/code_tab").FileType} type 1 of 3 specified types
          */
-        update(key, data, size, type) {
-            updateFile(key, data, size, type)
+        update(key, data, size, type, isNew = false) {
+            updateFile(key, data, size, type, isNew)
         },
         
         /**
