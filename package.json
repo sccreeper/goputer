@@ -1,22 +1,21 @@
 {
-  "devDependencies": {
-    "@parcel/transformer-glsl": "^2.14.4",
-    "@parcel/transformer-toml": "^2.14.4",
-    "bootstrap-icons": "^1.11.3",
-    "dexie": "^4.0.11",
-    "gl-matrix": "^3.4.3",
-    "mediabunny": "^1.0.6",
-    "microtip": "0.2.2",
-    "parcel": "^2.14.4",
-    "parcel-reporter-static-files-copy": "^1.5.3",
-    "postcss": "^8.5.3",
-    "process": "0.11.10",
-    "tailwindcss": "^3.4.17"
-  },
   "staticFiles": {
     "staticPath": "static"
   },
   "dependencies": {
-    "sharp": "^0.33.5"
+    "@parcel/transformer-glsl": "^2.15.4",
+    "@parcel/transformer-toml": "^2.15.4",
+    "@tailwindcss/postcss": "^4.1.11",
+    "bootstrap-icons": "^1.13.1",
+    "dexie": "^4.0.11",
+    "gl-matrix": "^3.4.3",
+    "mediabunny": "^1.1.1",
+    "microtip": "^0.2.2",
+    "parcel": "^2.15.4",
+    "parcel-reporter-static-files-copy": "^1.5.3",
+    "postcss": "^8.5.6",
+    "process": "^0.11.10",
+    "sharp": "^0.33.5",
+    "tailwindcss": "^4.1.11"
   }
 }
