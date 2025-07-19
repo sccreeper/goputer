@@ -16,34 +16,6 @@ var currentMousePos = {
 var executionStartTime = 0
 var cyclesCompleted = 0
 
-//Other app logic
-
-/**
- * 
- * @param {MouseEvent} e 
- * @returns {null}
- */
-export function IOToggle(e) {
-
-    if (!globals.vmIsAlive) {
-        return
-    }
-
-    if (e.target.getAttribute("on") == "false") {
-        e.target.setAttribute("on", "true")
-    } else {
-        e.target.setAttribute("on", "false")
-    }
-
-    globals.switchQueue.push(
-        {
-            register: e.target.getAttribute("reg"),
-            enabled: (e.target.getAttribute("on") == "true") ? true : false,
-        }
-        
-    )
-}
-
 export function PeekRegister() {
     if (peekRegInput.value == "" || !globals.vmInited) {
         return;
@@ -272,7 +244,7 @@ export function Cycle() {
                 for (let i = 0; i < globals.ioBulbNames.length; i++) {
                     
                     globals.ioBulbs[globals.ioBulbNames[i]].setAttribute(
-                        "on",
+                        "enabled",
                         (getRegister(registerInts[globals.ioBulbNames[i]]) > 0) ? "true" : "false"
                     )
 
@@ -346,6 +318,8 @@ export function Cycle() {
         //IO Switches
 
         globals.switchQueue.forEach(element => {
+
+            console.log(element)
         
             goputer.setRegister(registerInts[element.register], (element.enabled) ? 1 : 0)
 

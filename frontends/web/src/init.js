@@ -1,12 +1,13 @@
-import { Compile, handleKeyDown, handleKeyUp, handleMouseMove, IOToggle, PeekRegister, Run, SaveVideo } from "./app";
+import { Compile, handleKeyDown, handleKeyUp, handleMouseMove, PeekRegister, Run, SaveVideo } from "./app";
 import globals from "./globals";
-import { DownloadProgram, OpenSharedArchive, DownloadAll, UploadBinary } from "./sharing";
+import { DownloadProgram, DownloadAll, UploadBinary } from "./sharing";
 import { ExamplesInit } from "./examples";
 import { glInit } from "./gl/index";
 import { ToggleRecording } from "./recording";
-import { imageMap, InitImage, NewFile, SwitchFocus } from "./imports";
+import { InitImage, NewFile, SwitchFocus } from "./imports";
 import { db, fileTableName } from "./db";
 import { goputer } from "./goputer";
+import "./ui/io.js";
 
 //Init Go WASM before anything else
 const go = new Go();
@@ -126,7 +127,7 @@ document.getElementById("stop-code-button").addEventListener("click", function (
     // Clear IO lights
 
     for(let reg in globals.ioBulbs) {
-        globals.ioBulbs[reg].setAttribute("on", "false")
+        globals.ioBulbs[reg].setAttribute("enabled", "false")
     }
 
     // Clear other data
@@ -153,10 +154,6 @@ document.getElementById("stop-code-button").addEventListener("click", function (
 
 for (let i = 0; i < document.getElementById("bulb-container").children.length; i++) {
     globals.ioBulbs[document.getElementById("bulb-container").children[i].getAttribute("reg")] = document.getElementById("bulb-container").children[i]
-}
-
-for (let i = 0; i < document.getElementById("switch-container").children.length; i++) {
-    document.getElementById("switch-container").children[i].addEventListener("click", IOToggle)
 }
 
 canvas.addEventListener("mouseenter", () => {globals.mouseOverDisplay = true})
@@ -208,5 +205,14 @@ const peekRegInput = document.getElementById("peek-reg");
 peekRegInput.value = "";
 peekRegInput.addEventListener("input", PeekRegister);
 document.getElementById("peek-format-select").addEventListener("change", PeekRegister)
+
+// Global keyboard shortcuts
+
+document.addEventListener("keydown", (e) => {
+    if (e.altKey && e.key.charCodeAt(0) >= 49 && e.key.charCodeAt(0) <= 56) {
+        e.preventDefault();
+        document.getElementById("switch-container").children[e.key.charCodeAt(0)-49].click();
+    }
+})
 
 export {canvas, gl as glContext, programCounterHTML, currentInstructionHTML, peekRegHTML, peekRegInput}

@@ -164,30 +164,30 @@
 
                 <div class="bg-gray-800 rounded-lg w-full h-1/2 p-2">
 
-                    <grid class="grid grid-cols-2 grid-rows-1">
+                    <div class="grid grid-cols-2 grid-rows-1">
 
-                        <grid class="grid grid-cols-8 grid-rows-1" id="bulb-container">
-                            <div reg="io00" on="false" class="bulb"></div>
-                            <div reg="io01" on="false" class="bulb"></div>
-                            <div reg="io02" on="false" class="bulb"></div>
-                            <div reg="io03" on="false" class="bulb"></div>
-                            <div reg="io04" on="false" class="bulb"></div>
-                            <div reg="io05" on="false" class="bulb"></div>
-                            <div reg="io06" on="false" class="bulb"></div>
-                            <div reg="io07" on="false" class="bulb"></div>
-                        </grid>
+                        <div class="grid grid-cols-8 grid-rows-1 items-center" id="bulb-container">
+                            <io-light reg="io00" enabled="false"></io-light>
+                            <io-light reg="io01" enabled="false"></io-light>
+                            <io-light reg="io02" enabled="false"></io-light>
+                            <io-light reg="io03" enabled="false"></io-light>
+                            <io-light reg="io04" enabled="false"></io-light>
+                            <io-light reg="io05" enabled="false"></io-light>
+                            <io-light reg="io06" enabled="false"></io-light>
+                            <io-light reg="io07" enabled="false"></io-light>
+                        </div>
 
-                        <grid class="grid grid-cols-8 grid-rows-1" id="switch-container">
-                            <div reg="io08" on="false" class="switch"></div>
-                            <div reg="io09" on="false" class="switch"></div>
-                            <div reg="io10" on="false" class="switch"></div>
-                            <div reg="io11" on="false" class="switch"></div>
-                            <div reg="io12" on="false" class="switch"></div>
-                            <div reg="io13" on="false" class="switch"></div>
-                            <div reg="io14" on="false" class="switch"></div>
-                            <div reg="io15" on="false" class="switch"></div>
-                        </grid>
-                    </grid>
+                        <div class="grid grid-cols-8 grid-rows-1 items-center" id="switch-container">
+                            <io-switch reg="io08" enabled="false" aria-keyshortcuts="Alt+1"></io-switch>
+                            <io-switch reg="io09" enabled="false" aria-keyshortcuts="Alt+2"></io-switch>
+                            <io-switch reg="io10" enabled="false" aria-keyshortcuts="Alt+3"></io-switch>
+                            <io-switch reg="io11" enabled="false" aria-keyshortcuts="Alt+4"></io-switch>
+                            <io-switch reg="io12" enabled="false" aria-keyshortcuts="Alt+5"></io-switch>
+                            <io-switch reg="io13" enabled="false" aria-keyshortcuts="Alt+6"></io-switch>
+                            <io-switch reg="io14" enabled="false" aria-keyshortcuts="Alt+7"></io-switch>
+                            <io-switch reg="io15" enabled="false" aria-keyshortcuts="Alt+8"></io-switch>
+                        </div>
+                    </div>
 
                 </div>
 

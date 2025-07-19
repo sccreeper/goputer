@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+:host {
+    justify-self: start;
+}
+
+.bulb {
+    @apply w-6;
+    @apply h-6;
+    @apply rounded-full;
+
+    @apply bg-gray-900;
+    @apply border-gray-600;
+    @apply border;
+
+}
+
+:host([enabled=true]) {
+
+    .bulb {
+        @apply bg-yellow-200;
+        @apply border-yellow-50;
+    }
+}
+
+.switch {
+    @apply w-6;
+    @apply h-6;
+    @apply rounded-full;
+
+    @apply bg-red-700;
+    @apply border-red-400;
+    @apply border;
+
+    @apply hover:cursor-pointer;
+
+}
+
+:host([enabled=true]) {
+    .switch {
+        @apply bg-green-700;
+        @apply border-green-400;
+    }
+}

@@ -77,40 +77,6 @@
     grid-template-rows: auto 18em;
 }
 
-.bulb {
-    @apply w-6;
-    @apply h-6;
-    @apply rounded-full;
-
-    @apply bg-gray-900;
-    @apply border-gray-600;
-    @apply border;
-
-}
-
-.bulb[on=true] {
-    @apply bg-yellow-200;
-    @apply border-yellow-50;
-}
-
-.switch {
-    @apply w-6;
-    @apply h-6;
-    @apply rounded-full;
-
-    @apply bg-red-700;
-    @apply border-red-400;
-    @apply border;
-
-    @apply hover:cursor-pointer;
-
-}
-
-.switch[on=true] {
-    @apply bg-green-700;
-    @apply border-green-400;
-}
-
 a.in-para {
     @apply text-blue-500;
     @apply transition-all;
