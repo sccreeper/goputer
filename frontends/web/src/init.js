@@ -1,10 +1,10 @@
 import { Compile, handleKeyDown, handleKeyUp, handleMouseMove, IOToggle, PeekRegister, Run, SaveVideo } from "./app";
 import globals from "./globals";
-import { DownloadProgram, GetSharedCode, ShareCode, UploadBinary } from "./sharing";
+import { DownloadProgram, OpenSharedArchive, DownloadAll, UploadBinary } from "./sharing";
 import { ExamplesInit } from "./examples";
 import { glInit } from "./gl/index";
 import { ToggleRecording } from "./recording";
-import { imageMap, NewFile, SwitchFocus } from "./imports";
+import { imageMap, InitImage, NewFile, SwitchFocus } from "./imports";
 import { db, fileTableName } from "./db";
 import { goputer } from "./goputer";
 
@@ -24,24 +24,10 @@ if (files.length != 0) {
         NewFile(element.name, false)
 
         if (element.type == "image") {
+
             
             const imgBlob = new Blob([element.data])
-            const imgUrl = window.URL.createObjectURL(imgBlob)
-
-            const image = new Image()
-            
-            image.onload = (e) => {
-                imageMap.set(
-                    element.name,
-                    {
-                        blob: imgBlob,
-                        objectUrl: imgUrl,
-                        dimensions: [image.width, image.height]
-                    }
-                )
-            }
-
-            image.src = imgUrl
+            InitImage(imgBlob, element.name)
 
         }
         
@@ -65,8 +51,6 @@ if (files.length != 0) {
 } else {
     NewFile("main.gpasm");
 }
-
-
 
 //Cycles per second
 export const CPS = 240;
@@ -121,7 +105,7 @@ globals.audioVolume.connect(globals.audioMediaStreamDestination);
 document.getElementById("compile-code-button").addEventListener("click", Compile)
 document.getElementById("run-code-button").addEventListener("click", Run)
 document.getElementById("download-code-button").addEventListener("click", DownloadProgram)
-document.getElementById("share-code-button").addEventListener("click", ShareCode)
+document.getElementById("download-all-button").addEventListener("click", DownloadAll)
 document.getElementById("upload-binary-button").addEventListener("click", UploadBinary)
 document.getElementById("save-video-button").addEventListener("click", SaveVideo)
 document.getElementById("record-video-button").addEventListener("click", ToggleRecording)
@@ -161,7 +145,7 @@ document.getElementById("stop-code-button").addEventListener("click", function (
     document.getElementById("code-editor").style.visibility = "visible"
     document.getElementById("binary-message").style.visibility = "hidden"
     document.getElementById("compile-code-button").disabled = false
-    document.getElementById("share-code-button").disabled = false
+    document.getElementById("download-all-button").disabled = false
 
 })
 
@@ -224,9 +208,5 @@ const peekRegInput = document.getElementById("peek-reg");
 peekRegInput.value = "";
 peekRegInput.addEventListener("input", PeekRegister);
 document.getElementById("peek-format-select").addEventListener("change", PeekRegister)
-
-// Add any shared code from URL to editor
-
-GetSharedCode();
 
 export {canvas, gl as glContext, programCounterHTML, currentInstructionHTML, peekRegHTML, peekRegInput}

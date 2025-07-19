@@ -1,62 +1,112 @@
+import { BlobReader, BlobWriter, Uint8ArrayReader, Uint8ArrayWriter, ZipReader, ZipWriter } from "@zip.js/zip.js";
 import { ErrorTypes, ShowError } from "./error";
 import globals from "./globals";
 import { goputer } from "./goputer";
-import { NewFile } from "./imports";
+import { imageMap, InitImage, NewFile, RemoveAll, SwitchFocus } from "./imports";
 
-// Extracts shared code from URL
-export function GetSharedCode() {
+/**
+ * Open a shared archive. Expects all files to be in the top level directory, will not tree walk.
+ * @param {Blob} fileBlob 
+ * @returns 
+ */
+export async function OpenSharedArchive(fileBlob) {
 
-    if (window.location.search.length == 0) {
-        return;
+    if (confirm("Importing this will delete all existing files. Are you sure you want to do this?")) {
+        RemoveAll()
+    } else {
+        return
     }
 
-    let base64Sting = window.location.search;
-    base64Sting = base64Sting.substring(3, base64Sting.length);
+    const zipFileReader = new BlobReader(fileBlob);
 
-    let codeJson = JSON.parse(atob(base64Sting))
+    const zipReader = new ZipReader(zipFileReader);
 
-    for (const [key, value] of Object.entries(codeJson)) {
+    for (const ent of await zipReader.getEntries()) {
+        if (!ent.directory && ent.filename.split("/").length == 1) {
+            
+            const fileWriter = new Uint8ArrayWriter();
+            await ent.getData(fileWriter)
+            const fileData = await fileWriter.getData()
 
-        if (key != "main.gpasm") {
-            NewFile(key)
+            /** @type {import("./editor/code_tab").FileType} */
+            let fileType;
+
+            switch (ent.filename.split(".").pop()) {
+                case "txt":
+                case "gpasm":
+                    fileType = "text"
+                    break;
+                case "png":
+                case "jpg":
+                    fileType = "image"
+
+                    InitImage(new Blob([fileData]), ent.filename)
+
+                    break;
+                default:
+                    fileType = "bin"
+                    break;
+            }
+
+            goputer.files.update(
+                ent.filename, 
+                fileData,
+                fileData.length,
+                fileType,
+                true
+            )
+            NewFile(ent.filename, false)
         }
-
-        let encoder = new TextEncoder()
-        let encoded = encoder.encode(atob(value))
-
-        goputer.files.update(key, encoded, encoded.length, "text")
-        document.getElementById("code-textarea").value = atob(value);
-
     }
 
-    ShowError(ErrorTypes.Success, "Imported code from shared URL");
+    SwitchFocus("main.gpasm");
+    ShowError(ErrorTypes.Success, "Imported code from archive");
 
 }
 
 // Converts text area to base64 and copies shareable URL to clipboard.
-export function ShareCode(e) {
+export async function DownloadAll(e) {
 
-    let files = goputer.files.fileNames
+    const zipFileWriter = new BlobWriter();
+    const zipWriter = new ZipWriter(zipFileWriter);
 
-    var files_object = {}
+    for (const fileName of goputer.files.fileNames) {
+        
+        /** @type {Uint8Array} */
+        let fileBytes;
 
-    files.forEach(element => {
-        files_object[element] = btoa(goputer.files.get(element))
-    });
+        if (goputer.files.type(fileName) == "image") {
 
-    let code_json = JSON.stringify(files_object)
+            fileBytes = new Uint8Array(await imageMap.get(fileName).blob.bytes())
 
-    // Convert to base64
+        } else {
 
-    let base64 = btoa(code_json);
+            fileBytes = new Uint8Array(goputer.files.size(fileName))
+            goputer.files.get(fileName, fileBytes)
 
-    let port = ("" == window.location.port) ? "" : `:${window.location.port}`
+        }
 
-    let shareable_url = `${window.location.protocol}//${window.location.hostname}${port}/?c=${base64}`
+        const fileReader = new Uint8ArrayReader(fileBytes)
+        await zipWriter.add(fileName, fileReader)
 
-    navigator.clipboard.writeText(shareable_url);
+    }
 
-    ShowError(ErrorTypes.Success, "Code copied to clipboard");
+    await zipWriter.close()
+
+    const objUrl = window.URL.createObjectURL(await zipFileWriter.getData())
+
+    const date = new Date()
+
+    /** @type {HTMLAnchorElement} */
+    const linkElement = document.createElement("a")
+    linkElement.href = objUrl
+    linkElement.download = `files_${date.getHours().toString().padStart(2, "0")}${date.getMinutes().toString().padStart(2, "0")}${date.getSeconds().toString().padStart(2, "0")}.zip`
+    linkElement.click()
+
+    window.URL.revokeObjectURL(objUrl)
+
+    ShowError(ErrorTypes.Success, "Zip file exported successfully.")
+
 }
 
 // Download program bytes.
@@ -82,10 +132,12 @@ export function DownloadProgram(e) {
     let link = document.createElement("a")
     link.href = window.URL.createObjectURL(blob)
 
-    let filename = `program_${date.getHours().toString().padStart(2, "0")}${date.getMinutes().toString().padStart(2, "0")}${date.getSeconds().toString().padStart(2, "0")}`
+    let filename = `program_${date.getHours().toString().padStart(2, "0")}${date.getMinutes().toString().padStart(2, "0")}${date.getSeconds().toString().padStart(2, "0")}.gp`
 
     link.download = filename;
     link.click();
+
+    window.URL.revokeObjectURL(blob);
 
 }
 
@@ -117,7 +169,7 @@ export function UploadBinary(e) {
         document.getElementById("code-editor").style.visibility = "hidden"
         document.getElementById("binary-message").style.display = "block"
         document.getElementById("compile-code-button").disabled = true
-        document.getElementById("share-code-button").disabled = true
+        document.getElementById("download-all-button").disabled = true
 
         ShowError(ErrorTypes.Success, "Binary uploaded successfully")
 

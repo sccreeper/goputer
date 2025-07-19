@@ -2,6 +2,7 @@ import { db, fileTableName } from "./db";
 import { CodeTabElement } from "./editor/code_tab"
 import globals from "./globals"
 import { goputer } from "./goputer"
+import { OpenSharedArchive } from "./sharing";
 import { clamp } from "./util";
 
 const rowLength = 16;
@@ -46,18 +47,8 @@ deleteAllButton.addEventListener("click", (e) => {
 
     if (confirm("Are you sure you want permanently to delete all files?")) {
         
-        goputer.files.fileNames.forEach(fileName => {
+        RemoveAll()
 
-            if (goputer.files.type(fileName) == "image") {
-                window.URL.revokeObjectURL(imageMap.get(fileName).objectUrl)
-            }
-
-            goputer.files.remove(fileName)
-
-            document.querySelector(`code-tab[filename="${fileName}"]`).remove()
-        });
-
-        imageMap.clear()
         NewFile("main.gpasm")
         SwitchFocus("main.gpasm")
 
@@ -127,22 +118,28 @@ codeEditorDiv.addEventListener("drop",
         if (e.dataTransfer.files.length > 0) {
         
             const f = e.dataTransfer.files[0]
-            let filename = ""
 
-            if (goputer.files.exists(f.name)) {
-                filename = `dup_${f.name}`
-            } else {
-                filename = f.name
+            if (f.name.split(".").pop() == "zip") {
+                OpenSharedArchive(f)
+                return
             }
 
-            NewFile(filename)
+            let fileName = ""
+
+            if (goputer.files.exists(f.name)) {
+                fileName = `dup_${f.name}`
+            } else {
+                fileName = f.name
+            }
+
+            NewFile(fileName)
 
             // Determine extension and thus filetype
 
             /** @type {import("./editor/code_tab").FileType} */
             let fileType = ""
 
-            switch (filename.split(".").pop()) {
+            switch (fileName.split(".").pop()) {
                 case "txt":
                 case "gpasm":
                     fileType = "text"
@@ -150,36 +147,17 @@ codeEditorDiv.addEventListener("drop",
                 case "png":
                 case "jpg":
                     fileType = "image"
-
-                    const imgObjectUrl = window.URL.createObjectURL(f)
-
-                    const loadedImage = new Image()
-
-                    loadedImage.onload = (e) => {
-                        imageMap.set(
-                            filename,
-                            {
-                                blob: f,
-                                objectUrl: imgObjectUrl,
-                                dimensions: [loadedImage.width, loadedImage.height]
-                            },
-                        ) 
-                        SwitchFocus(filename) 
-                    }
-
-                    loadedImage.src = imgObjectUrl
-
-
+                    InitImage(new Blob([f]), fileName, () => {SwitchFocus(fileName)})
                     break;
                 default:
                     fileType = "bin"
                     break;
             }
 
-            goputer.files.update(filename, await f.bytes(), f.size, fileType, true)
+            goputer.files.update(fileName, await f.bytes(), f.size, fileType, true)
 
             if (fileType != "image") {
-                SwitchFocus(filename)                
+                SwitchFocus(fileName)                
             }
         }
     }
@@ -188,6 +166,53 @@ codeEditorDiv.addEventListener("drop",
 codeEditorDiv.addEventListener("dragover", (e) => {
     e.preventDefault()
 })
+
+/**
+ * Deletes all files and performs required cleanup.
+ */
+export function RemoveAll() {
+    goputer.files.fileNames.forEach(fileName => {
+
+        if (goputer.files.type(fileName) == "image") {
+            window.URL.revokeObjectURL(imageMap.get(fileName).objectUrl)
+        }
+
+        goputer.files.remove(fileName)
+
+        document.querySelector(`code-tab[filename="${fileName}"]`).remove()
+    });
+
+    imageMap.clear()
+}
+
+/**
+ * 
+ * @param {Blob} imageBlob 
+ * @param {string} key 
+ * @param {() => void|undefined} loadCallback
+ */
+export function InitImage(imageBlob, key, loadCallback = undefined) {
+    const imgUrl = window.URL.createObjectURL(imageBlob)
+
+    const image = new Image()
+    
+    image.onload = (e) => {
+        imageMap.set(
+            key,
+            {
+                blob: imageBlob,
+                objectUrl: imgUrl,
+                dimensions: [image.width, image.height]
+            }
+        )
+
+        if (typeof loadCallback !== "undefined") {
+            loadCallback()
+        }
+    }
+
+    image.src = imgUrl
+}
 
 // Creation of a file from the UI.
 export function NewFileUI(e) {

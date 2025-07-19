@@ -93,6 +93,8 @@ export const goputer = {
          * @param {Uint8Array} data 
          * @param {number} size length of the data
          * @param {import("./editor/code_tab").FileType} type 1 of 3 specified types
+         * @param {boolean} [isNew=false] defaults to false
+         * @param {boolean} [writeToDb=true] defaults to true
          */
         update(key, data, size, type, isNew = false, writeToDb = true) {
 
