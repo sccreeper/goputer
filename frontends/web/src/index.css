@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&family=Heebo:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&family=Heebo:wght@300;400;500;700&display=swap');
 
 @import "microtip/microtip.css";
 @import "bootstrap-icons/font/bootstrap-icons.css";
@@ -12,14 +12,16 @@
     @apply border;
     @apply transition-all;
     @apply cursor-pointer;
+    @apply active:outline-2;
 }
 
 .btn-main {
 
     @apply bg-blue-700;
-    @apply border-blue-300;
+    @apply border-blue-400;
     @apply hover:bg-blue-600;
     @apply disabled:bg-blue-800;
+    @apply active:outline-blue-200;
 
 }
 
@@ -28,20 +30,24 @@
     @apply border-red-400;
     @apply hover:bg-red-600;
     @apply disabled:bg-red-800;
+    @apply active:outline-red-200;
 }
 
 .txt-btn {
     @apply cursor-pointer;
     @apply text-gray-400;
-    @apply transition-colors;
+    @apply transition-all;
+    @apply active:outline-1;
 }
 
 .txt-btn-main {
     @apply hover:text-blue-600;
+    @apply active:outline-blue-900;
 }
 
 .txt-btn-destruct {
     @apply hover:text-red-600;
+    @apply active:outline-red-900;
 }
 
 .content-div {
@@ -80,6 +86,8 @@
 a.in-para {
     @apply text-blue-500;
     @apply transition-all;
+    @apply active:outline-1;
+    @apply active:text-blue-300;    
 }
 
 a:hover {
@@ -138,6 +146,8 @@ a:hover {
     @apply border-gray-400;
     @apply border-b;
     @apply cursor-pointer;
+    @apply active:outline-1;
+    @apply active:outline-white;
 }
 
 .example-container h3 {
@@ -226,4 +236,43 @@ a:hover {
     @apply m-auto;
     @apply h-full;
     image-rendering: pixelated;
+}
+
+details > summary {
+    @apply font-bold;
+    @apply cursor-pointer;
+    @apply select-none;
+    @apply active:outline;
+    @apply active:outline-white;
+
+    &::marker {
+        content: '+  ';
+        @apply text-lg;
+    }
+}
+
+details[open] > summary {
+    &::marker { 
+        content: '-  ';
+    }
+}
+
+#key-shortcuts-summary span {
+    @apply font-light;
+}
+
+#key-shortcuts-summary br {
+    @apply h-2;
+}
+
+kbd {
+    @apply pt-0.5 pb-0.5 pl-1 pr-1;
+    @apply m-0.5;
+    @apply border-2;
+    @apply bg-gray-400;
+    @apply border-gray-500;
+    @apply text-gray-800;
+    @apply rounded-sm;
+    border-style: outset;
+    @apply text-sm;
 }

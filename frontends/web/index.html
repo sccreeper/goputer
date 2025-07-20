@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <script src="wasm_exec.js"></script>
     <script type="module" src="./src/main.js" defer></script>
     <link rel="stylesheet" href="./src/index.css" />
@@ -37,7 +38,7 @@
             <div class="m-4">
                 <h1 class="sub-heading">
                     Program code
-                    <span class="txt-btn txt-btn-destruct float-right text-base font-normal" id="delete-all-button"><i class="bi bi-trash3"></i> Delete all</span>
+                    <span class="txt-btn txt-btn-destruct float-right text-base font-normal" id="delete-all-button" role="button" tabindex="0"><i class="bi bi-trash3"></i> Delete all</span>
                 </h1>
 
                 <!-- Code editor outer container -->
@@ -47,13 +48,13 @@
 
                         <div class="p-3 border-b border-gray-400 h-[10%]">
                             <div id="code-names-container">
-                                <i id="new-file" class="bi bi-plus inline-block"></i>
+                                <i id="new-file" class="bi bi-plus inline-block txt-btn txt-btn-main" aria-keyshortcuts="Ctrl+Alt+N" aria-label="New file" role="button" tabindex="0"></i>
                             </div>
                         </div>
 
                         <textarea placeholder="Write your code here..." id="code-textarea"
                             class="font-fira resize-none bg-gray-800 text-white focus:outline-none p-3 w-full h-[90%] rounded-b-lg"
-                            spellcheck="false"></textarea>
+                            spellcheck="false" aria-multiline="true" aria-keyshortcuts="Ctrl+Alt+F"></textarea>
 
                         <div id="bin-display">
                             <div id="bin-display-menu">
@@ -85,15 +86,15 @@
 
                     <button class="btn btn-main" id="compile-code-button"
                         aria-label="Compile your code before running it." data-microtip-position="top"
-                        role="tooltip">Compile Code <i class="bi bi-box-arrow-down"></i></button>
+                        role="tooltip" aria-keyshortcuts="Alt+F1">Compile Code <i class="bi bi-box-arrow-down"></i></button>
 
                     <button class="btn btn-main" id="run-code-button" aria-label="Run your compiled code in goputer."
                         data-microtip-position="top" role="tooltip" disabled>Run Code <i
-                            class="bi bi-play-fill"></i></button>
+                            class="bi bi-play-fill" aria-keyshortcuts="Alt+F2"></i></button>
 
                     <button class="btn btn-destruct" id="stop-code-button"
                         aria-label="Reset and stop goputer." data-microtip-position="top" role="tooltip">Reset
-                        <i class="bi bi-stop-fill"></i></button>
+                        <i class="bi bi-stop-fill" aria-keyshortcuts="Alt+F3"></i></button>
 
                     <button class="btn btn-main" id="download-code-button" aria-label="Download your compiled program."
                         data-microtip-position="top" role="tooltip" disabled>Download
@@ -119,10 +120,10 @@
                         <div class="bg-gray-800 rounded-lg w-full h-36 p-2 overflow-y-auto">
 
                             <button class="sticky top-0 z-10 float-right btn btn-main" id="error-clear-button"
-                                aria-label="Clear errors" data-microtip-position="top" role="tooltip">Clear <i
+                                aria-label="Clear errors" data-microtip-position="bottom" role="tooltip" aria-keyshortcuts="Alt+F5">Clear <i
                                     class="bi bi-trash-fill"></i></button>
 
-                            <div id="error-div">
+                            <div id="error-div" aria-live="polite">
                                 <p class="text-center w-full text-gray-400">No notifications.</p>
                             </div>
 
@@ -149,9 +150,9 @@
 
             <div class="mt-3">
 
-                <span title="Save video as PNG" id="save-video-button" class="txt-btn txt-btn-main">Save <i class="bi bi-image"></i></span>
+                <span title="Save video as PNG" id="save-video-button" class="txt-btn txt-btn-main" role="button" tabindex="0" aria-keyshortcuts="Ctrl+Alt+S">Save <i class="bi bi-image"></i></span>
 
-                <span title="Record video as MP4" id="record-video-button" class="txt-btn txt-btn-main ml-2"><span id="record-video-text">Record</span> <i class="bi bi-record-circle"></i><sup>1</sup></span>
+                <span title="Record video as MP4" id="record-video-button" class="txt-btn txt-btn-main ml-2" role="button" tabindex="0" aria-keyshortcuts="Ctrl+Alt+V"><span id="record-video-text">Record</span> <i class="bi bi-record-circle"></i><sup>1</sup></span>
 
             </div>
         </div>
@@ -260,6 +261,77 @@
                 </ul>
 
                 <br>
+
+                <details id="key-shortcuts-summary">
+                    <summary>Keyboard shortcuts</summary>
+                    
+                    <ul class="ml-4">
+                        <li>
+                            <span>Toggle IO switch (r08-r15)</span>
+                            <br>
+                            <kbd>Alt</kbd> + <kbd>1-8</kbd></li>
+                        <li>
+                            <span>Switch between tabs</span>
+                            <br>
+                            <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>←</kbd> <em>or</em> <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>→</kbd>
+                        </li>
+                        <li>
+                            <span>New file</span>
+                            <br>
+                            <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>N</kbd>
+                        </li>
+                        <li>
+                            <span>Delete focused file</span>
+                            <br>
+                            <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>W</kbd>
+                        </li>
+                        <li>
+                            <span>Rename focused file</span>
+                            <br>
+                            <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>R</kbd>
+                        </li>
+                        <li>
+                            <span>Focus text file in editor</span>
+                            <br>
+                            <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>F</kbd>
+                        </li>
+                        <li>
+                            <span>Compile code</span>
+                            <br>
+                            <kbd>Alt</kbd> + <kbd>F1</kbd>
+                        </li>
+                        <li>
+                            <span>Run code</span>
+                            <br>
+                            <kbd>Alt</kbd> + <kbd>F2</kbd>
+                        </li>
+                        <li>
+                            <span>Stop & reset VM</span>
+                            <br>
+                            <kbd>Alt</kbd> + <kbd>F3</kbd>
+                        </li>
+                        <li>
+                            <span>Clear errors</span>
+                            <br>
+                            <kbd>Alt</kbd> + <kbd>F5</kbd>
+                        </li>
+                        <li>
+                            <span>Take screenshot of video</span>
+                            <br>
+                            <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>S</kbd>
+                        </li>
+                        <li>
+                            <span>Toggle recording of video</span>
+                            <br>
+                            <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>V</kbd>
+                        </li>
+                        <li>
+                            <span>Toggle this list</span>
+                            <br>
+                            <kbd>Ctrl</kbd> + <kbd>/</kbd>
+                        </li>
+                    </ul>
+                </details>
 
                 <p><sup>1</sup>Audio recording is not supported on Firefox.</p>
 

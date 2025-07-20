@@ -36,6 +36,7 @@ export class CodeTabElement extends HTMLElement {
     set selected(val) {
         this.#selected = val;
         this.setAttribute("selected", this.#selected)
+        this.setAttribute("aria-selected", this.#selected)
     }
 
     get type() {
@@ -97,7 +98,7 @@ export class CodeTabElement extends HTMLElement {
         fileNameEl.addEventListener("click", (e) => this.#focusFile(e))
 
         if (this.renamable) {
-            fileNameEl.addEventListener("dblclick", (e) => this.#renameFile(e))   
+            fileNameEl.addEventListener("dblclick", (e) => this.renameFile(e))   
         }
 
         mainParent.appendChild(fileNameEl)
@@ -106,7 +107,7 @@ export class CodeTabElement extends HTMLElement {
             let deleteFileEl = document.createElement("i")
             deleteFileEl.classList.add("bi", "bi-x", "delete-file-button")
             deleteFileEl.title = "Delete file"
-            deleteFileEl.addEventListener("click", (e) => this.#deleteFile(e))
+            deleteFileEl.addEventListener("click", (e) => this.deleteFile(e))
             mainParent.appendChild(deleteFileEl)   
         }
 
@@ -114,17 +115,23 @@ export class CodeTabElement extends HTMLElement {
         shadow.appendChild(bsIcons)
         shadow.appendChild(mainParent)
 
+        this.addEventListener("focus", (e) => {
+            SwitchFocus(this.filename)
+        })
+
         // Set attributes
 
         this.setAttribute("selected", this.selected)
         this.setAttribute("filename", this.filename)
         this.setAttribute("type", this.type)
+        this.tabIndex = 0
+        this.role = "tab"
 
     }
 
-    #deleteFile(e) {
+    deleteFile(e) {
 
-        if (confirm(`Are you sure you want to delete ${this.filename}?`)) {
+        if (this.deletable && confirm(`Are you sure you want to delete ${this.filename}?`)) {
             
             const deleteEvent = new CustomEvent("filedelete", {detail: this.filename, composed: true})
             this.dispatchEvent(deleteEvent)
@@ -150,9 +157,13 @@ export class CodeTabElement extends HTMLElement {
 
     }
 
-    #renameFile(e) {
+    renameFile(e) {
 
-        let newFilename = prompt("Choose a new filename:", this.filename) ?? ""
+        if (!this.renamable) {
+            return
+        }
+
+        let newFilename = prompt("Choose a new filename:", this.filename) ?? this.filename
 
         if (newFilename.trim().length == 0) {
             return

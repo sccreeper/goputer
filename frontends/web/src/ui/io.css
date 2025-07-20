@@ -42,3 +42,10 @@
         @apply border-green-400;
     }
 }
+
+:host(:active) {
+    .switch {
+        @apply outline-2;
+        @apply outline-green-200;
+    }
+}

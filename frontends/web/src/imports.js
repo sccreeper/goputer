@@ -7,7 +7,7 @@ import { clamp } from "./util";
 
 const rowLength = 16;
 
-const filesContainer = document.getElementById("code-names-container");
+export const tabsContainer = document.getElementById("code-names-container");
 
 const newFile = document.getElementById("new-file");
 newFile.addEventListener("click", NewFileUI)
@@ -18,7 +18,7 @@ newFile.addEventListener("click", NewFileUI)
 const codeEditorDiv = document.getElementById("code-editor")
 
 /** @type {HTMLTextAreaElement} */
-const codeArea = document.getElementById("code-textarea");
+export const codeArea = document.getElementById("code-textarea");
 
 /** @type {HTMLDivElement} */
 const binDisplay = document.getElementById("bin-display");
@@ -264,7 +264,7 @@ export function NewFile(fileName, doCreation = true) {
         }
     )
 
-    filesContainer.insertBefore(newTab, newFile);
+    tabsContainer.insertBefore(newTab, newFile);
 
     globals.focusedFile = fileName;
 
@@ -356,7 +356,7 @@ Original size: ${imageMap.get(fileName).blob.size} bytes Encoded size: ${goputer
 
 export function SwitchFocusedStyle() {
     
-    let fileElements = filesContainer.children
+    let fileElements = tabsContainer.children
 
     for (let i = 0; i < fileElements.length; i++) {
         

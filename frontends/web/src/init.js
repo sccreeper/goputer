@@ -4,10 +4,11 @@ import { DownloadProgram, DownloadAll, UploadBinary } from "./sharing";
 import { ExamplesInit } from "./examples";
 import { glInit } from "./gl/index";
 import { ToggleRecording } from "./recording";
-import { InitImage, NewFile, SwitchFocus } from "./imports";
+import { codeArea, InitImage, NewFile, NewFileUI, SwitchFocus, tabsContainer } from "./imports";
 import { db, fileTableName } from "./db";
 import { goputer } from "./goputer";
 import "./ui/io.js";
+import { clamp } from "./util.js";
 
 //Init Go WASM before anything else
 const go = new Go();
@@ -209,9 +210,70 @@ document.getElementById("peek-format-select").addEventListener("change", PeekReg
 // Global keyboard shortcuts
 
 document.addEventListener("keydown", (e) => {
-    if (e.altKey && e.key.charCodeAt(0) >= 49 && e.key.charCodeAt(0) <= 56) {
+    if (e.altKey && e.key.charCodeAt(0) >= 49 && e.key.charCodeAt(0) <= 56) { // Alt+1-8 - use switch
+        
         e.preventDefault();
         document.getElementById("switch-container").children[e.key.charCodeAt(0)-49].click();
+    
+    } else if (e.ctrlKey && e.altKey && (e.key == "ArrowLeft" || e.key == "ArrowRight")) { // Ctrl+Alt+<-/-> - change tab
+        
+        e.preventDefault();
+
+        const increment = e.key == "ArrowLeft" ? -1 : 1
+
+        const tabs = tabsContainer.querySelectorAll("code-tab");
+        let selectedIndex = 0;
+
+        for (let i = 0; i < tabs.length; i++) {
+            
+            if (tabs[i].selected) {
+                selectedIndex = i;
+                break;
+            }
+            
+        }
+
+        selectedIndex += increment;
+        selectedIndex = clamp(selectedIndex, 0, tabsContainer.length - 1);
+
+        SwitchFocus(tabs[selectedIndex].filename);
+        
+    } else if (e.ctrlKey && e.altKey && e.code == "KeyN") { // Ctrl+Alt+N - new file
+        e.preventDefault();
+        NewFileUI(e)
+    } else if (e.ctrlKey && e.altKey && e.code == "KeyW") { // Ctrl+Alt+W - delete file
+        e.preventDefault();
+        tabsContainer.querySelector("code-tab[selected=true]").deleteFile(e);
+    } else if (e.ctrlKey && e.altKey && e.code == "KeyR") { // Ctrl+Alt+R - rename file
+        e.preventDefault();
+        tabsContainer.querySelector("code-tab[selected=true]").renameFile(e);
+    } else if (e.altKey && e.code == "F1") { // Compile
+        e.preventDefault()
+        Compile()
+    } else if (e.altKey && e.code == "F2") { // Run
+        e.preventDefault()
+        Run()
+    } else if (e.altKey && e.code == "F3") { // Reset
+        e.preventDefault()
+        document.getElementById("stop-code-button").click()
+    } else if (e.altKey && e.code == "F5") { // Clear errors
+        e.preventDefault()
+        document.getElementById("error-clear-button").click()
+    } else if (e.ctrlKey && e.altKey && e.code == "KeyF") { // Ctrl+Alt+F - focus text file in editor
+        if (goputer.files.type(globals.focusedFile) == "text") {
+            e.preventDefault()
+            codeArea.focus()
+        }
+    } else if (e.ctrlKey && e.code == "Slash") { // Toggle help menu
+        e.preventDefault()
+        document.getElementById("key-shortcuts-summary").toggleAttribute("open")
+        document.getElementById("key-shortcuts-summary").scrollIntoView()
+    } else if (e.ctrlKey && e.altKey && e.code == "KeyS") { // Take screenshot of output
+        e.preventDefault()
+        SaveVideo()
+    } else if (e.ctrlKey && e.altKey && e.code == "KeyV") { // Start/end video recording
+        e.preventDefault()
+        ToggleRecording()
     }
 })
 
