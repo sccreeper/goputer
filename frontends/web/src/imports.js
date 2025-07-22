@@ -119,6 +119,14 @@ codeEditorDiv.addEventListener("drop",
         
             const f = e.dataTransfer.files[0]
 
+            if (f.size > goputer.usableMemorySize) {
+                if (!confirm(
+                    `This file is ${f.size} bytes in size which is larger than goputer's usable memory size of ${goputer.usableMemorySize} bytes. Press OK if you know what you are doing.`
+                )) {
+                    return;    
+                }
+            }
+
             if (f.name.split(".").pop() == "zip") {
                 OpenSharedArchive(f)
                 return

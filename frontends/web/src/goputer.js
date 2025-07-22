@@ -283,6 +283,11 @@ export const goputer = {
         convertHex(num, isOffset) {
             return convertHex(num, isOffset)
         }
+    },
+
+    /** @type {number} */
+    get usableMemorySize() {
+        return memSize
     }
 
 }

@@ -484,6 +484,7 @@ func main() {
 	js.Global().Set("interruptArray", js.ValueOf(interruptArray))
 
 	js.Global().Set("memOffset", js.ValueOf(int(compiler.StackSize)))
+	js.Global().Set("memSize", js.ValueOf(int(vm.MemSize-vm.VideoBufferSize))) // usable memory size
 
 	js.Global().Set("convertColour", js.FuncOf(ConvertColour))
 	js.Global().Set("convertHex", js.FuncOf(ConvertHex))
