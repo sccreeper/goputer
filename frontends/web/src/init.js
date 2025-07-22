@@ -151,6 +151,10 @@ document.getElementById("stop-code-button").addEventListener("click", function (
 
 })
 
+document.getElementById("toggle-contrast-button").addEventListener("click", () => {
+    document.documentElement.classList.toggle("high-contrast");
+})
+
 //Init IO elements
 
 for (let i = 0; i < document.getElementById("bulb-container").children.length; i++) {

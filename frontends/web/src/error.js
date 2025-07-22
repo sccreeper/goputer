@@ -59,8 +59,8 @@ export function ShowError(type, text) {
 
     }
 
-    var error_container = document.createElement("div")
-    error_container.classList.add("bg-gray-800", "rounded-lg", "w-full", "p-3");
+    var error_container = document.createElement("section")
+    error_container.classList.add("rounded-lg", "w-full", "p-3");
 
     var header = document.createElement("h1")
     header.classList.add(error_html.HeaderClass)

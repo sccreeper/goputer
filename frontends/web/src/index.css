@@ -4,6 +4,16 @@
 @import "bootstrap-icons/font/bootstrap-icons.css";
 @import "tailwindcss";
 
+body {
+    @apply bg-gray-800 font-normal text-white;
+}
+
+.high-contrast {
+    body {
+        @apply bg-black;
+    }
+}
+
 .btn {
     @apply rounded-lg;
     @apply text-white;
@@ -33,6 +43,19 @@
     @apply active:outline-red-200;
 }
 
+.high-contrast {
+    .btn-main, .btn-destruct {
+        @apply bg-black;
+        @apply disabled:bg-black;
+        @apply border-pink-600;
+        @apply text-pink-600;
+        @apply active:outline-2;
+        @apply outline-pink-600;
+        @apply hover:bg-pink-600;
+        @apply hover:text-black;
+    }
+}
+
 .txt-btn {
     @apply cursor-pointer;
     @apply text-gray-400;
@@ -50,10 +73,38 @@
     @apply active:outline-red-900;
 }
 
+.high-contrast {
+    .txt-btn-main, .txt-btn-destruct {
+        @apply text-pink-600;
+        @apply hover:text-pink-600;
+        @apply hover:underline;
+        @apply active:outline-pink-600;        
+    }
+}
+
 .content-div {
     @apply bg-gray-700;
     @apply rounded-xl;
     @apply shadow-xl;
+}
+
+.content-div section {
+    @apply bg-gray-800;
+}
+
+.high-contrast {
+    .content-div {
+        @apply shadow-none;
+        @apply border;
+        @apply border-white;
+        @apply bg-black;
+    }
+
+    .content-div section {
+        @apply bg-black;
+        @apply border;
+        @apply border-white;
+    }
 }
 
 .font-heebo {
@@ -72,11 +123,25 @@
     @apply rounded-md;
 }
 
+.high-contrast {
+    .table-code {
+        @apply bg-black;
+        @apply border;
+        @apply border-white;
+    }
+}
+
 .sub-heading {
     @apply text-xl;
     @apply text-blue-500;
     @apply font-bold;
     @apply mb-3;
+}
+
+.high-contrast {
+    .sub-heading {
+        @apply text-yellow-400;
+    }
 }
 
 .md-grid-rows {
@@ -94,18 +159,32 @@ a:hover {
     @apply text-blue-300;
 }
 
-#render-canvas {
-    @apply transition-shadow
+.high-contrast {
+    a.in-para {
+        @apply text-pink-600;
+        @apply hover:text-pink-600;
+        @apply active:text-pink-600;
+    }
 }
 
-#render-canvas[running=false] {
+#render-canvas {
+    @apply transition-colors;
     @apply border;
     @apply border-gray-500;
 }
 
 #render-canvas[running=true] {
-    @apply border;
     @apply border-blue-500;
+}
+
+.high-contrast {
+    #render-canvas {
+        @apply border-white;
+    }
+
+    #render-canvas[running=true] {
+        @apply border-yellow-400;
+    }
 }
 
 .good-error {
@@ -124,12 +203,26 @@ a:hover {
 
 }
 
+.high-contrast {
+    .good-error, .bad-error {
+        @apply text-yellow-400;
+    }
+}
+
 .datalist-default, select, input {
     @apply bg-gray-800;
     @apply border-b;
     @apply border-gray-400;
     @apply focus:outline-none;
 
+}
+
+.high-contrast {
+    .datalist-default, select, input {
+        @apply bg-black;
+        @apply border;
+        @apply border-white;
+    }
 }
 
 .datalist-default[valid-reg=true] {
@@ -140,6 +233,12 @@ a:hover {
     @apply text-red-600;
 }
 
+.high-contrast {
+    .datalist-default[valid-reg=false] {
+        @apply text-pink-600;
+    }
+}
+
 .example-container {
     @apply mt-1;
     @apply p-2;
@@ -148,6 +247,12 @@ a:hover {
     @apply cursor-pointer;
     @apply active:outline-1;
     @apply active:outline-white;
+}
+
+.high-contrast {
+    .example-container {
+        @apply border-white;
+    }
 }
 
 .example-container h3 {
@@ -167,12 +272,24 @@ a:hover {
     @apply transition-colors;
 }
 
+.high-contrast {
+    .instruction-address {
+        @apply text-white;
+    }
+}
+
 .definition-info {
     @apply transition-colors;
 }
 
 .instruction-address:target, .definition-info:target {
     @apply text-gray-400;
+}
+
+.high-contrast {
+    .instruction-address:target, .definition-info:target {
+        @apply text-yellow-400;
+    }
 }
 
 #binary-message {
@@ -209,6 +326,13 @@ a:hover {
     @apply border-gray-600;
 }
 
+.high-contrast {
+    #bin-display-data div > span:first-child {
+        @apply text-white;
+        @apply border-white;
+    }
+}
+
 #bin-display-data div {
     @apply snap-start;
 }
@@ -220,6 +344,13 @@ a:hover {
     @apply border-b;
     @apply border-gray-400;
     @apply pb-1;
+}
+
+.high-contrast {
+    #bin-display-menu {
+        @apply bg-black;
+        @apply border-white;
+    }
 }
 
 #img-display {
@@ -276,3 +407,12 @@ kbd {
     border-style: outset;
     @apply text-sm;
 }
+
+.high-contrast {
+    kbd {
+        @apply bg-black;
+        @apply text-white;
+        @apply border-white;
+    }
+}
+

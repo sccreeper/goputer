@@ -17,7 +17,7 @@
     <title>goputer</title>
 </head>
 
-<body class="bg-gray-800 font-heebo font-normal text-white">
+<body class="font-heebo">
 
     <div class="flex justify-center h-16 font-fira">
         <img src="logo.png?height=64" alt="goputer logo" />
@@ -42,7 +42,7 @@
                 </h1>
 
                 <!-- Code editor outer container -->
-                <div class="font-normal w-full rounded-lg bg-gray-800 text-white">
+                <section class="font-normal w-full rounded-lg text-white">
 
                     <div id="code-editor">
 
@@ -53,7 +53,7 @@
                         </div>
 
                         <textarea placeholder="Write your code here..." id="code-textarea"
-                            class="font-fira resize-none bg-gray-800 text-white focus:outline-none p-3 w-full h-[90%] rounded-b-lg"
+                            class="font-fira resize-none text-white focus:outline-none p-3 w-full h-[90%] rounded-b-lg"
                             spellcheck="false" aria-multiline="true" aria-keyshortcuts="Ctrl+Alt+F"></textarea>
 
                         <div id="bin-display">
@@ -79,7 +79,7 @@
                         <p>Currently using a binary. Stop execution in order to be able to edit code again.</p>
                     </div>
 
-                </div>
+                </section>
 
                 <!-- Control buttons (compile, run etc.) -->
                 <div class="mt-4 flex justify-around">
@@ -117,7 +117,7 @@
 
                         <h1 class="sub-heading mt-4">Notifications</h1>
 
-                        <div class="bg-gray-800 rounded-lg w-full h-36 p-2 overflow-y-auto">
+                        <section class=" rounded-lg w-full h-36 p-2 overflow-y-auto">
 
                             <button class="sticky top-0 z-10 float-right btn btn-main" id="error-clear-button"
                                 aria-label="Clear errors" data-microtip-position="bottom" role="tooltip" aria-keyshortcuts="Alt+F5">Clear <i
@@ -127,16 +127,16 @@
                                 <p class="text-center w-full text-gray-400">No notifications.</p>
                             </div>
 
-                        </div>
+                        </section>
                     </div>
 
                     <div>
 
                         <h1 class="sub-heading mt-4">Examples</h1>
 
-                        <div class="bg-gray-800 rounded-lg w-full h-36 p-2 overflow-y-auto">
+                        <section class="rounded-lg w-full h-36 p-2 overflow-y-auto">
                             <div id="examples-div"></div>
-                        </div>
+                        </section>
 
                     </div>
 
@@ -163,7 +163,7 @@
 
                 <h1 class="sub-heading">Hardware</h1>
 
-                <div class="bg-gray-800 rounded-lg w-full h-1/2 p-2">
+                <section class=" rounded-lg w-full h-1/2 p-2">
 
                     <div class="grid grid-cols-2 grid-rows-1">
 
@@ -190,10 +190,10 @@
                         </div>
                     </div>
 
-                </div>
+                </section>
 
                 <!-- Register inspection/debug info -->
-                <div class="bg-gray-800 rounded-lg w-full h-1/2 overflow-auto p-2 mt-4">
+                <section class=" rounded-lg w-full h-1/2 overflow-auto p-2 mt-4">
                     <table class="w-full border-spacing-2 border-separate table-fixed">
                         <tr>
                             <td>Program counter</td>
@@ -222,7 +222,7 @@
                             </td>
                         </tr>
                     </table>
-                </div>
+                </section>
 
             </div>
 
@@ -236,7 +236,7 @@
         <div class="m-4">
             <h1 class="sub-heading">Info</h1>
 
-            <div class="bg-gray-800 rounded-lg w-full p-3">
+            <section class="rounded-lg w-full p-3">
 
                 <p>goputer is a computer emulator/virtual machine intended to demonstrate how computers work at a low
                     level.</p>
@@ -259,6 +259,10 @@
                             Related blog posts</a></li>
 
                 </ul>
+
+                <br>
+
+                <span class="txt-btn txt-btn-main" id="toggle-contrast-button" role="button"><i class="bi bi-palette"></i> Toggle contrast</span>
 
                 <br>
 
@@ -335,7 +339,7 @@
 
                 <p><sup>1</sup>Audio recording is not supported on Firefox.</p>
 
-            </div>
+            </section>
         </div>
 
     </div>
