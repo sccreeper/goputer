@@ -2,6 +2,7 @@
 
 :host {
     justify-self: start;
+    @apply relative;
 }
 
 .bulb {
@@ -48,4 +49,18 @@
         @apply outline-2;
         @apply outline-green-200;
     }
+}
+
+:host::after {
+    @apply absolute;
+    @apply top-1/5;
+    @apply left-1;
+    @apply text-white;
+    font-size: 0.5rem;
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+    content: attr(reg);
+}
+
+:host(io-switch)::after {
+    @apply cursor-pointer;
 }

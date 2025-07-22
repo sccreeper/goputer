@@ -108,6 +108,10 @@ body {
     }
 }
 
+.content-div section strong {
+    @apply underline;
+}
+
 .font-heebo {
     font-family: 'Heebo', sans-serif;
 }

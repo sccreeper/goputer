@@ -10,6 +10,8 @@
     <script type="module" src="./src/main.js" defer></script>
     <link rel="stylesheet" href="./src/index.css" />
 
+    <link rel="icon" href="./icon.png" type="image/png">
+
     <meta property="og:title" content="goputer" />
     <meta property="og:description" content="The goputer playground & website" />
     <meta property="og:image" content="logo.png" />
@@ -239,10 +241,17 @@
             <section class="rounded-lg w-full p-3">
 
                 <p>goputer is a computer emulator/virtual machine intended to demonstrate how computers work at a low
-                    level.</p>
+                    level. Some examples are provided, the documentation is also linked below which contains more detailed information.</p>
 
-                <p>Files are saved automatically and are <a href="https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API" class="in-para" target="_blank">local</a> to your computer.</p>
+                <br>
 
+                <p>Files are saved automatically and are <a href="https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API" class="in-para" target="_blank">local</a> to your computer.
+                
+                Additional files (images, binary blobs, plaintext, and source code) can be imported by dragging and dropping onto the code editor. The usable memory size for goputer is ~65kb so bear this in mind when importing files. If the file is too large you will recieve a warning.
+
+                You can also import and export your code by using the "Share" button and by dragging and dropping a suitable zip file.
+                
+                If you have a binary executable you can import it using the "Upload" button.</p>
                 <br>
 
                 <strong>Helpful links</strong>
@@ -264,11 +273,7 @@
 
                 <strong>Accessibility</strong>
 
-                <br>
-
-                <span class="txt-btn txt-btn-main" id="toggle-contrast-button" role="button"><i class="bi bi-circle-half"></i> Toggle high contrast</span>
-
-                <br>
+                <p>Most of this page can be interacted with using keyboard shortcuts which are listed <a href="#key-shortcuts-summary" class="in-para">below</a>. There is also a high contrast stylesheet available.</p>
 
                 <details id="key-shortcuts-summary">
                     <summary>Keyboard shortcuts</summary>
@@ -340,6 +345,12 @@
                         </li>
                     </ul>
                 </details>
+
+                <span class="txt-btn txt-btn-main" id="toggle-contrast-button" role="button"><i class="bi bi-circle-half"></i> Toggle high contrast</span>
+
+                <br>
+
+                <strong>Implementation notes</strong>
 
                 <p><sup>1</sup>Audio recording is not supported on Firefox.</p>
 
