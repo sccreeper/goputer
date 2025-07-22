@@ -151,8 +151,15 @@ document.getElementById("stop-code-button").addEventListener("click", function (
 
 })
 
+if (localStorage.getItem("highContrast") != null) {
+    if (localStorage.getItem("highContrast") === "true") {
+        document.documentElement.classList.add("high-contrast");
+    }
+}
+
 document.getElementById("toggle-contrast-button").addEventListener("click", () => {
     document.documentElement.classList.toggle("high-contrast");
+    localStorage.setItem("highContrast", document.documentElement.classList.contains("high-contrast"))
 })
 
 //Init IO elements

@@ -61,6 +61,7 @@ body {
     @apply text-gray-400;
     @apply transition-all;
     @apply active:outline-1;
+    @apply select-none;
 }
 
 .txt-btn-main {
