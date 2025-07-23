@@ -161,9 +161,9 @@ func NumFiles(this js.Value, args []js.Value) any {
 	return js.ValueOf(len(fileMap))
 }
 
-func HandleError(error_type compiler.ErrorType, error_text string) {
+func HandleError(errorType compiler.ErrorMessage, errorText string) {
 
-	js.Global().Call("showError", 1, js.ValueOf(error_text))
+	js.Global().Call("showError", 1, js.ValueOf(errorText))
 
 }
 
@@ -291,26 +291,9 @@ func Cycle(this js.Value, args []js.Value) any {
 
 }
 
-func ParserItnStr(this js.Value, args []js.Value) any {
+func GetCurrentInstruction(this js.Value, args []js.Value) any {
 
-	//Generate current instruction string
-
-	var arg_text string = ""
-
-	switch js32.Opcode {
-	case constants.IJump, constants.ICall, constants.IConditionalJump, constants.IConditionalCall:
-		arg_text = util.ConvertHex(js32.ArgLarge)
-	default:
-		if constants.InstructionArgumentCounts[js32.Opcode][0] == 1 && js32.Opcode != constants.ICallInterrupt {
-			arg_text = registerMap[js32.ArgLarge]
-		} else if js32.Opcode == constants.ICallInterrupt {
-			arg_text = interruptMap[constants.Interrupt(js32.ArgLarge)]
-		} else {
-			arg_text = fmt.Sprintf("%s %s", registerMap[uint32(js32.ArgSmall0)], registerMap[uint32(js32.ArgSmall1)])
-		}
-	}
-
-	return js.ValueOf(fmt.Sprintf("%s %s", itnMap[uint32(js32.Opcode)], arg_text))
+	return js.ValueOf(compiler.DecodeInstructionString(js32.CurrentInstruction))
 
 }
 
@@ -410,7 +393,7 @@ func main() {
 	js.Global().Set("sendInterrupt", js.FuncOf(SendInterrupt))
 	js.Global().Set("isSubscribed", js.FuncOf(IsSubscribed))
 
-	js.Global().Set("currentItn", js.FuncOf(ParserItnStr))
+	js.Global().Set("currentItn", js.FuncOf(GetCurrentInstruction))
 
 	js.Global().Set("cycleVM", js.FuncOf(Cycle))
 

@@ -7,7 +7,7 @@ import (
 	"log"
 	"math"
 	"regexp"
-	"sccreeper/goputer/pkg/constants"
+	c "sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/util"
 	"strconv"
 	"strings"
@@ -79,7 +79,7 @@ type Parser struct {
 
 	Verbose bool //Should there be output when parsing the file.
 
-	ErrorHandler func(error_type ErrorType, error_text string) //The error handler method, required.
+	ErrorHandler func(error_type ErrorMessage, error_text string) //The error handler method, required.
 	FileReader   func(path string) ([]byte, error)             //The file reader method, required.
 }
 
@@ -163,7 +163,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 			case "label":
 
 				if errMessage, collision := p.nameCollision(statementValue); collision {
-					p.parsingError(ErrSymbol, ErrorType(errMessage))
+					p.parsingError(ErrSymbol, ErrorMessage(errMessage))
 				} else {
 					p.AllNames = append(p.AllNames, statementValue)
 
@@ -179,22 +179,22 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 				defStringValue := nameValueRegex.FindStringSubmatch(statementValue)[2]
 
 				if errMessage, collison := p.nameCollision(defName); collison {
-					p.parsingError(ErrSymbol, ErrorType(errMessage))
+					p.parsingError(ErrSymbol, ErrorMessage(errMessage))
 				} else {
 					p.AllNames = append(p.AllNames, defName)
 
 					var defByteValue []byte
-					var defType constants.DefType
+					var defType c.DefType
 
 					if doubleQuoteStringValueRegex.MatchString(defStringValue) {
 
 						strValue, err := strconv.Unquote(defStringValue)
 						if err != nil {
-							p.parsingError(ErrSyntax, ErrorType(err.Error()))
+							p.parsingError(ErrSyntax, ErrorMessage(err.Error()))
 						}
 
 						defByteValue = []byte(strValue)
-						defType = constants.StringType
+						defType = c.StringType
 
 					} else if intValueRegex.MatchString(defStringValue) {
 
@@ -202,21 +202,21 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 						x, err := strconv.Atoi(strings.ReplaceAll(defStringValue, "_", ""))
 						if err != nil {
-							p.parsingError(ErrSyntax, ErrorType(err.Error()))
+							p.parsingError(ErrSyntax, ErrorMessage(err.Error()))
 						}
 
 						binary.LittleEndian.PutUint32(defByteValue[:], uint32(x))
-						defType = constants.IntType
+						defType = c.IntType
 
 					} else if floatValueRegex.MatchString(defStringValue) {
 
 						x, err := strconv.ParseFloat(strings.ReplaceAll(defStringValue, "_", ""), 32)
 						if err != nil {
-							p.parsingError(ErrSyntax, ErrorType(err.Error()))
+							p.parsingError(ErrSyntax, ErrorMessage(err.Error()))
 						}
 
 						binary.LittleEndian.PutUint32(defByteValue[:], math.Float32bits(float32(x)))
-						defType = constants.FloatType
+						defType = c.FloatType
 
 					} else if hexValueRegex.MatchString(defStringValue) {
 
@@ -227,10 +227,10 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 						var err error
 						defByteValue, err = hex.DecodeString(strings.ReplaceAll(hexValue, "_", ""))
 						if err != nil {
-							p.parsingError(ErrSyntax, ErrorType(err.Error()))
+							p.parsingError(ErrSyntax, ErrorMessage(err.Error()))
 						}
 
-						defType = constants.BytesType
+						defType = c.BytesType
 
 					} else if specialValueRegex.MatchString(defStringValue) {
 
@@ -253,10 +253,10 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 								}
 
 								defByteValue = b
-								defType = constants.BytesType
+								defType = c.BytesType
 
 							} else {
-								p.parsingError(ErrSyntax, ErrorType("malformed string"))
+								p.parsingError(ErrSyntax, ErrorMessage("malformed string"))
 							}
 
 						} else if specialType == "region" {
@@ -273,10 +273,10 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 							}
 
 							defByteValue = make([]byte, regionSize, regionSize)
-							defType = constants.BytesType
+							defType = c.BytesType
 
 						} else {
-							p.parsingError(ErrSyntax, ErrorType(fmt.Sprintf("unrecognised special definition type '%s'", specialType)))
+							p.parsingError(ErrSyntax, ErrorMessage(fmt.Sprintf("unrecognised special definition type '%s'", specialType)))
 						}
 
 					} else {
@@ -310,7 +310,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 				importedFile, err := p.FileReader(fName)
 
 				if err != nil {
-					p.parsingError(ErrFile, ErrorType(fmt.Sprintf("error reading file '%s'", fName)))
+					p.parsingError(ErrFile, ErrorMessage(fmt.Sprintf("error reading file '%s'", fName)))
 				}
 
 				importParser := Parser{
@@ -327,7 +327,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 				importedProgramStructure, err := importParser.Parse()
 				if err != nil {
-					p.parsingError(err, ErrorType(err.Error()))
+					p.parsingError(err, ErrorMessage(err.Error()))
 				}
 
 				if p.ImportedFrom == fName {
@@ -336,7 +336,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 				p.ProgramStructure, err = p.combine(importedProgramStructure)
 				if err != nil {
-					p.parsingError(err, ErrorType(err.Error()))
+					p.parsingError(err, ErrorMessage(err.Error()))
 				}
 
 				instructionCount = len(p.ProgramStructure.ProgramInstructions)
@@ -346,17 +346,17 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 				interruptType := strings.Split(statementValue, " ")[0]
 				interruptLabel := strings.Split(statementValue, " ")[1]
 
-				if _, exists := constants.InterruptInts[interruptType]; !exists || constants.InterruptInts[interruptType] < constants.IntMouseMove {
-					p.parsingError(ErrSymbol, ErrorType(fmt.Sprintf("unknown interrupt '%s'", interruptType)))
+				if _, exists := c.InterruptInts[interruptType]; !exists || c.InterruptInts[interruptType] < c.IntMouseMove {
+					p.parsingError(ErrSymbol, ErrorMessage(fmt.Sprintf("unknown interrupt '%s'", interruptType)))
 				}
 
 				if !slices.Contains(p.ProgramStructure.LabelNames, interruptLabel) {
-					p.parsingError(ErrSymbol, ErrorType(fmt.Sprintf("unrecognized label '%s'", interruptLabel)))
+					p.parsingError(ErrSymbol, ErrorMessage(fmt.Sprintf("unrecognized label '%s'", interruptLabel)))
 				}
 
 				p.ProgramStructure.InterruptSubscriptions[interruptType] = InterruptSubscription{
 					InterruptName: interruptType,
-					Interrupt:     constants.InterruptInts[interruptType],
+					Interrupt:     c.InterruptInts[interruptType],
 					LabelName:     interruptLabel,
 				}
 
@@ -368,11 +368,11 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 			// Instructions
 
-			if _, exists := constants.InstructionInts[lineSplit[0]]; !exists {
+			if _, exists := c.InstructionInts[lineSplit[0]]; !exists {
 				p.parsingError(ErrDoesNotExist, InstructionDoesNotExist)
 			}
 
-			var argCount []int = constants.InstructionArgumentCounts[constants.Instruction(constants.InstructionInts[lineSplit[0]])]
+			var argCount []int = c.InstructionArgumentCounts[c.Instruction(c.InstructionInts[lineSplit[0]])]
 
 			if !slices.Contains(argCount, len(lineSplit)-1) {
 
@@ -387,7 +387,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 					p.parsingError(
 						ErrWrongNumArgs,
-						ErrorType(
+						ErrorMessage(
 							fmt.Sprintf("instruction '%s' expects %s arguments got %d", lineSplit[0], argList, len(lineSplit)-1),
 						),
 					)
@@ -395,10 +395,49 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 				} else {
 					p.parsingError(
 						ErrWrongNumArgs,
-						ErrorType(
+						ErrorMessage(
 							fmt.Sprintf("too many arguments in call to '%s' - was expecting %d got %d", lineSplit[0], argCount[0], len(lineSplit)-1),
 						),
 					)
+				}
+
+			}
+
+			// Check for immediate args
+
+			var hasImmediate bool
+			var immediateIndex int
+
+			for _, possibleArrangement := range c.InstructionImmediates[c.Instruction(c.InstructionInts[lineSplit[0]])] {
+
+				if len(possibleArrangement) != len(lineSplit[1:]) {
+					continue
+				}
+
+				for argIndex, arg := range lineSplit[1:] {
+
+					if arg[0] == '$' {
+						if !possibleArrangement[argIndex] {
+							p.parsingError(ErrInvalidArgument, ErrorMessage(fmt.Sprintf("argument %d cannot be immediate value", argIndex+1)))
+						} else if hasImmediate {
+							p.parsingError(ErrInvalidArgument, ErrorMessage(fmt.Sprintf("multiple immediates in call to %s", lineSplit[0])))
+						} else {
+							// Make sure value is valid integer and not above limit (2^26)
+
+							imm, err := strconv.Atoi(arg[1:])
+							if err != nil {
+								p.parsingError(ErrSyntax, InvalidValue)
+							}
+
+							if imm > int(math.Pow(2, 26)) {
+								p.parsingError(ErrValue, ErrorMessage("value too large to be immediate (> 2^26)"))
+							}
+
+							hasImmediate = true
+							immediateIndex = argIndex
+						}	
+					}
+
 				}
 
 			}
@@ -408,7 +447,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 				// Interrupts
 
 				if lineSplit[0] == "int" {
-					if _, exists := constants.InterruptInts[arg]; !exists {
+					if _, exists := c.InterruptInts[arg]; !exists {
 						p.parsingError(ErrSymbol, InvalidArgument)
 					}
 
@@ -419,7 +458,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 					if !slices.Contains(p.ProgramStructure.DefinitionNames, arg[1:]) {
 						p.parsingError(
 							ErrDoesNotExist,
-							ErrorType(fmt.Sprintf("definition '%s' does not exist", lineSplit[1][1:])),
+							ErrorMessage(fmt.Sprintf("definition '%s' does not exist", lineSplit[1][1:])),
 						)
 					}
 
@@ -435,9 +474,9 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 				} else {
 
-					if _, exists := constants.RegisterInts[arg]; !exists {
+					if _, exists := c.RegisterInts[arg]; !exists && arg[0] != '$' {
 
-						p.parsingError(ErrDoesNotExist, ErrorType(fmt.Sprintf("unknown register '%s'", arg)))
+						p.parsingError(ErrDoesNotExist, ErrorMessage(fmt.Sprintf("unknown register '%s'", arg)))
 
 					}
 
@@ -450,7 +489,9 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 			instructionToBeAdded := Instruction{
 				ArgumentCount: uint32(len(strings.Split(line, " ")) - 1),
 				StringData:    strings.Split(line, " ")[1:],
-				Instruction:   constants.InstructionInts[strings.Split(line, " ")[0]],
+				Instruction:   c.InstructionInts[strings.Split(line, " ")[0]],
+				HasImmediate: hasImmediate,
+				ImmediateIndex: immediateIndex,
 			}
 
 			p.ProgramStructure.ProgramInstructions = append(p.ProgramStructure.ProgramInstructions, instructionToBeAdded)
@@ -557,13 +598,13 @@ func (p *Parser) nameCollision(s string) (errMessage string, isCollision bool) {
 
 	isCollision = false
 
-	if _, exists := constants.InstructionInts[s]; exists {
+	if _, exists := c.InstructionInts[s]; exists {
 		errMessage = fmt.Sprintf("name %s shares name with instruction", s)
 		isCollision = true
-	} else if _, exists := constants.RegisterInts[s]; exists {
+	} else if _, exists := c.RegisterInts[s]; exists {
 		errMessage = fmt.Sprintf("name %s shares name with register", s)
 		isCollision = true
-	} else if _, exists := constants.InterruptInts[s]; exists {
+	} else if _, exists := c.InterruptInts[s]; exists {
 		errMessage = fmt.Sprintf("name %s shares name with interrupt", s)
 		isCollision = true
 	} else if slices.Contains(p.ProgramStructure.AllNames, s) {

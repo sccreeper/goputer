@@ -1,0 +1,24 @@
+// Small example to demonstrate how to use immediates
+
+#def red 0xFF0000FF
+
+#label start
+
+lda @red
+mov d0 vc
+
+// Unneeded but works
+
+add r00 $64
+mov a0 vx0
+mov a0 vy0
+
+// Draw square properly
+
+mov $64 vx0
+mov $64 vy0
+
+mov $128 vx1
+mov $128 vy1
+
+int va

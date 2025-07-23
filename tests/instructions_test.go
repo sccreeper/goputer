@@ -36,7 +36,7 @@ func compile(text string) []byte {
 		FileName:     "main.gpasm",
 		Verbose:      false,
 		Imported:     false,
-		ErrorHandler: func(error_type compiler.ErrorType, error_text string) { panic(error_text) },
+		ErrorHandler: func(error_type compiler.ErrorMessage, error_text string) { panic(error_text) },
 		FileReader:   func(path string) []byte { return []byte(text) },
 	}
 
@@ -115,7 +115,7 @@ func TestJump(t *testing.T) {
 
 		if test32.Opcode == constants.IJump && !inJump {
 			inJump = true
-			jumpAddr = test32.ArgLarge
+			jumpAddr = test32.LongArg
 		} else if test32.Opcode != constants.IJump && inJump {
 
 			if test32.Registers[constants.RProgramCounter]-5 != jumpAddr {
@@ -150,7 +150,7 @@ func TestCall(t *testing.T) {
 
 		if test32.Opcode == constants.IJump && !inCall {
 			inCall = true
-			callAddr = test32.ArgLarge
+			callAddr = test32.LongArg
 		} else if test32.Opcode != constants.IJump && inCall {
 
 			if test32.Registers[constants.RProgramCounter]-5 != callAddr {
@@ -189,7 +189,7 @@ func TestConditionalJump(t *testing.T) {
 
 		if test32.Opcode == constants.IConditionalJump && !inJump {
 			inJump = true
-			jumpAddr = test32.ArgLarge
+			jumpAddr = test32.LongArg
 		} else if test32.Opcode != constants.IConditionalJump && inJump {
 
 			if test32.Registers[constants.RProgramCounter]-5 != jumpAddr {
@@ -223,7 +223,7 @@ func TestConditionalCall(t *testing.T) {
 
 		if test32.Opcode == constants.IConditionalCall && !inJump {
 			inJump = true
-			jumpAddr = test32.ArgLarge
+			jumpAddr = test32.LongArg
 		} else if test32.Opcode != constants.IConditionalCall && inJump {
 
 			if test32.Registers[constants.RProgramCounter]-5 != jumpAddr {

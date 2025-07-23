@@ -21,7 +21,7 @@ type AssembledProgram struct {
 //
 // Mainly used by the command line.
 // Designed to work on desktop systems only.
-func Compile(rootPath string, getFile func(path string) ([]byte, error), config CompilerConfig, errorHandler func(errorType ErrorType, errorText string)) (AssembledProgram, error) {
+func Compile(rootPath string, getFile func(path string) ([]byte, error), config CompilerConfig, errorHandler func(errorType ErrorMessage, errorText string)) (AssembledProgram, error) {
 
 	startTime := time.Now().UnixMicro()
 

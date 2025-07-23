@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"log"
 	c "sccreeper/goputer/pkg/constants"
+	"strconv"
 )
 
 const (
@@ -145,7 +146,7 @@ func GenerateBytecode(p ProgramStructure, verbose bool) []byte {
 // Generates individual instruction bytecode.
 //
 // 1 byte for instruction, 4 bytes for arguments.
-func generateInstructionBytecode(i Instruction, definitionAddresses map[string]uint32, labelAddresses map[string]uint32) []byte {
+func generateInstructionBytecode(itn Instruction, definitionAddresses map[string]uint32, labelAddresses map[string]uint32) []byte {
 
 	//TODO: sign bit
 	//TODO: add offset for "hardware reserved" space
@@ -153,64 +154,103 @@ func generateInstructionBytecode(i Instruction, definitionAddresses map[string]u
 	var instructionBytes []byte
 
 	instructionBytes = append(instructionBytes,
-		uint8(i.Instruction),
+		uint8(itn.Instruction),
 	)
 
 	//Evaluate instruction args
 
-	var arguements []uint32
+	var arguments []uint32
 
-	for _, v := range i.StringData {
+	for _, stringArg := range itn.StringData {
 		var arg uint32
 
-		if i.Instruction == uint32(c.IStore) || i.Instruction == uint32(c.ILoad) {
+		if itn.Instruction == uint32(c.IStore) || itn.Instruction == uint32(c.ILoad) {
 
-			if v[0] == '@' {
-				arg = definitionAddresses[v[1:]]
+			if stringArg[0] == '@' {
+				arg = definitionAddresses[stringArg[1:]]
+			} else if stringArg[0] == '$' {
+				x, _ := strconv.Atoi(stringArg[1:])
+				arg = uint32(x)
 			} else {
-				arg = uint32(c.RegisterInts[v])
+				arg = uint32(c.RegisterInts[stringArg])
 			}
 
-		} else if i.Instruction == uint32(c.IJump) || i.Instruction == uint32(c.IConditionalJump) || i.Instruction == uint32(c.ICall) || i.Instruction == uint32(c.IConditionalCall) {
+		} else if itn.Instruction == uint32(c.IJump) || itn.Instruction == uint32(c.IConditionalJump) || itn.Instruction == uint32(c.ICall) || itn.Instruction == uint32(c.IConditionalCall) {
 
-			if v[0] == '@' {
-				arg = labelAddresses[v[1:]]
+			if stringArg[0] == '@' {
+				arg = labelAddresses[stringArg[1:]]
+			} else if stringArg[0] == '$' {
+				x, _ := strconv.Atoi(stringArg[1:])
+				arg = uint32(x)
 			} else {
-				arg = uint32(c.RegisterInts[v])
+				arg = uint32(c.RegisterInts[stringArg])
 			}
 
-		} else if i.Instruction == uint32(c.ICallInterrupt) {
-			arg = uint32(c.InterruptInts[v])
+		} else if itn.Instruction == uint32(c.ICallInterrupt) {
+			arg = uint32(c.InterruptInts[stringArg])
 		} else {
-			arg = c.RegisterInts[v]
+
+			if stringArg[0] == '$' {
+				x, _ := strconv.Atoi(stringArg[1:])
+				arg = uint32(x)
+			} else {
+				arg = c.RegisterInts[stringArg]
+			}
+		
 		}
 
-		arguements = append(arguements, arg)
+		arguments = append(arguments, arg)
 	}
 
-	//Add args to byte array
+	if itn.HasImmediate {
+		
+		if itn.ImmediateIndex == 0 {
+			instructionBytes[0] |= byte(c.ItnFlagFirstArgImmediate)
+		} else if itn.ImmediateIndex == 1 {
+			instructionBytes[0] |= byte(c.ItnFlagSecondArgImmediate)
+		}
 
-	var dataArray []byte
+		// Process immediate
 
-	if i.ArgumentCount == 0 {
+		var argValue uint32
 
-		dataArray = []byte{0, 0, 0, 0}
+		argValue = arguments[itn.ImmediateIndex]
 
-	} else if i.ArgumentCount == 1 {
+		if itn.ImmediateIndex == 0 {
+			argValue |= arguments[1] << 26	
+		} else {
+			argValue |= arguments[0] << 26	
+		}
 
-		dataArray = make([]byte, 4)
+		instructionBytes = binary.LittleEndian.AppendUint32(instructionBytes, argValue)
 
-		binary.LittleEndian.PutUint32(dataArray[:], arguements[0])
-
+		return instructionBytes
+	
 	} else {
-		dataArray = make([]byte, 4)
+		//Add args to byte array
 
-		binary.LittleEndian.PutUint16(dataArray[:], uint16(arguements[0]))
-		binary.LittleEndian.PutUint16(dataArray[2:], uint16(arguements[1]))
+		var dataArray []byte
+
+		if itn.ArgumentCount == 0 {
+
+			dataArray = []byte{0, 0, 0, 0}
+
+		} else if itn.ArgumentCount == 1 {
+
+			dataArray = make([]byte, 4)
+
+			binary.LittleEndian.PutUint32(dataArray[:], arguments[0])
+
+		} else {
+			dataArray = make([]byte, 4)
+
+			binary.LittleEndian.PutUint16(dataArray[:], uint16(arguments[0]))
+			binary.LittleEndian.PutUint16(dataArray[2:], uint16(arguments[1]))
+		}
+
+		instructionBytes = append(instructionBytes, dataArray...)
+
+		return instructionBytes	
 	}
-
-	instructionBytes = append(instructionBytes, dataArray...)
-
-	return instructionBytes
 
 }

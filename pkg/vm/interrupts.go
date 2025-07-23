@@ -10,7 +10,7 @@ type InterruptInfo struct {
 
 func (m *VM) subbedInterrupt(i c.Interrupt) {
 
-	m.ArgLarge = m.InterruptTable[i]
+	m.LongArg = m.InterruptTable[i]
 
 }
 
@@ -22,7 +22,7 @@ func (m *VM) Subscribed(i c.Interrupt) bool {
 
 func (m *VM) calledInterrupt() {
 
-	switch c.Interrupt(m.ArgSmall0) {
+	switch c.Interrupt(m.LeftArg) {
 	case c.IntVideoArea:
 		m.drawArea()
 	case c.IntVideoText:
@@ -36,7 +36,7 @@ func (m *VM) calledInterrupt() {
 	case c.IntVideoClear:
 		m.clearVideo()
 	default:
-		if c.Interrupt(m.ArgSmall0) == c.IntIOClear {
+		if c.Interrupt(m.LeftArg) == c.IntIOClear {
 
 			//Set all IO registers to zero
 
@@ -46,7 +46,7 @@ func (m *VM) calledInterrupt() {
 
 		}
 
-		m.InterruptQueue = append(m.InterruptQueue, c.Interrupt(m.ArgSmall0))
+		m.InterruptQueue = append(m.InterruptQueue, c.Interrupt(m.LeftArg))
 	}
 
 }

@@ -24,6 +24,8 @@ type Instruction struct {
 	ArgumentCount uint32   `json:"argument_count"`
 	StringData    []string `json:"data"`
 	ByteData      []byte   `json:"byte_data"`
+	HasImmediate bool `json:"has_immediate"`
+	ImmediateIndex int `json:"immediate_index"`
 
 	Instruction uint32 `json:"instruction"`
 }

@@ -133,6 +133,6 @@ func GetCurrentInstruction() C.uint {
 //export GetArgs
 func GetArgs() C.uint {
 
-	return C.uint(py32.ArgLarge)
+	return C.uint(py32.LongArg)
 
 }
