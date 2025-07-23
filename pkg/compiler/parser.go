@@ -40,13 +40,13 @@ func init() {
 	doubleQuoteStringValueRegex = regexp.MustCompile(`^"(?:\\.|[^"\\])*"$`)
 
 	// Match integer values
-	intValueRegex = regexp.MustCompile(`^(-?[0-9]+)$`)
+	intValueRegex = regexp.MustCompile(`^(-?(?:[0-9]+(?:_[0-9]+)*))$`)
 
 	// Match floating point values
-	floatValueRegex = regexp.MustCompile(`^(-?[0-9]+\.[0-9]+)$`)
+	floatValueRegex = regexp.MustCompile(`^(-?(?:[0-9]+(?:_[0-9]+)*)\.(?:[0-9]+(?:_[0-9]+)*))$`)
 
 	// Match hex values
-	hexValueRegex = regexp.MustCompile(`^0x([a-zA-Z0-9]+)$`)
+	hexValueRegex = regexp.MustCompile(`^0x((?:[a-fA-F0-9]+(?:_[a-fA-F0-9]+)*))$`)
 
 	// Match values in the form hello:world
 	specialValueRegex = regexp.MustCompile(`^(.+):(.+)$`)
@@ -144,6 +144,8 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 			log.Printf("Parsing statement %d", index)
 		}
 
+		line = strings.TrimRight(line, " ")
+
 		// Skip conditions
 
 		if len(line) == 0 || commentStatementRegex.MatchString(line) || len(strings.TrimSpace(line)) == 0 {
@@ -198,7 +200,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 						defByteValue = make([]byte, 4)
 
-						x, err := strconv.Atoi(defStringValue)
+						x, err := strconv.Atoi(strings.ReplaceAll(defStringValue, "_", ""))
 						if err != nil {
 							p.parsingError(ErrSyntax, ErrorType(err.Error()))
 						}
@@ -208,7 +210,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 					} else if floatValueRegex.MatchString(defStringValue) {
 
-						x, err := strconv.ParseFloat(defStringValue, 32)
+						x, err := strconv.ParseFloat(strings.ReplaceAll(defStringValue, "_", ""), 32)
 						if err != nil {
 							p.parsingError(ErrSyntax, ErrorType(err.Error()))
 						}
@@ -223,9 +225,9 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 						hexValue := hexValueRegex.FindStringSubmatch(defStringValue)[1]
 
 						var err error
-						defByteValue, err = hex.DecodeString(hexValue)
+						defByteValue, err = hex.DecodeString(strings.ReplaceAll(hexValue, "_", ""))
 						if err != nil {
-							panic(err)
+							p.parsingError(ErrSyntax, ErrorType(err.Error()))
 						}
 
 						defType = constants.BytesType

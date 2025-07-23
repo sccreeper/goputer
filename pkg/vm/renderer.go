@@ -173,27 +173,30 @@ func (m *VM) drawPolygon() {
 
 	for i := 1; i < numVertices*2; i += 2 {
 
+		var adjustedX int = int(m.DataBuffer[i]) + int(m.Registers[c.RVideoX0])
+		var adjustedY int = int(m.DataBuffer[i+1]) + int(m.Registers[c.RVideoY0])
+
 		vertices = append(
 			vertices, [2]int{
-				int(m.DataBuffer[i]) + int(m.Registers[c.RVideoX0]),
-				int(m.DataBuffer[i+1]) + int(m.Registers[c.RVideoY0]),
+				adjustedX,
+				adjustedY,
 			},
 		)
 
 		if int(m.DataBuffer[i])+int(m.Registers[c.RVideoX0]) < xMin {
-			xMin = int(m.DataBuffer[i]) + int(m.Registers[c.RVideoX0])
+			xMin = adjustedX
 		}
 
 		if int(m.DataBuffer[i])+int(m.Registers[c.RVideoX0]) > xMax {
-			xMax = int(m.DataBuffer[i]) + int(m.Registers[c.RVideoX0])
+			xMax = adjustedX
 		}
 
 		if int(m.DataBuffer[i+1])+int(m.Registers[c.RVideoY0]) < yMin {
-			yMin = int(m.DataBuffer[i+1]) + int(m.Registers[c.RVideoY0])
+			yMin = adjustedY
 		}
 
 		if int(m.DataBuffer[i+1])+int(m.Registers[c.RVideoY0]) > yMax {
-			yMax = int(m.DataBuffer[i+1]) + int(m.Registers[c.RVideoY0])
+			yMax = adjustedY
 		}
 
 	}
@@ -216,7 +219,7 @@ func (m *VM) drawPolygon() {
 
 		for point := range Bresenham(vertices[i], next) {
 
-			if _, exists := edges[point[1]]; exists {
+			if _, keyExists := edges[point[1]]; keyExists {
 				if !slices.Contains(edges[point[1]], point[0]) {
 					edges[point[1]] = append(edges[point[1]], point[0])
 				}
@@ -236,19 +239,27 @@ func (m *VM) drawPolygon() {
 	for y := yMin; y < yMax; y++ {
 		var inShape bool = false
 
-		for x := xMin; x < xMax; x++ {
+		if len(edges[y]) == 1 {
+			m.putPixel(edges[y][0], y, colour)
+			continue
+		}
 
-			if slices.Contains(edges[y], x) {
-				if !slices.Contains(edges[y], x-1) {
-					inShape = !inShape
-				}
-			}
+		for x := xMin; x < xMax; x++ {
 
 			if inShape {
 				m.putPixel(x, y, colour)
 			}
+			
+			if slices.Contains(edges[y], x) && !slices.Contains(edges[y], x-1) {
+				inShape = !inShape
 
+				if inShape {
+					m.putPixel(x, y, colour)
+				}
+			}
+		
 		}
+	
 	}
 
 }

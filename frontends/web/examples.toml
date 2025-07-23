@@ -1,10 +1,16 @@
 examples = [
-    { name="Video Area", description="Draws a white rectangle to the screen", path="area_test", program_text="""
-//Draws a rectangle to the screen
+    { name="Shapes", description="Draws several shapes to the screen", path="area_test", program_text="""
+//Draws a rectangle and other shapes to the screen
 #def pos 64
 #def size 2
 
+#def line_end_x 320
+#def line_end_y 240
+
 #def white 0xFFFFFFFF
+
+//          
+#def poly 0x03_4000_8040_0040
 
 #label start
 
@@ -22,9 +28,25 @@ mov a0 vy1
 
 mov r00 vx0
 mov r00 vy0
-
 int va
-    
+
+add r00 r00
+mov a0 vx0
+mov a0 vy0
+
+lda @poly
+int vp
+
+lda @line_end_x
+mov d0 vx1
+
+lda @line_end_y
+mov d0 vy1
+
+clr vx0
+clr vy0
+
+int vl
 """},
     { name="Hello World", description="Basic hello world example", path="hello_world", program_text="""
 // Simple hello world example
@@ -40,7 +62,7 @@ mov d0 vt
 lda @white
 mov d0 vc
 
-int vt 
+int vt
 """},
     { name="IO Inputs", description="IO Inputs test", path="io_inputs",  program_text="""
 
@@ -270,5 +292,48 @@ mov d0 vc
 incr r00
 
 jmp @loop
+"""},
+{name="Fibonacci", description="Iteraritve Fibonacci", path="fib", program_text="""
+// Iterative fib
+// Result is stored in r02
+// Target is 46 because this results in the largest value that can be stored
+// in a 32 bit register.
+
+#def aim 46
+#def two 2
+
+#label start
+
+lda @two
+mov d0 r00
+
+lda @aim
+mov d0 r15
+lt r15 r00
+cndjmp @end
+
+// Loop
+
+incr r03
+
+clr r00
+incr r01
+
+#label main_loop
+
+add r00 r01
+mov a0 r00
+
+mov r00 r02
+mov r01 r00
+mov r02 r01
+
+sub r15 r03
+mov a0 r15
+
+gt r15 r04
+cndjmp @main_loop
+
+#label end
 """}
 ]

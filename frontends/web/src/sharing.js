@@ -152,14 +152,21 @@ export function UploadBinary(e) {
     
         let file = uploadForm.files[0]
 
-        let fileBytes = new Uint8Array(await file.arrayBuffer())
+        const fileBytes = await file.bytes()
+
+        if (new TextDecoder().decode(fileBytes.slice(0, 4)) != "GPTR") {
+            alert("Invalid file.")
+            return
+        }
+
+        fileBytes.slice(0, 4)
+
         console.log(`Read file with ${fileBytes.length} byte(s)`)
 
         goputer.setProgramBytes(fileBytes, fileBytes.length)
 
         document.getElementById("run-code-button").disabled = false
         document.getElementById("download-code-button").disabled = false
-        document.getElementById("code-textarea").disabled = true
 
         globals.codeHasBeenCompiled = true
         globals.compileFailed = false

@@ -32,7 +32,7 @@ var ErrSymbol error = errors.New("symbol error")
 var ErrDoesNotExist error = errors.New("does not exist error")
 var ErrInvalidArgument error = errors.New("invalid argument")
 var ErrImport error = errors.New("import error")
-var ErrWrongNumArgs error = errors.New("wrong number of arguements")
+var ErrWrongNumArgs error = errors.New("wrong number of arguments")
 var ErrFile = errors.New("error whilst reading file")
 
 var RedError color.Color = *color.New(color.FgHiRed, color.Bold)
@@ -65,7 +65,7 @@ func (p *Parser) parsingError(e error, errorType ErrorType) {
 	case ErrImport:
 		errorText += fmt.Sprintf("%s %s\n", RedError.Sprint("Import error:"), errorType)
 	case ErrWrongNumArgs:
-		errorText += fmt.Sprintf("%s %s\n", RedError.Sprint("Wrong number of arguements:"), errorType)
+		errorText += fmt.Sprintf("%s %s\n", RedError.Sprint("Wrong number of arguments:"), errorType)
 	default:
 		errorText += string(errorType)
 	}
