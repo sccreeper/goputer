@@ -1,6 +1,7 @@
 // Small example to demonstrate how to use immediates
 
 #def red 0xFF0000FF
+#def num 64
 
 #label start
 
@@ -21,7 +22,7 @@ mov $64 vy1
 
 // Draw square properly
 
-add vx0 $64
+add vx0 $d:num
 mov a0 vx0
 add vy0 $64
 mov a0 vy0
@@ -33,4 +34,4 @@ mov a0 vy1
 
 int va
 
-jmp $start+45
+jmp $l:start+45

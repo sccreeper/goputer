@@ -616,7 +616,7 @@ func (p *Parser) nameCollision(s string) (errMessage string, isCollision bool) {
 
 const integers string = "-1234567890_"
 const operators string = "+-*/"
-const alpha string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
+const alpha string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_:"
 
 type tokenType int
 
@@ -704,14 +704,26 @@ func (p *Parser) parseImmediate(imm string) (stringResult string, intResult int)
 		switch t.Type {
 		case Alpha:
 
-			if !slices.Contains(p.ProgramStructure.LabelNames, t.Data) {
-				p.parsingError(ErrSymbol, SymbolDoesNotExist)
-				return
+			if t.Data[:2] == "l:" {
+				if !slices.Contains(p.ProgramStructure.LabelNames, t.Data[2:]) {
+					p.parsingError(ErrSymbol, SymbolDoesNotExist)
+					return
+				}
+
+				val = p.ProgramStructure.ProgramLabels[t.Data].InstructionOffset * int(InstructionLength)	
+
+				hasLabel = true
+			} else if t.Data[:2] == "d:" {
+				if !slices.Contains(p.ProgramStructure.DefinitionNames, t.Data[2:]) {
+					p.parsingError(ErrSymbol, SymbolDoesNotExist)
+					return
+				}
+
+				val = int(binary.LittleEndian.Uint32(p.ProgramStructure.Definitions[t.Data[2:]].ByteData[:4])) 
+
+			} else {
+				p.parsingError(strconv.ErrSyntax, ErrorMessage("symbol in immediate must begin with l: or d:"))
 			}
-
-			val = p.ProgramStructure.ProgramLabels[t.Data].InstructionOffset * int(InstructionLength)
-
-			hasLabel = true
 			
 		case Integer:
 

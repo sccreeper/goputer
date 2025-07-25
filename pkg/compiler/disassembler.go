@@ -93,7 +93,7 @@ func DecodeInstruction(b []byte) (Instruction, error) {
 				itn == c.ICall ||
 				itn == c.IConditionalCall {
 
-				argumentData = fmt.Sprintf("0x%08X", itnData[0])
+				argumentData = fmt.Sprintf("0x%08X", binary.LittleEndian.Uint32(itnDataBytes))
 
 			} else {
 
