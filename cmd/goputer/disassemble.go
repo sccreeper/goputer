@@ -7,6 +7,7 @@ import (
 	"sccreeper/goputer/pkg/compiler"
 	"sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/util"
+	"sccreeper/goputer/pkg/vm"
 	"strings"
 
 	"github.com/fatih/color"
@@ -25,7 +26,9 @@ func _disassemble(ctx *cli.Context) error {
 	filePath := ctx.Args().Get(0)
 
 	data, err := os.ReadFile(filePath)
-	util.CheckError(err)
+	if err != nil {
+		return err
+	}
 
 	if string(data[:4]) != compiler.MagicString {
 		fmt.Println("Error: Invalid file")
@@ -33,6 +36,9 @@ func _disassemble(ctx *cli.Context) error {
 	}
 
 	program, err := compiler.Disassemble(data, BeVerbose)
+	if err != nil {
+		return err
+	}
 
 	//Reverse map
 
@@ -99,7 +105,7 @@ func _disassemble(ctx *cli.Context) error {
 
 		fmt.Printf(
 			"%s: %s\n",
-			Grey.Sprintf(util.ConvertHex((i*int(compiler.InstructionLength))+int(program.StartIndexes[2])+int(compiler.StackSize))),
+			Grey.Sprintf(util.ConvertHex((i*int(compiler.InstructionLength))+int(program.StartIndexes[2])+int(compiler.StackSize+vm.VideoBufferSize))),
 			formatInstruction(
 				itnMap[constants.Instruction(v.Instruction)],
 				v.StringData,

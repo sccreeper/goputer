@@ -17,6 +17,7 @@ type Interrupt uint16
 type Register uint16
 
 type Instruction uint8
+type InstructionFlag uint8
 
 type DefType uint8
 
@@ -352,6 +353,48 @@ var InstructionArgumentCounts map[Instruction][]int = map[Instruction][]int{
 	IInterruptCallReturn: {0},
 }
 
+// Determines which arguments in an instruction can have immediate values, if any.
+// Even if both values are true, in practice every instruction can only have one immediate value, due to the way immediate values are encoded.
+// Both values are true in cases where the order of operations matters.
+var InstructionImmediates map[Instruction][][]bool = map[Instruction][][]bool{
+	IJump:                    {{true}},
+	IConditionalJump:         {{true}},
+	IInvert:                  {{false}},
+	ICallInterrupt:           {{false}},
+	ILoad:                    {{false}, {true, true}},
+	IStore:                   {{false}, {true, true}},
+	IIncrement:               {{false}},
+	IDecrement:               {{false}},
+	IHalt:                    {{true}},
+	ISquareRoot:              {{true}},
+	ICall:                    {{true}},
+	IConditionalCall:         {{true}},
+	IClear:                   {{true}},
+	IPush:                    {{true}},
+	IPop:                     {{false}},
+	IExpansionModuleInteract: {{true}},
+
+	IMove:        {{true, false}},
+	IAdd:         {{false, true}},
+	IMultiply:    {{false, true}},
+	IDivide:      {{true, true}},
+	ISubtract:    {{false, true}},
+	IGreaterThan: {{false, true}},
+	ILessThan:    {{false, true}},
+	IOr:          {{false, true}},
+	IXor:         {{false, true}},
+	IAnd:         {{false, true}},
+	IEquals:      {{false, true}},
+	INotEquals:   {{false, true}},
+	IShiftLeft:   {{false, true}},
+	IShiftRight:  {{false, true}},
+	IPower:       {{true, true}},
+	IModulo:      {{true, true}},
+
+	ICallReturn:          {{false}},
+	IInterruptCallReturn: {{false}},
+}
+
 const (
 	RGeneralPurpose00 Register = 0
 	RGeneralPurpose01 Register = 1
@@ -434,4 +477,14 @@ const (
 const (
 	SWSquare SoundWaveType = 0
 	SWSine   SoundWaveType = 1
+)
+
+const (
+	ItnFlagFirstArgImmediate InstructionFlag = 0b100_00000
+	ItnFlagSecondArgImmediate InstructionFlag = 0b010_00000
+
+	InstructionMask byte = 0b00_111111
+	FlagMask byte = ^InstructionMask
+	InstructionArgImmediateMask uint32 = 0b000000_11_11111111_11111111_11111111
+	InstructionArgRegisterMask uint32 = ^InstructionArgImmediateMask
 )

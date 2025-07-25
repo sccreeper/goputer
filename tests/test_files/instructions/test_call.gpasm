@@ -1,0 +1,9 @@
+#label test
+mov r00 r01
+ret
+
+#label start
+
+call @test
+
+mov r00 r01

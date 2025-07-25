@@ -10,20 +10,20 @@ import (
 	"github.com/fatih/color"
 )
 
-type ErrorType string
+type ErrorMessage string
 
 const (
-	UnexpectedEndStatement  ErrorType = "unexpected end statement" //Error for a end statement outside of a jump block.
-	NestingError            ErrorType = "cannot nest jump blocks"  //Error for nesting jump blocks.
-	MinimumNameLength       ErrorType = "minimum length of one"    //Error for having a def/jump block name which isn't at least 1 character long.
-	NameConflict            ErrorType = "symbol already exists"
-	InstructionDoesNotExist ErrorType = "instruction does not exist"
-	SymbolDoesNotExist      ErrorType = "symbol does not exist" //When a symbol for a definition or a jump block doesn't exist.
-	InvalidArgument         ErrorType = "invalid argument"
-	InvalidValue            ErrorType = "invalid value"
+	UnexpectedEndStatement  ErrorMessage = "unexpected end statement" //Error for a end statement outside of a jump block.
+	NestingError            ErrorMessage = "cannot nest jump blocks"  //Error for nesting jump blocks.
+	MinimumNameLength       ErrorMessage = "minimum length of one"    //Error for having a def/jump block name which isn't at least 1 character long.
+	NameConflict            ErrorMessage = "symbol already exists"
+	InstructionDoesNotExist ErrorMessage = "instruction does not exist"
+	SymbolDoesNotExist      ErrorMessage = "symbol does not exist" //When a symbol for a definition or a jump block doesn't exist.
+	InvalidArgument         ErrorMessage = "invalid argument"
+	InvalidValue            ErrorMessage = "invalid value"
 
-	CircularImport ErrorType = "circular import"
-	FileNotFound   ErrorType = "file not found"
+	CircularImport ErrorMessage = "circular import"
+	FileNotFound   ErrorMessage = "file not found"
 )
 
 var ErrSyntax error = errors.New("syntax error")
@@ -39,7 +39,7 @@ var RedError color.Color = *color.New(color.FgHiRed, color.Bold)
 var ItalicCode color.Color = *color.New(color.Italic)
 
 // Handles a parsing error
-func (p *Parser) parsingError(e error, errorType ErrorType) {
+func (p *Parser) parsingError(e error, errorType ErrorMessage) {
 
 	var errorText string
 

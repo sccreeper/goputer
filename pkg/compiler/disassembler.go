@@ -2,79 +2,115 @@ package compiler
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"log"
-	"sccreeper/goputer/pkg/constants"
+	c "sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/util"
+	"strings"
 )
 
 type DisassembledProgram struct {
 	ProgramDefinitions [][]byte                       `json:"program_definitions"`
-	InterruptTable     map[constants.Interrupt]uint32 `json:"interrupt_table"`
+	InterruptTable     map[c.Interrupt]uint32 `json:"interrupt_table"`
 	Instructions       []Instruction                  `json:"instructions"`
 	StartIndexes       []uint32                       `json:"start_indexes"`
 }
 
-var regMap map[constants.Register]string
-var interruptMap map[constants.Interrupt]string
+var regMap map[c.Register]string
+var interruptMap map[c.Interrupt]string
+var instructionMap map[c.Instruction]string
 
 func init() {
-	regMap = make(map[constants.Register]string)
-	interruptMap = make(map[constants.Interrupt]string)
+	regMap = make(map[c.Register]string)
+	interruptMap = make(map[c.Interrupt]string)
+	instructionMap = make(map[c.Instruction]string)
 
-	for k, v := range constants.RegisterInts {
-		regMap[constants.Register(v)] = k
+	for k, v := range c.RegisterInts {
+		regMap[c.Register(v)] = k
 	}
 
-	for k, v := range constants.InterruptInts {
+	for k, v := range c.InterruptInts {
 		interruptMap[v] = k
+	}
+
+	for k, v := range c.InstructionInts {
+		instructionMap[c.Instruction(v)] = k
 	}
 }
 
+func DecodeInstructionString(b []byte) (string, error) {
+	
+	itn, err := DecodeInstruction(b)
+
+	return fmt.Sprintf("%s %s", instructionMap[c.Instruction(itn.Instruction)], strings.Join(itn.StringData, " ")), err
+
+}
+
 // Decodes individual instructions.
-func decodeInstruction(b []byte) Instruction {
+func DecodeInstruction(b []byte) (Instruction, error) {
 
 	i := Instruction{}
 
-	itn := constants.Instruction(b[0])
+	itn := c.Instruction(b[0]) & c.Instruction(c.InstructionMask)
 	itnDataBytes := b[1:]
 
 	var itnData []uint32
 
+	if int(itn) > len(c.InstructionArgumentCounts) {
+		fmt.Println(itn)
+		return Instruction{}, errors.New("error decoding instruction")
+	}
+
 	// Get instruction arguments
-	for i := 0; i < constants.InstructionArgumentCounts[itn][0]; i += 2 {
-		itnData = append(itnData, uint32(binary.LittleEndian.Uint16(itnDataBytes[i:i+2])))
+	for i := range c.InstructionArgumentCounts[itn][0] {
+		itnData = append(itnData, uint32(binary.LittleEndian.Uint16(itnDataBytes[(i*2):(i*2)+2])))
 	}
 
 	argumentData := ""
 
-	for _, v := range itnData {
+	if (b[0] & byte(c.ItnFlagFirstArgImmediate)) != 0 || (b[0] & byte(c.ItnFlagSecondArgImmediate)) != 0 {
+		
+		immediateValue := binary.LittleEndian.Uint32(itnDataBytes) & c.InstructionArgImmediateMask
+		immediateRegister := (binary.LittleEndian.Uint32(itnDataBytes) & c.InstructionArgRegisterMask) >> 26
 
-		// If the instruction is one where a memory address is passed as an arguement instead of a register.
-		if itn == constants.ILoad ||
-			itn == constants.IStore ||
-			itn == constants.IJump ||
-			itn == constants.IConditionalJump ||
-			itn == constants.ICall ||
-			itn == constants.IConditionalCall {
-
-			argumentData = fmt.Sprintf("0x"+"%08X", itnData[0])
-
+		if (b[0] & byte(c.ItnFlagFirstArgImmediate)) != 0 {
+			argumentData = fmt.Sprintf("$%d %s", immediateValue, regMap[c.Register(immediateRegister)])
 		} else {
-
-			if itn == constants.ICallInterrupt {
-				argumentData = interruptMap[constants.Interrupt(v)]
-			} else {
-				argumentData = regMap[constants.Register(v)]
-			}
+			argumentData = fmt.Sprintf("%s $%d", regMap[c.Register(immediateRegister)], immediateValue)
 		}
 
 		i.StringData = append(i.StringData, argumentData)
+
+	} else {
+		for _, v := range itnData {
+
+			// If the instruction is one where a memory address is passed as an argument instead of a register.
+			if itn == c.ILoad ||
+				itn == c.IStore ||
+				itn == c.IJump ||
+				itn == c.IConditionalJump ||
+				itn == c.ICall ||
+				itn == c.IConditionalCall {
+
+				argumentData = fmt.Sprintf("0x%08X", binary.LittleEndian.Uint32(itnDataBytes))
+
+			} else {
+
+				if itn == c.ICallInterrupt {
+					argumentData = interruptMap[c.Interrupt(v)]
+				} else {
+					argumentData = regMap[c.Register(v)]
+				}
+			}
+
+			i.StringData = append(i.StringData, argumentData)
+		}
 	}
 
 	i.Instruction = uint32(itn)
 
-	return i
+	return i, nil
 
 }
 
@@ -139,8 +175,6 @@ func Disassemble(programBytes []byte, verbose bool) (DisassembledProgram, error)
 
 	program.ProgramDefinitions = make([][]byte, 0)
 
-	fmt.Println(dataBlockBytes)
-
 	//Break definitions up into individual byte arrays
 
 	var i uint32 = 0
@@ -168,7 +202,7 @@ func Disassemble(programBytes []byte, verbose bool) (DisassembledProgram, error)
 
 	// Build interrupt table
 
-	program.InterruptTable = make(map[constants.Interrupt]uint32)
+	program.InterruptTable = make(map[c.Interrupt]uint32)
 
 	if verbose {
 		log.Printf("Interrupt byte length %d", len(interruptBlockBytes))
@@ -176,7 +210,7 @@ func Disassemble(programBytes []byte, verbose bool) (DisassembledProgram, error)
 
 	for _, v := range util.SliceChunks(interruptBlockBytes, 6) {
 
-		interrupt := constants.Interrupt(binary.LittleEndian.Uint16(v[:2]))
+		interrupt := c.Interrupt(binary.LittleEndian.Uint16(v[:2]))
 		labelAddr := binary.LittleEndian.Uint32(v[2:])
 
 		program.InterruptTable[interrupt] = labelAddr
@@ -191,7 +225,12 @@ func Disassemble(programBytes []byte, verbose bool) (DisassembledProgram, error)
 
 	for _, v := range util.SliceChunks(instructionBytes, int(InstructionLength)) {
 
-		program.Instructions = append(program.Instructions, decodeInstruction(v))
+		itn, err := DecodeInstruction(v)
+		if err != nil {
+			return DisassembledProgram{}, err
+		}
+
+		program.Instructions = append(program.Instructions, itn)
 
 	}
 

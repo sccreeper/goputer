@@ -1,0 +1,7 @@
+#label test
+mov r00 r01
+
+#label start
+
+incr a0
+cndjmp @test

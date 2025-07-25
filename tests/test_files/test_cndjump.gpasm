@@ -1,6 +1,0 @@
-:test
-mov r00 r01
-end
-
-incr a0
-cndjmp test

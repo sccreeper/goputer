@@ -1,8 +1,0 @@
-:test
-mov r00 r01
-ret
-end
-
-call test
-
-mov r00 r01

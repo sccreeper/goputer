@@ -12,8 +12,8 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-//go:embed test_files
-var testFiles embed.FS
+//go:embed test_files/instructions
+var instructionTestFiles embed.FS
 
 // Generalized instruction tests.
 
@@ -36,14 +36,14 @@ func compile(text string) []byte {
 		FileName:     "main.gpasm",
 		Verbose:      false,
 		Imported:     false,
-		ErrorHandler: func(error_type compiler.ErrorType, error_text string) { panic(error_text) },
-		FileReader:   func(path string) []byte { return []byte(text) },
+		ErrorHandler: func(error_type compiler.ErrorMessage, error_text string) { panic(error_text) },
+		FileReader:   func(path string) ([]byte, error) { return []byte(text), nil },
 	}
 
 	programStructure, err := p.Parse()
 	util.CheckError(err)
 
-	programBytes := compiler.GenerateBytecode(programStructure)
+	programBytes := compiler.GenerateBytecode(programStructure, false)
 
 	return programBytes
 
@@ -53,7 +53,7 @@ func TestInstructions(t *testing.T) {
 
 	var testDetails TestArray
 
-	tomlFile, err := testFiles.ReadFile("test_files/instruction_tests.toml")
+	tomlFile, err := instructionTestFiles.ReadFile("test_files/instructions/instruction_tests.toml")
 	if err != nil {
 		panic(err)
 	}
@@ -64,30 +64,30 @@ func TestInstructions(t *testing.T) {
 
 	for _, v := range testDetails.Tests {
 
-		// Compile example code
+		t.Run(v.Name, func(t *testing.T) {
+			// Compile example code
 
-		programBytes := compile(v.CodeText)
+			programBytes := compile(v.CodeText)
 
-		// Create VM instance
-		// TODO: make this more time and memory efficient.
+			// Create VM instance
+			// TODO: make this more time and memory efficient.
 
-		var test32 vm.VM
+			var test32 vm.VM
 
-		vm.InitVM(&test32, programBytes, false)
+			vm.InitVM(&test32, programBytes, false)
 
-		for {
-			test32.Cycle()
+			for {
+				if test32.Finished {
+					break
+				}
 
-			if !test32.Finished {
-				continue
-			} else {
-				break
+				test32.Cycle()
 			}
-		}
 
-		if test32.Registers[constants.RegisterInts[v.CheckRegister]] != uint32(v.CheckValue) {
-			t.Errorf("Failed instruction test %s. Value should be %d but got %d", v.Name, v.CheckValue, test32.Registers[constants.RegisterInts[v.CheckRegister]])
-		}
+			if test32.Registers[constants.RegisterInts[v.CheckRegister]] != uint32(v.CheckValue) {
+				t.Errorf("Failed instruction test %s. Value should be %d but got %d", v.Name, v.CheckValue, test32.Registers[constants.RegisterInts[v.CheckRegister]])
+			}
+		})
 
 	}
 
@@ -99,7 +99,7 @@ func TestJump(t *testing.T) {
 
 	var test32 vm.VM
 
-	programText, err := testFiles.ReadFile("test_files/test_jump.gpasm")
+	programText, err := instructionTestFiles.ReadFile("test_files/instructions/test_jump.gpasm")
 	if err != nil {
 		panic(err)
 	}
@@ -111,11 +111,15 @@ func TestJump(t *testing.T) {
 
 	for {
 
+		if test32.Finished {
+			break
+		}
+
 		test32.Cycle()
 
 		if test32.Opcode == constants.IJump && !inJump {
 			inJump = true
-			jumpAddr = test32.ArgLarge
+			jumpAddr = test32.LongArg
 		} else if test32.Opcode != constants.IJump && inJump {
 
 			if test32.Registers[constants.RProgramCounter]-5 != jumpAddr {
@@ -134,7 +138,7 @@ func TestCall(t *testing.T) {
 
 	var test32 vm.VM
 
-	programText, err := testFiles.ReadFile("test_files/test_jump.gpasm")
+	programText, err := instructionTestFiles.ReadFile("test_files/instructions/test_call.gpasm")
 	if err != nil {
 		panic(err)
 	}
@@ -146,12 +150,16 @@ func TestCall(t *testing.T) {
 
 	for {
 
+		if test32.Finished {
+			break
+		}
+
 		test32.Cycle()
 
-		if test32.Opcode == constants.IJump && !inCall {
+		if test32.Opcode == constants.ICall && !inCall {
 			inCall = true
-			callAddr = test32.ArgLarge
-		} else if test32.Opcode != constants.IJump && inCall {
+			callAddr = test32.LongArg
+		} else if test32.Opcode != constants.ICall && inCall {
 
 			if test32.Registers[constants.RProgramCounter]-5 != callAddr {
 				t.Fatalf("Program counter should be %d is %d instead\n", callAddr, test32.Registers[constants.RProgramCounter])
@@ -173,7 +181,7 @@ func TestConditionalJump(t *testing.T) {
 
 	var test32 vm.VM
 
-	programText, err := testFiles.ReadFile("test_files/test_cndjump.gpasm")
+	programText, err := instructionTestFiles.ReadFile("test_files/instructions/test_cndjump.gpasm")
 	if err != nil {
 		panic(err)
 	}
@@ -185,11 +193,15 @@ func TestConditionalJump(t *testing.T) {
 
 	for {
 
+		if test32.Finished {
+			break
+		}
+
 		test32.Cycle()
 
 		if test32.Opcode == constants.IConditionalJump && !inJump {
 			inJump = true
-			jumpAddr = test32.ArgLarge
+			jumpAddr = test32.LongArg
 		} else if test32.Opcode != constants.IConditionalJump && inJump {
 
 			if test32.Registers[constants.RProgramCounter]-5 != jumpAddr {
@@ -207,24 +219,28 @@ func TestConditionalJump(t *testing.T) {
 func TestConditionalCall(t *testing.T) {
 	var test32 vm.VM
 
-	programText, err := testFiles.ReadFile("test_files/test_cndcall.gpasm")
+	programText, err := instructionTestFiles.ReadFile("test_files/instructions/test_cndcall.gpasm")
 	if err != nil {
 		panic(err)
 	}
 
 	vm.InitVM(&test32, compile(string(programText[:])), false)
 
-	var inJump bool = false
+	var inCall bool = false
 	var jumpAddr uint32
 
 	for {
 
+		if test32.Finished {
+			break
+		}
+
 		test32.Cycle()
 
-		if test32.Opcode == constants.IConditionalCall && !inJump {
-			inJump = true
-			jumpAddr = test32.ArgLarge
-		} else if test32.Opcode != constants.IConditionalCall && inJump {
+		if test32.Opcode == constants.IConditionalCall && !inCall {
+			inCall = true
+			jumpAddr = test32.LongArg
+		} else if test32.Opcode != constants.IConditionalCall && inCall {
 
 			if test32.Registers[constants.RProgramCounter]-5 != jumpAddr {
 				t.Fatalf("Program counter should be %d is %d instead\n", jumpAddr, test32.Registers[constants.RProgramCounter])

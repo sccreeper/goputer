@@ -8,7 +8,7 @@ import (
 )
 
 func (m *VM) popStack() {
-	m.Registers[m.ArgSmall0] =
+	m.Registers[m.LeftArg] =
 		binary.LittleEndian.Uint32(
 			m.MemArray[m.Registers[c.RStackPointer]-4 : m.Registers[c.RStackPointer]],
 		)
@@ -21,9 +21,9 @@ func (m *VM) popStack() {
 
 func (m *VM) pushStack() {
 
-	binary.LittleEndian.PutUint32(m.MemArray[m.Registers[c.RStackPointer]:m.Registers[c.RStackPointer]+4], uint32(m.Registers[m.ArgSmall0]))
+	binary.LittleEndian.PutUint32(m.MemArray[m.Registers[c.RStackPointer]:m.Registers[c.RStackPointer]+4], uint32(m.LeftArgVal))
 
-	if !(m.Registers[c.RStackPointer]+4 > compiler.StackSize) {
+	if m.Registers[c.RStackPointer]+4 < compiler.DataStackSize + VideoBufferSize {
 		m.Registers[c.RStackPointer] += 4
 	} else {
 		panic(errors.New("stack overflow"))

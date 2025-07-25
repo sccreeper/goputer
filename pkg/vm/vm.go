@@ -3,7 +3,6 @@ package vm
 import (
 	"encoding/binary"
 	"errors"
-	"log"
 	"math"
 	comp "sccreeper/goputer/pkg/compiler"
 	c "sccreeper/goputer/pkg/constants"
@@ -16,14 +15,14 @@ import (
 
 const (
 	MemSize          uint32 = VideoBufferSize + 65536 // 2 ^ 16
-	RegisterCount    uint16 = 57
+	MaxRegister    uint16 = 55
 	InstructionCount uint16 = 34
 	InterruptCount   uint16 = 23
 )
 
 type VM struct {
 	MemArray   [MemSize]byte
-	Registers  [RegisterCount + 1]uint32 //float32 or uint32
+	Registers  [MaxRegister + 1]uint32 //float32 or uint32
 	DataBuffer [128]byte
 	TextBuffer [128]byte
 
@@ -35,9 +34,16 @@ type VM struct {
 	ProgramBounds      uint32
 	Finished           bool
 
-	ArgSmall0 uint16
-	ArgSmall1 uint16
-	ArgLarge  uint32
+	LeftArg uint16
+	RightArg uint16
+	LongArg  uint32
+
+	LeftArgVal uint32
+	RightArgVal uint32
+	LongArgVal uint32
+
+	IsImmediate bool
+	ImmediateArgIndex int
 
 	InterruptQueue       []c.Interrupt
 	SubbedInterruptQueue []c.Interrupt
@@ -55,9 +61,6 @@ func InitVM(machine *VM, vmProgram []byte, expansionsSupported bool) error {
 	if len(vmProgram)-4 > int(MemSize) {
 		return errors.New("program too large")
 	}
-
-	PrintChar(0)
-	PrintChar('#')
 
 	//Extract program start index
 
@@ -79,8 +82,8 @@ func InitVM(machine *VM, vmProgram []byte, expansionsSupported bool) error {
 	machine.Registers[c.RCallStackZeroPointer] = comp.MemOffset - comp.CallStackSize
 	machine.Registers[c.RCallStackPointer] = machine.Registers[c.RCallStackZeroPointer]
 
-	machine.Registers[c.RStackZeroPointer] = comp.MemOffset
-	machine.Registers[c.RStackPointer] = comp.MemOffset
+	machine.Registers[c.RStackZeroPointer] = comp.MemOffset - comp.CallStackSize - comp.DataStackSize
+	machine.Registers[c.RStackPointer] = machine.Registers[c.RStackZeroPointer]
 
 	machine.InterruptQueue = []c.Interrupt{}
 	machine.SubbedInterruptQueue = []c.Interrupt{}
@@ -106,8 +109,6 @@ func InitVM(machine *VM, vmProgram []byte, expansionsSupported bool) error {
 
 	if expansionsSupported {
 		expansions.LoadExpansions()
-	} else {
-		log.Println("Expansions are disabled for this frontend")
 	}
 
 	return nil
@@ -126,7 +127,7 @@ func (m *VM) Cycle() {
 
 	if m.ExecutionPaused {
 
-		if time.Now().UnixMilli()-m.ExecutionPauseTime >= int64(m.Registers[m.ArgSmall0]) {
+		if time.Now().UnixMilli()-m.ExecutionPauseTime >= int64(m.LeftArgVal) {
 			m.ExecutionPaused = false
 			m.Registers[c.RProgramCounter] += comp.InstructionLength
 			return
@@ -136,14 +137,50 @@ func (m *VM) Cycle() {
 
 	}
 
+	m.IsImmediate = false
+
 	// Get arguments from memory
 
 	m.CurrentInstruction = m.MemArray[m.Registers[c.RProgramCounter] : m.Registers[c.RProgramCounter]+comp.InstructionLength]
-	m.Opcode = c.Instruction(m.CurrentInstruction[0])
+	m.Opcode = c.Instruction(m.CurrentInstruction[0] & c.InstructionMask)
 
-	m.ArgSmall0 = binary.LittleEndian.Uint16(m.CurrentInstruction[1:3])
-	m.ArgSmall1 = binary.LittleEndian.Uint16(m.CurrentInstruction[3:5])
-	m.ArgLarge = binary.LittleEndian.Uint32(m.CurrentInstruction[1:5])
+	m.LeftArg = binary.LittleEndian.Uint16(m.CurrentInstruction[1:3])
+	m.RightArg = binary.LittleEndian.Uint16(m.CurrentInstruction[3:5])
+	m.LongArg = binary.LittleEndian.Uint32(m.CurrentInstruction[1:5])
+
+	if (m.CurrentInstruction[0] & byte(c.ItnFlagFirstArgImmediate)) != 0 || (m.CurrentInstruction[0] & byte(c.ItnFlagSecondArgImmediate)) != 0 {
+		m.IsImmediate = true
+
+		immVal := m.LongArg & c.InstructionArgImmediateMask
+		immReg := (m.LongArg & c.InstructionArgRegisterMask) >> 26
+
+		if (m.CurrentInstruction[0] & byte(c.ItnFlagFirstArgImmediate)) != 0 {
+			m.ImmediateArgIndex = 0
+			m.LeftArgVal = immVal
+			m.LeftArg = 0
+			m.RightArgVal = m.Registers[immReg]
+			m.RightArg = uint16(immReg)
+		} else {
+			m.ImmediateArgIndex = 1
+			m.RightArgVal = immVal
+			m.RightArg = 0
+			m.LeftArgVal = m.Registers[immReg]
+			m.LeftArg = uint16(immReg)
+		}
+
+		m.LongArgVal = immVal
+
+	} else {
+		if m.LeftArg < MaxRegister {
+			m.LeftArgVal = m.Registers[m.LeftArg]
+		}
+
+		if m.RightArg < MaxRegister {
+			m.RightArgVal = m.Registers[m.RightArg]
+		}
+
+		m.LongArgVal = m.LongArg
+	}
 
 	//Interrupts
 
@@ -166,7 +203,7 @@ func (m *VM) Cycle() {
 
 	// If there is a null instruction, then terminate program.
 	// Null instructions should only ever be encountered this way.
-	if m.Opcode == 0 && m.ArgLarge == 0 {
+	if m.Opcode == 0 && m.LongArg == 0 {
 
 		m.Finished = true
 		return
@@ -185,7 +222,7 @@ func (m *VM) Cycle() {
 	case c.IMove:
 		m.move()
 
-		// Control flow
+	// Control flow
 
 	case c.ICall:
 		m.call()
@@ -213,7 +250,7 @@ func (m *VM) Cycle() {
 		m.popCall()
 		return
 
-		// Load & store
+	// Load & store
 
 	case c.ILoad:
 		m.load()
@@ -223,53 +260,53 @@ func (m *VM) Cycle() {
 
 	//Math
 	case c.IAdd:
-		m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] + m.Registers[m.ArgSmall1]
+		m.Registers[c.RAccumulator] = m.LeftArgVal + m.RightArgVal
 	case c.IMultiply:
-		m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] * m.Registers[m.ArgSmall1]
+		m.Registers[c.RAccumulator] = m.LeftArgVal * m.RightArgVal
 	case c.ISubtract:
-		m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] - m.Registers[m.ArgSmall1]
+		m.Registers[c.RAccumulator] = m.LeftArgVal - m.RightArgVal
 	case c.IDivide:
-		m.Registers[c.RAccumulator] = uint32(math.Floor(float64(m.Registers[m.ArgSmall0]) / float64(m.Registers[m.ArgSmall1])))
+		m.Registers[c.RAccumulator] = m.LeftArgVal / m.RightArgVal
 	case c.ISquareRoot:
-		m.Registers[c.RAccumulator] = uint32(math.Sqrt(float64(m.Registers[m.ArgSmall0])))
+		m.Registers[c.RAccumulator] = uint32(math.Sqrt(float64(m.LeftArgVal)))
 	case c.IIncrement:
-		m.Registers[m.ArgSmall0]++
+		m.Registers[m.LeftArg]++
 	case c.IDecrement:
-		m.Registers[m.ArgSmall0]--
+		m.Registers[m.LeftArg]--
 	case c.IInvert:
-		m.Registers[m.ArgSmall0] = ^m.Registers[m.ArgSmall0]
+		m.Registers[c.RAccumulator] = ^m.LeftArgVal
 	case c.IPower:
-		if m.Registers[m.ArgSmall0] == 10 {
-			m.Registers[c.RAccumulator] = uint32(math.Pow10(int(m.Registers[m.ArgSmall1])))
+		if m.LeftArgVal == 10 {
+			m.Registers[c.RAccumulator] = uint32(math.Pow10(int(m.RightArgVal)))
 		} else {
-			m.Registers[c.RAccumulator] = uint32(math.Pow(float64(m.Registers[m.ArgSmall0]), float64(m.Registers[m.ArgSmall1])))
+			m.Registers[c.RAccumulator] = uint32(math.Pow(float64(m.LeftArgVal), float64(m.RightArgVal)))
 		}
 	case c.IModulo:
-		m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] % m.Registers[m.ArgSmall1]
+		m.Registers[c.RAccumulator] = m.LeftArgVal % m.RightArgVal
 
 	//Logic
 
 	case c.IGreaterThan:
-		if m.Registers[m.ArgSmall0] > m.Registers[m.ArgSmall1] {
+		if m.LeftArgVal > m.RightArgVal {
 			m.Registers[c.RAccumulator] = math.MaxUint32
 		} else {
 			m.Registers[c.RAccumulator] = 0
 		}
 	case c.ILessThan:
-		if m.Registers[m.ArgSmall0] < m.Registers[m.ArgSmall1] {
+		if m.LeftArgVal < m.RightArgVal {
 			m.Registers[c.RAccumulator] = math.MaxUint32
 		} else {
 			m.Registers[c.RAccumulator] = 0
 		}
 
 	case c.IEquals:
-		if m.Registers[m.ArgSmall0] == m.Registers[m.ArgSmall1] {
+		if m.LeftArgVal == m.RightArgVal {
 			m.Registers[c.RAccumulator] = math.MaxUint32
 		} else {
 			m.Registers[c.RAccumulator] = 0
 		}
 	case c.INotEquals:
-		if m.Registers[m.ArgSmall0] != m.Registers[m.ArgSmall1] {
+		if m.LeftArgVal != m.RightArgVal {
 			m.Registers[c.RAccumulator] = math.MaxUint32
 		} else {
 			m.Registers[c.RAccumulator] = 0
@@ -278,11 +315,11 @@ func (m *VM) Cycle() {
 	//Bitwise operators
 
 	case c.IAnd:
-		m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] & m.Registers[m.ArgSmall1]
+		m.Registers[c.RAccumulator] = m.LeftArgVal & m.RightArgVal
 	case c.IOr:
-		m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] | m.Registers[m.ArgSmall1]
+		m.Registers[c.RAccumulator] = m.LeftArgVal | m.RightArgVal
 	case c.IXor:
-		m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] ^ m.Registers[m.ArgSmall1]
+		m.Registers[c.RAccumulator] = m.LeftArgVal ^ m.RightArgVal
 
 	case c.IShiftLeft:
 		m.shiftLeft()
@@ -299,13 +336,13 @@ func (m *VM) Cycle() {
 		return
 
 	case c.IClear:
-		if m.ArgLarge != uint32(c.RData) && m.ArgLarge != uint32(c.RVideoText) {
+		if m.LongArg != uint32(c.RData) && m.LongArg != uint32(c.RVideoText) {
 
-			m.Registers[m.ArgLarge] = 0
+			m.Registers[m.LongArg] = 0
 
 		} else {
 
-			switch m.ArgLarge {
+			switch m.LongArg {
 			case uint32(c.RData):
 				m.DataBuffer = [128]byte{}
 			case uint32(c.RVideoText):
@@ -314,8 +351,8 @@ func (m *VM) Cycle() {
 
 		}
 	case c.IExpansionModuleInteract:
-		if expansions.ModuleExists(m.Registers[m.ArgLarge]) && m.ExpansionsSupported {
-			data := expansions.Interaction(m.Registers[m.ArgLarge], m.DataBuffer[:])
+		if expansions.ModuleExists(m.LongArgVal) && m.ExpansionsSupported {
+			data := expansions.Interaction(m.LongArgVal, m.DataBuffer[:])
 
 			m.Registers[c.RDataLength] = uint32(len(data))
 			m.Registers[c.RDataPointer] = 0

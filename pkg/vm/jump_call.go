@@ -6,15 +6,17 @@ import (
 	c "sccreeper/goputer/pkg/constants"
 )
 
-// Calls the address of m.ArgLarge
+
 func (m *VM) call() {
 
 	var addressVal uint32
 
-	if uint16(m.ArgLarge) < RegisterCount {
-		addressVal = m.Registers[m.ArgLarge]
+	if m.IsImmediate {
+		addressVal = m.LongArgVal
+	} else if uint16(m.LongArg) < MaxRegister {
+		addressVal = m.Registers[m.LongArg]
 	} else {
-		addressVal = m.ArgLarge
+		addressVal = m.LongArg
 	}
 
 	var increment uint32
@@ -40,10 +42,12 @@ func (m *VM) conditionalCall() bool {
 
 		var addressVal uint32
 
-		if uint16(m.ArgLarge) < RegisterCount {
-			addressVal = m.Registers[m.ArgLarge]
+		if m.IsImmediate {
+			addressVal = m.LongArgVal
+		} else if uint16(m.LongArg) < MaxRegister {
+			addressVal = m.Registers[m.LongArg]
 		} else {
-			addressVal = m.ArgLarge
+			addressVal = m.LongArg
 		}
 
 		m.Registers[c.RCallStackPointer] += 4
@@ -64,10 +68,12 @@ func (m *VM) jump() {
 
 	var addressVal uint32
 
-	if uint16(m.ArgLarge) < RegisterCount {
-		addressVal = m.Registers[m.ArgLarge]
+	if m.IsImmediate {
+		addressVal = m.LongArgVal
+	} else if uint16(m.LongArg) < MaxRegister {
+		addressVal = m.Registers[m.LongArg]
 	} else {
-		addressVal = m.ArgLarge
+		addressVal = m.LongArg
 	}
 
 	m.HandlingInterrupt = false
@@ -80,10 +86,12 @@ func (m *VM) conditionalJump() bool {
 	if m.Registers[c.RAccumulator] != 0 {
 		var addressVal uint32
 
-		if uint16(m.ArgLarge) < RegisterCount {
-			addressVal = m.Registers[m.ArgLarge]
+		if m.IsImmediate {
+			addressVal = m.LongArgVal
+		} else if uint16(m.LongArg) < MaxRegister {
+			addressVal = m.Registers[m.LongArg]
 		} else {
-			addressVal = m.ArgLarge
+			addressVal = m.LongArg
 		}
 
 		m.HandlingInterrupt = false

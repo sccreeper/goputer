@@ -7,24 +7,24 @@ import (
 //Shifting left and shifting right
 
 func (m *VM) shiftLeft() {
-	switch m.ArgSmall0 {
+	switch m.LeftArg {
 	case uint16(c.RData):
-		copy(m.DataBuffer[:], append(m.DataBuffer[m.Registers[m.ArgSmall1]:], make([]byte, 128-len(m.DataBuffer[m.Registers[m.ArgSmall1]:]))...))
+		copy(m.DataBuffer[:], append(m.DataBuffer[m.Registers[m.RightArg]:], make([]byte, 128-len(m.DataBuffer[m.Registers[m.RightArg]:]))...))
 	case uint16(c.RVideoText):
-		copy(m.TextBuffer[:], append(m.TextBuffer[m.Registers[m.ArgSmall1]:], make([]byte, 128-len(m.TextBuffer[m.Registers[m.ArgSmall1]:]))...))
+		copy(m.TextBuffer[:], append(m.TextBuffer[m.Registers[m.RightArg]:], make([]byte, 128-len(m.TextBuffer[m.Registers[m.RightArg]:]))...))
 	default:
-		m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] << m.Registers[m.ArgSmall1]
+		m.Registers[c.RAccumulator] = m.Registers[m.LeftArg] << m.Registers[m.RightArg]
 	}
 
 }
 
 func (m *VM) shiftRight() {
-	switch m.ArgSmall0 {
+	switch m.LeftArg {
 	case uint16(c.RData):
-		copy(m.DataBuffer[:], append(make([]byte, m.Registers[m.ArgSmall1]), m.DataBuffer[:128-m.Registers[m.Registers[m.ArgSmall1]]]...))
+		copy(m.DataBuffer[:], append(make([]byte, m.Registers[m.RightArg]), m.DataBuffer[:128-m.Registers[m.Registers[m.RightArg]]]...))
 	case uint16(c.RVideoText):
-		copy(m.TextBuffer[:], append(make([]byte, m.Registers[m.ArgSmall1]), m.TextBuffer[:128-m.Registers[m.Registers[m.ArgSmall1]]]...))
+		copy(m.TextBuffer[:], append(make([]byte, m.Registers[m.RightArg]), m.TextBuffer[:128-m.Registers[m.Registers[m.RightArg]]]...))
 	default:
-		m.Registers[c.RAccumulator] = m.Registers[m.ArgSmall0] >> m.Registers[m.ArgSmall1]
+		m.Registers[c.RAccumulator] = m.Registers[m.LeftArg] >> m.Registers[m.RightArg]
 	}
 }

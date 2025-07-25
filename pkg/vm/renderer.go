@@ -8,6 +8,7 @@ import (
 	"math"
 	c "sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/gpimg"
+	"sccreeper/goputer/pkg/util"
 	"slices"
 )
 
@@ -58,15 +59,20 @@ func (m *VM) drawArea() {
 		return
 	}
 
+	var posX uint32 = util.Clamp(m.Registers[c.RVideoX0], 0, VideoBufferWidth)
+	var posY uint32 = util.Clamp(m.Registers[c.RVideoY0], 0, VideoBufferHeight)
+	var posX1 uint32 = util.Clamp(m.Registers[c.RVideoX1], 0, VideoBufferWidth)
+	var posY1 uint32 = util.Clamp(m.Registers[c.RVideoY1], 0, VideoBufferHeight)
+
 	var colour = m.getVideoColour()
 
-	var areaStart = (m.Registers[c.RVideoX0] * VideoBytesPerPixel) + (m.Registers[c.RVideoY0] * VideoBufferWidth * VideoBytesPerPixel)
+	var areaStart = (uint32(posX) * VideoBytesPerPixel) + (uint32(posY) * VideoBufferWidth * VideoBytesPerPixel)
 
 	if colour[3] == 255 {
 
 		// Do the first row
 
-		for x := 0; x < int(m.Registers[c.RVideoX1]-m.Registers[c.RVideoX0]); x++ {
+		for x := 0; x < int(posX1-posX); x++ {
 			var offset int = int(areaStart) + (x * int(VideoBytesPerPixel))
 
 			m.MemArray[offset] = colour[0]
@@ -76,19 +82,19 @@ func (m *VM) drawArea() {
 
 		// Copy each row thereafter
 
-		for y := 1; y < int(m.Registers[c.RVideoY1]-m.Registers[c.RVideoY0]); y++ {
+		for y := 1; y < int(posY1-posY); y++ {
 			var offset = int(areaStart) + (y * int(VideoBufferWidth) * int(VideoBytesPerPixel))
 
 			copy(
 				m.MemArray[offset:offset+(int(VideoBufferWidth*VideoBytesPerPixel))],
-				m.MemArray[areaStart:areaStart+((m.Registers[c.RVideoX1]-m.Registers[c.RVideoX0])*VideoBytesPerPixel)],
+				m.MemArray[areaStart:areaStart+((uint32(posX1)-uint32(posX))*VideoBytesPerPixel)],
 			)
 		}
 
 	} else {
 
-		for y := 0; y < int(m.Registers[c.RVideoY1]-m.Registers[c.RVideoY0]); y++ {
-			for x := 0; x < int(m.Registers[c.RVideoX1]-m.Registers[c.RVideoX0]); x++ {
+		for y := 0; y < int(posY1-posY); y++ {
+			for x := 0; x < int(posX1-posX); x++ {
 
 				var pixelAddr int = int(areaStart) + (x * int(VideoBytesPerPixel)) + (y * int(VideoBufferWidth) * int(VideoBytesPerPixel))
 
@@ -384,9 +390,9 @@ func blendPixel(src [4]byte, dest [3]byte) [3]byte {
 	var invertedAlpha int = 255 - int(src[3])
 
 	return [3]byte{
-		byte((int(src[0])*int(src[3]) + int(dest[0])*invertedAlpha) / 255),
-		byte((int(src[1])*int(src[3]) + int(dest[1])*invertedAlpha) / 255),
-		byte((int(src[2])*int(src[3]) + int(dest[2])*invertedAlpha) / 255),
+		byte((int(src[0])*int(src[3]) + int(dest[0])*invertedAlpha) >> 8),
+		byte((int(src[1])*int(src[3]) + int(dest[1])*invertedAlpha) >> 8),
+		byte((int(src[2])*int(src[3]) + int(dest[2])*invertedAlpha) >> 8),
 	}
 
 }

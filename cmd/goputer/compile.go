@@ -189,7 +189,7 @@ func _standalone(program []byte) []byte {
 	return finalCode.Bytes()
 }
 
-func errorHandler(errorType compiler.ErrorType, errorText string) {
+func errorHandler(errorType compiler.ErrorMessage, errorText string) {
 
 	fmt.Println(errorText)
 	os.Exit(1)
