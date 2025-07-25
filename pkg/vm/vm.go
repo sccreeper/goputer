@@ -16,14 +16,14 @@ import (
 
 const (
 	MemSize          uint32 = VideoBufferSize + 65536 // 2 ^ 16
-	RegisterCount    uint16 = 57
+	MaxRegister    uint16 = 55
 	InstructionCount uint16 = 34
 	InterruptCount   uint16 = 23
 )
 
 type VM struct {
 	MemArray   [MemSize]byte
-	Registers  [RegisterCount + 1]uint32 //float32 or uint32
+	Registers  [MaxRegister + 1]uint32 //float32 or uint32
 	DataBuffer [128]byte
 	TextBuffer [128]byte
 
@@ -173,14 +173,12 @@ func (m *VM) Cycle() {
 
 		m.LongArgVal = immVal
 
-	}
-
-	if !m.IsImmediate {
-		if m.LeftArg < RegisterCount {
+	} else {
+		if m.LeftArg < MaxRegister {
 			m.LeftArgVal = m.Registers[m.LeftArg]
 		}
 
-		if m.RightArg < RegisterCount {
+		if m.RightArg < MaxRegister {
 			m.RightArgVal = m.Registers[m.RightArg]
 		}
 

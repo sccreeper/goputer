@@ -9,16 +9,28 @@ mov d0 vc
 
 // Unneeded but works
 
-add r00 $64
+add r00 $64+64/2
 mov a0 vx0
 mov a0 vy0
 
+clr vx0
+clr vy0
+
+mov $64 vx1
+mov $64 vy1
+
 // Draw square properly
 
-mov $64 vx0
-mov $64 vy0
+add vx0 $64
+mov a0 vx0
+add vy0 $64
+mov a0 vy0
 
-mov $128 vx1
-mov $128 vy1
+add vx1 $64
+mov a0 vx1
+add vy1 $64
+mov a0 vy1
 
 int va
+
+jmp $start+45

@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"log"
 	c "sccreeper/goputer/pkg/constants"
@@ -38,16 +39,16 @@ func init() {
 	}
 }
 
-func DecodeInstructionString(b []byte) string {
+func DecodeInstructionString(b []byte) (string, error) {
 	
-	itn := DecodeInstruction(b)
+	itn, err := DecodeInstruction(b)
 
-	return fmt.Sprintf("%s %s", instructionMap[c.Instruction(b[0])], strings.Join(itn.StringData, " "))
+	return fmt.Sprintf("%s %s", instructionMap[c.Instruction(itn.Instruction)], strings.Join(itn.StringData, " ")), err
 
 }
 
 // Decodes individual instructions.
-func DecodeInstruction(b []byte) Instruction {
+func DecodeInstruction(b []byte) (Instruction, error) {
 
 	i := Instruction{}
 
@@ -56,9 +57,14 @@ func DecodeInstruction(b []byte) Instruction {
 
 	var itnData []uint32
 
+	if int(itn) > len(c.InstructionArgumentCounts) {
+		fmt.Println(itn)
+		return Instruction{}, errors.New("error decoding instruction")
+	}
+
 	// Get instruction arguments
-	for i := 0; i < c.InstructionArgumentCounts[itn][0]; i += 2 {
-		itnData = append(itnData, uint32(binary.LittleEndian.Uint16(itnDataBytes[i:i+2])))
+	for i := range c.InstructionArgumentCounts[itn][0] {
+		itnData = append(itnData, uint32(binary.LittleEndian.Uint16(itnDataBytes[(i*2):(i*2)+2])))
 	}
 
 	argumentData := ""
@@ -104,7 +110,7 @@ func DecodeInstruction(b []byte) Instruction {
 
 	i.Instruction = uint32(itn)
 
-	return i
+	return i, nil
 
 }
 
@@ -169,8 +175,6 @@ func Disassemble(programBytes []byte, verbose bool) (DisassembledProgram, error)
 
 	program.ProgramDefinitions = make([][]byte, 0)
 
-	fmt.Println(dataBlockBytes)
-
 	//Break definitions up into individual byte arrays
 
 	var i uint32 = 0
@@ -221,7 +225,12 @@ func Disassemble(programBytes []byte, verbose bool) (DisassembledProgram, error)
 
 	for _, v := range util.SliceChunks(instructionBytes, int(InstructionLength)) {
 
-		program.Instructions = append(program.Instructions, DecodeInstruction(v))
+		itn, err := DecodeInstruction(v)
+		if err != nil {
+			return DisassembledProgram{}, err
+		}
+
+		program.Instructions = append(program.Instructions, itn)
 
 	}
 

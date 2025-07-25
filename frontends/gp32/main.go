@@ -90,12 +90,25 @@ func Run(program []byte, args []string) {
 
 	var startTime int64 = time.Now().UnixMilli()
 	var cyclesCompleted int = 0
+	var shouldCycle bool = false
+
+	toggleManualButton := rendering.NewButton("Toggle step", 560, 0, 80, 24, func() {
+		shouldCycle = !shouldCycle
+	})
+
+	cycleButton := rendering.NewButton("Cycle", 560, 24, 80, 24, func() {
+		if !shouldCycle {
+			gp32.Cycle()	
+		}
+	})
 
 	//Start rendering
 
 	for !rl.WindowShouldClose() {
 
-		gp32.Cycle()
+		if shouldCycle {
+			gp32.Cycle()	
+		}
 
 		//Render IO
 
@@ -105,6 +118,8 @@ func Run(program []byte, args []string) {
 
 		rl.BeginTextureMode(VMStatusRenderTexture)
 		rendering.RenderVMDebug(&gp32)
+		toggleManualButton.Draw()
+		cycleButton.Draw()
 		rl.EndTextureMode()
 
 		//Check if finished and then exit program loop
@@ -360,6 +375,16 @@ func Run(program []byte, args []string) {
 				}
 
 			}
+
+			toggleManualButton.Update(rl.Vector2{
+				X: float32(rl.GetMouseX()),
+				Y: float32(rl.GetMouseY()),
+			})
+
+			cycleButton.Update(rl.Vector2{
+				X: float32(rl.GetMouseX()),
+				Y: float32(rl.GetMouseY()),
+			})
 
 		}
 

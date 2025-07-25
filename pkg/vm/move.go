@@ -47,7 +47,11 @@ func (m *VM) move() {
 			}
 
 		} else {
-			m.Registers[m.RightArg] = m.Registers[m.LeftArg]
+			if m.RightArg > MaxRegister || m.LeftArg > MaxRegister {
+				return
+			} else {
+				m.Registers[m.RightArg] = m.Registers[m.LeftArg]
+			}
 		}
 	}
 }

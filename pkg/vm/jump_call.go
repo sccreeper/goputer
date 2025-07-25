@@ -6,14 +6,14 @@ import (
 	c "sccreeper/goputer/pkg/constants"
 )
 
-// Calls the address of m.ArgLarge
+
 func (m *VM) call() {
 
 	var addressVal uint32
 
 	if m.IsImmediate {
 		addressVal = m.LongArgVal
-	} else if uint16(m.LongArg) < RegisterCount {
+	} else if uint16(m.LongArg) < MaxRegister {
 		addressVal = m.Registers[m.LongArg]
 	} else {
 		addressVal = m.LongArg
@@ -44,7 +44,7 @@ func (m *VM) conditionalCall() bool {
 
 		if m.IsImmediate {
 			addressVal = m.LongArgVal
-		} else if uint16(m.LongArg) < RegisterCount {
+		} else if uint16(m.LongArg) < MaxRegister {
 			addressVal = m.Registers[m.LongArg]
 		} else {
 			addressVal = m.LongArg
@@ -70,7 +70,7 @@ func (m *VM) jump() {
 
 	if m.IsImmediate {
 		addressVal = m.LongArgVal
-	} else if uint16(m.LongArg) < RegisterCount {
+	} else if uint16(m.LongArg) < MaxRegister {
 		addressVal = m.Registers[m.LongArg]
 	} else {
 		addressVal = m.LongArg
@@ -88,7 +88,7 @@ func (m *VM) conditionalJump() bool {
 
 		if m.IsImmediate {
 			addressVal = m.LongArgVal
-		} else if uint16(m.LongArg) < RegisterCount {
+		} else if uint16(m.LongArg) < MaxRegister {
 			addressVal = m.Registers[m.LongArg]
 		} else {
 			addressVal = m.LongArg

@@ -13,8 +13,8 @@ import (
 func (m *VM) load() {
 
 	// This means we are unable to "directly address" the first 57 bytes of memory (register address space).
-	// Addressing stack
-	if m.LeftArg > RegisterCount && !m.IsImmediate {
+	// Addressing static stack value
+	if m.LeftArg > MaxRegister && !m.IsImmediate {
 		dataLength := binary.LittleEndian.Uint32(m.MemArray[m.LongArg : m.LongArg+4])
 		m.Registers[c.RDataLength] = dataLength
 
@@ -26,18 +26,18 @@ func (m *VM) load() {
 
 		m.Registers[c.RDataPointer] = m.LongArg + 4 // If we want data length, it is in dl
 	} else { // Addressing main memory
-		copy(m.DataBuffer[:m.Registers[m.RightArgVal]], m.MemArray[m.Registers[m.LeftArgVal]:m.Registers[m.LeftArgVal]+m.Registers[m.RightArgVal]])
+		copy(m.DataBuffer[:m.RightArgVal], m.MemArray[m.LeftArgVal:m.LeftArgVal+m.RightArgVal])
 
-		m.Registers[c.RDataPointer] = m.Registers[m.LeftArgVal]
-		m.Registers[c.RDataLength] = m.Registers[m.RightArgVal]
+		m.Registers[c.RDataPointer] = m.LeftArgVal
+		m.Registers[c.RDataLength] = m.RightArgVal
 	}
 
 }
 
 func (m *VM) store() {
 
-	// Addressing stack
-	if m.LeftArg > RegisterCount && !m.IsImmediate {
+	// Addressing static stack
+	if m.LeftArg > MaxRegister && !m.IsImmediate {
 		dataLength := binary.LittleEndian.Uint32(m.MemArray[m.LongArg : m.LongArg+4])
 		m.Registers[c.RDataLength] = dataLength
 
@@ -49,10 +49,11 @@ func (m *VM) store() {
 
 		m.Registers[c.RDataPointer] = m.LongArg
 	} else { // Addressing main memory
-		copy(m.MemArray[m.Registers[m.LeftArgVal]:m.Registers[m.LeftArgVal]+m.Registers[m.RightArgVal]], m.DataBuffer[:m.Registers[m.RightArgVal]])
 
-		m.Registers[c.RDataPointer] = m.Registers[m.LeftArgVal]
-		m.Registers[c.RDataLength] = m.Registers[m.RightArgVal]
+		copy(m.MemArray[m.LeftArgVal:m.LeftArgVal+m.RightArgVal], m.DataBuffer[:m.RightArgVal])
+
+		m.Registers[c.RDataPointer] = m.LeftArgVal
+		m.Registers[c.RDataLength] = m.RightArgVal
 	}
 
 }

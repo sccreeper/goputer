@@ -293,7 +293,13 @@ func Cycle(this js.Value, args []js.Value) any {
 
 func GetCurrentInstruction(this js.Value, args []js.Value) any {
 
-	return js.ValueOf(compiler.DecodeInstructionString(js32.CurrentInstruction))
+	itn, err := compiler.DecodeInstructionString(js32.CurrentInstruction)
+
+	if err != nil {
+		return js.ValueOf(err.Error())
+	} else {
+		return js.ValueOf(itn)
+	}
 
 }
 

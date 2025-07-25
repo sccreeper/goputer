@@ -424,14 +424,13 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 						} else {
 							// Make sure value is valid integer and not above limit (2^26)
 
-							imm, err := strconv.Atoi(arg[1:])
-							if err != nil {
-								p.parsingError(ErrSyntax, InvalidValue)
-							}
+							str, num := p.parseImmediate(arg[1:])
 
-							if imm > int(math.Pow(2, 26)) {
+							if num > int(math.Pow(2, 26)) {
 								p.parsingError(ErrValue, ErrorMessage("value too large to be immediate (> 2^26)"))
 							}
+
+							lineSplit[argIndex+1] = fmt.Sprintf("$%s", str)
 
 							hasImmediate = true
 							immediateIndex = argIndex
@@ -488,7 +487,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 			instructionToBeAdded := Instruction{
 				ArgumentCount: uint32(len(strings.Split(line, " ")) - 1),
-				StringData:    strings.Split(line, " ")[1:],
+				StringData:    lineSplit[1:],
 				Instruction:   c.InstructionInts[strings.Split(line, " ")[0]],
 				HasImmediate: hasImmediate,
 				ImmediateIndex: immediateIndex,
@@ -613,4 +612,150 @@ func (p *Parser) nameCollision(s string) (errMessage string, isCollision bool) {
 	}
 
 	return errMessage, isCollision
+}
+
+const integers string = "-1234567890_"
+const operators string = "+-*/"
+const alpha string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
+
+type tokenType int
+
+type Token struct {
+	Data string
+	Type tokenType
+}
+
+const (
+	Integer tokenType = iota
+	Operator
+	Alpha
+)
+
+// Evaluates an immediate expression and returns a constant.
+// If the value begins with ':' it tells the bytecode generator that a label was involved and thus to offset by the respective number of bytes.
+// 
+// Expressions through left-to-right. Brackets are not supported.
+// e.g.
+// 
+// 45 + 2 * 2
+// 
+// 47 * 2
+// 
+// 84
+func (p *Parser) parseImmediate(imm string) (stringResult string, intResult int) {
+
+	stringResult = "0"
+	tokens := make([]Token, 1)
+
+	if strings.Contains(integers[:len(integers)-1], string(imm[0])) {
+		tokens[0] = Token{
+			Type: Integer,
+		}
+	} else if strings.Contains(alpha, string(imm[0])) {
+		tokens[0] = Token{
+			Type: Alpha,
+		}
+	} else {
+		p.parsingError(ErrSyntax, ErrorMessage(fmt.Sprintf("unexpected token '%s' at start of immediate expression", string(imm[0]))))
+		return
+	}
+
+	for _, char := range imm {
+		
+		if strings.Contains(integers, string(char)) && tokens[len(tokens)-1].Type == Integer || strings.Contains(alpha, string(char)) && tokens[len(tokens)-1].Type == Alpha {
+			tokens[len(tokens)-1].Data += string(char)
+			continue
+		} else {
+			
+			// Type mismatch
+
+			var tokenType tokenType
+
+			if strings.Contains(operators, string(char)) {
+				tokenType = Operator
+			} else if strings.Contains(alpha, string(char)) {
+				tokenType = Alpha
+			} else {
+				tokenType = Integer
+			}
+
+			tokens = append(
+				tokens,
+				Token{
+					Type: tokenType,
+					Data: string(char),
+				},
+			)
+
+		}
+
+
+	}
+
+	var hasLabel bool
+
+	var operation byte = '+'
+	var result int
+
+	for _, t := range tokens {
+
+		var val int
+		
+		switch t.Type {
+		case Alpha:
+
+			if !slices.Contains(p.ProgramStructure.LabelNames, t.Data) {
+				p.parsingError(ErrSymbol, SymbolDoesNotExist)
+				return
+			}
+
+			val = p.ProgramStructure.ProgramLabels[t.Data].InstructionOffset * int(InstructionLength)
+
+			hasLabel = true
+			
+		case Integer:
+
+			if !intValueRegex.Match([]byte(t.Data)) {
+				p.parsingError(ErrValue, InvalidValue)
+				return
+			}
+
+			x, err := strconv.Atoi(strings.ReplaceAll(t.Data, "_", ""))
+
+			if err != nil {
+				p.parsingError(ErrValue, ErrorMessage(err.Error()))
+				return
+			}
+
+			val = x
+			
+		case Operator:
+			operation = t.Data[0]
+			continue
+		}
+
+		switch operation {
+		case '+':
+			result += val
+		case '-':
+			result -= val
+		case '/':
+			result /= val
+		case '*':
+			result *= val
+		}
+
+	}
+
+	if hasLabel {
+		stringResult = ":"
+	} else {
+		stringResult = ""
+	}
+
+	stringResult += strconv.Itoa(result)
+	intResult = result
+
+	return
+
 }

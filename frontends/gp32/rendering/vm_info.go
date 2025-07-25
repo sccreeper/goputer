@@ -43,6 +43,13 @@ func RenderVMDebug(m *vm.VM) {
 
 	rl.DrawText(fmt.Sprintf("Program counter: 0x%s", util.ConvertHex(m.Registers[constants.RProgramCounter])), 0, 0, 16, rl.Black)
 
-	rl.DrawText(fmt.Sprintf("Instruction: %s", compiler.DecodeInstructionString(m.CurrentInstruction)), 0, 33, 16, rl.Black)
+	itn, err := compiler.DecodeInstructionString(m.CurrentInstruction)
+	if err != nil {
+		itn = err.Error()
+	}
+
+	rl.DrawText(fmt.Sprintf("Instruction: %s", itn), 0, 33, 16, rl.Black)
+
+	// Buttons
 
 }

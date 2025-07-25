@@ -109,6 +109,7 @@ func GenerateBytecode(p ProgramStructure, verbose bool) []byte {
 			v,
 			definitionBlockAddresses,
 			labelAddresses,
+			byteIndex + MemOffset,
 		)...)
 
 	}
@@ -146,7 +147,7 @@ func GenerateBytecode(p ProgramStructure, verbose bool) []byte {
 // Generates individual instruction bytecode.
 //
 // 1 byte for instruction, 4 bytes for arguments.
-func generateInstructionBytecode(itn Instruction, definitionAddresses map[string]uint32, labelAddresses map[string]uint32) []byte {
+func generateInstructionBytecode(itn Instruction, definitionAddresses map[string]uint32, labelAddresses map[string]uint32, memOffset uint32) []byte {
 
 	//TODO: sign bit
 	//TODO: add offset for "hardware reserved" space
@@ -164,13 +165,29 @@ func generateInstructionBytecode(itn Instruction, definitionAddresses map[string
 	for _, stringArg := range itn.StringData {
 		var arg uint32
 
+		// Do immediate val ahead of time, if there is one
+		if stringArg[0] == '$' {
+			if stringArg[1] == ':' {
+				
+				x, _ := strconv.Atoi(stringArg[2:])
+				arg = uint32(x)
+
+				arg += memOffset
+
+			} else {
+				x, _ := strconv.Atoi(stringArg[1:])
+				arg = uint32(x)
+			}
+
+			arguments = append(arguments, arg)
+
+			continue
+		}
+
 		if itn.Instruction == uint32(c.IStore) || itn.Instruction == uint32(c.ILoad) {
 
 			if stringArg[0] == '@' {
 				arg = definitionAddresses[stringArg[1:]]
-			} else if stringArg[0] == '$' {
-				x, _ := strconv.Atoi(stringArg[1:])
-				arg = uint32(x)
 			} else {
 				arg = uint32(c.RegisterInts[stringArg])
 			}
@@ -179,9 +196,6 @@ func generateInstructionBytecode(itn Instruction, definitionAddresses map[string
 
 			if stringArg[0] == '@' {
 				arg = labelAddresses[stringArg[1:]]
-			} else if stringArg[0] == '$' {
-				x, _ := strconv.Atoi(stringArg[1:])
-				arg = uint32(x)
 			} else {
 				arg = uint32(c.RegisterInts[stringArg])
 			}
@@ -190,12 +204,7 @@ func generateInstructionBytecode(itn Instruction, definitionAddresses map[string
 			arg = uint32(c.InterruptInts[stringArg])
 		} else {
 
-			if stringArg[0] == '$' {
-				x, _ := strconv.Atoi(stringArg[1:])
-				arg = uint32(x)
-			} else {
-				arg = c.RegisterInts[stringArg]
-			}
+			arg = c.RegisterInts[stringArg]
 		
 		}
 
@@ -216,10 +225,12 @@ func generateInstructionBytecode(itn Instruction, definitionAddresses map[string
 
 		argValue = arguments[itn.ImmediateIndex]
 
-		if itn.ImmediateIndex == 0 {
-			argValue |= arguments[1] << 26	
-		} else {
-			argValue |= arguments[0] << 26	
+		if len(arguments) > 1 {
+			if itn.ImmediateIndex == 0 {
+				argValue |= arguments[1] << 26	
+			} else {
+				argValue |= arguments[0] << 26	
+			}	
 		}
 
 		instructionBytes = binary.LittleEndian.AppendUint32(instructionBytes, argValue)
