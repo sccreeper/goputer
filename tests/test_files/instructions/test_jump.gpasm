@@ -1,0 +1,6 @@
+#label test
+mov r00 r01
+
+#label start
+
+jmp @test

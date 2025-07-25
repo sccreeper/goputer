@@ -1,7 +1,0 @@
-:test
-mov r00 r01
-ret
-end
-
-incr a0
-cndcall test

@@ -123,10 +123,15 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 			if statementType == "label" {
 				p.ProgramStructure.LabelNames = append(p.ProgramStructure.LabelNames, statementValue)
 			} else if statementType == "def" {
-				p.ProgramStructure.DefinitionNames = append(
-					p.ProgramStructure.DefinitionNames,
-					nameValueRegex.FindStringSubmatch(statementValue)[1],
-				)
+
+				if nameValueRegex.FindStringSubmatch(statementValue) == nil {
+					p.parsingError(ErrSyntax, ErrorMessage("invalid definition name"))
+				} else {
+					p.ProgramStructure.DefinitionNames = append(
+						p.ProgramStructure.DefinitionNames,
+						nameValueRegex.FindStringSubmatch(statementValue)[1],
+					)
+				}
 			}
 		}
 	}
@@ -174,6 +179,11 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 				}
 
 			case "def":
+
+				if nameValueRegex.FindStringSubmatch(statementValue) == nil {
+					p.parsingError(ErrSyntax, "syntax error")
+					return ProgramStructure{}, nil
+				}
 
 				defName := nameValueRegex.FindStringSubmatch(statementValue)[1]
 				defStringValue := nameValueRegex.FindStringSubmatch(statementValue)[2]

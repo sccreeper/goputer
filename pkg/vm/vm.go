@@ -3,7 +3,6 @@ package vm
 import (
 	"encoding/binary"
 	"errors"
-	"log"
 	"math"
 	comp "sccreeper/goputer/pkg/compiler"
 	c "sccreeper/goputer/pkg/constants"
@@ -83,8 +82,8 @@ func InitVM(machine *VM, vmProgram []byte, expansionsSupported bool) error {
 	machine.Registers[c.RCallStackZeroPointer] = comp.MemOffset - comp.CallStackSize
 	machine.Registers[c.RCallStackPointer] = machine.Registers[c.RCallStackZeroPointer]
 
-	machine.Registers[c.RStackZeroPointer] = comp.MemOffset
-	machine.Registers[c.RStackPointer] = comp.MemOffset
+	machine.Registers[c.RStackZeroPointer] = comp.MemOffset - comp.CallStackSize - comp.DataStackSize
+	machine.Registers[c.RStackPointer] = machine.Registers[c.RStackZeroPointer]
 
 	machine.InterruptQueue = []c.Interrupt{}
 	machine.SubbedInterruptQueue = []c.Interrupt{}
@@ -110,8 +109,6 @@ func InitVM(machine *VM, vmProgram []byte, expansionsSupported bool) error {
 
 	if expansionsSupported {
 		expansions.LoadExpansions()
-	} else {
-		log.Println("Expansions are disabled for this frontend")
 	}
 
 	return nil
