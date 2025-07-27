@@ -148,13 +148,19 @@ func (m *VM) Cycle() {
 	m.RightArg = binary.LittleEndian.Uint16(m.CurrentInstruction[3:5])
 	m.LongArg = binary.LittleEndian.Uint32(m.CurrentInstruction[1:5])
 
-	if (m.CurrentInstruction[0] & byte(c.ItnFlagFirstArgImmediate)) != 0 || (m.CurrentInstruction[0] & byte(c.ItnFlagSecondArgImmediate)) != 0 {
+	if (m.CurrentInstruction[0] & byte(c.ItnFlagLongArgImmediate)) == byte(c.ItnFlagLongArgImmediate) {
+		
+		m.LeftArgVal = uint32(m.LeftArg)
+		m.RightArgVal = uint32(m.RightArg)
+		m.LongArgVal = m.LongArg
+
+	} else if (m.CurrentInstruction[0] & byte(c.ItnFlagLeftArgImmediate)) != 0 || (m.CurrentInstruction[0] & byte(c.ItnFlagRightArgImmediate)) != 0 {
 		m.IsImmediate = true
 
 		immVal := m.LongArg & c.InstructionArgImmediateMask
 		immReg := (m.LongArg & c.InstructionArgRegisterMask) >> 26
 
-		if (m.CurrentInstruction[0] & byte(c.ItnFlagFirstArgImmediate)) != 0 {
+		if (m.CurrentInstruction[0] & byte(c.ItnFlagLeftArgImmediate)) != 0 {
 			m.ImmediateArgIndex = 0
 			m.LeftArgVal = immVal
 			m.LeftArg = 0

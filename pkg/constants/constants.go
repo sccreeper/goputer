@@ -480,8 +480,9 @@ const (
 )
 
 const (
-	ItnFlagFirstArgImmediate InstructionFlag = 0b100_00000
-	ItnFlagSecondArgImmediate InstructionFlag = 0b010_00000
+	ItnFlagLeftArgImmediate InstructionFlag = 0b10_000000
+	ItnFlagRightArgImmediate InstructionFlag = 0b01_000000
+	ItnFlagLongArgImmediate InstructionFlag = 0b11_000000
 
 	InstructionMask byte = 0b00_111111
 	FlagMask byte = ^InstructionMask

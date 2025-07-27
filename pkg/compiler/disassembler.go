@@ -69,12 +69,18 @@ func DecodeInstruction(b []byte) (Instruction, error) {
 
 	argumentData := ""
 
-	if (b[0] & byte(c.ItnFlagFirstArgImmediate)) != 0 || (b[0] & byte(c.ItnFlagSecondArgImmediate)) != 0 {
+	if b[0] & byte(c.ItnFlagLongArgImmediate) == byte(c.ItnFlagLongArgImmediate) {
+		
+		argumentData = fmt.Sprintf("$%d", binary.LittleEndian.Uint32(itnDataBytes))
+
+		i.StringData = append(i.StringData, argumentData)
+
+	} else if (b[0] & byte(c.ItnFlagLeftArgImmediate)) != 0 || (b[0] & byte(c.ItnFlagRightArgImmediate)) != 0 {
 		
 		immediateValue := binary.LittleEndian.Uint32(itnDataBytes) & c.InstructionArgImmediateMask
 		immediateRegister := (binary.LittleEndian.Uint32(itnDataBytes) & c.InstructionArgRegisterMask) >> 26
 
-		if (b[0] & byte(c.ItnFlagFirstArgImmediate)) != 0 {
+		if (b[0] & byte(c.ItnFlagLeftArgImmediate)) != 0 {
 			argumentData = fmt.Sprintf("$%d %s", immediateValue, regMap[c.Register(immediateRegister)])
 		} else {
 			argumentData = fmt.Sprintf("%s $%d", regMap[c.Register(immediateRegister)], immediateValue)

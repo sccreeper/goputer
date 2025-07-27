@@ -214,20 +214,19 @@ func generateInstructionBytecode(itn Instruction, definitionAddresses map[string
 	if itn.HasImmediate {
 
 		if len(arguments) == 1 {
+			instructionBytes[0] |= byte(c.ItnFlagLongArgImmediate)
+		} else if itn.ImmediateIndex == 0 {
+			instructionBytes[0] |= byte(c.ItnFlagLeftArgImmediate)
+		} else if itn.ImmediateIndex == 1 {
+			instructionBytes[0] |= byte(c.ItnFlagRightArgImmediate)
+		}
+
+		// Process immediate
+
+		var argValue uint32
+
+		if len(arguments) > 1 {
 			
-			instructionBytes = binary.LittleEndian.AppendUint32(instructionBytes, arguments[0])
-		
-		} else {
-			if itn.ImmediateIndex == 0 {
-				instructionBytes[0] |= byte(c.ItnFlagFirstArgImmediate)
-			} else if itn.ImmediateIndex == 1 {
-				instructionBytes[0] |= byte(c.ItnFlagSecondArgImmediate)
-			}
-
-			// Process immediate
-
-			var argValue uint32
-
 			argValue = arguments[itn.ImmediateIndex]
 
 			if itn.ImmediateIndex == 0 {
@@ -236,8 +235,11 @@ func generateInstructionBytecode(itn Instruction, definitionAddresses map[string
 				argValue |= arguments[0] << 26	
 			}
 
-			instructionBytes = binary.LittleEndian.AppendUint32(instructionBytes, argValue)
+		} else {
+			argValue = arguments[0]
 		}
+
+		instructionBytes = binary.LittleEndian.AppendUint32(instructionBytes, argValue)
 
 		return instructionBytes
 	
