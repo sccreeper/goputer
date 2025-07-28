@@ -95,61 +95,41 @@ This will build the container and then run `mage dev` inside the container, outp
 
 - Languages
   - Python ^3.10
-  - Go ^1.19
+  - Go ^1.23
   - NodeJS ^18.X
 
 - Build tools
   - [Poetry](https://python-poetry.org/)
   - [Mage](https://magefile.org/)
 
-- Library requirements
-  
-  Requirements for different display servers & audio.
-  
-  ##### Ubuntu <!-- omit in toc -->
-  
-  ###### x11 <!-- omit in toc -->
-  
-  ```
-  libgl1-mesa-dev libxi-dev libxcursor-dev libxrandr-dev libxinerama-dev
-  ```
+For Node I would recommend installing [NVM](https://github.com/nvm-sh/nvm) (Node Version Manager).
 
-  ###### Wayland <!-- omit in toc -->
+##### Fedora <!-- omit in toc -->
 
-  ```
-  libgl1-mesa-dev libwayland-dev libxkbcommon-dev 
-  ```
+Tested on Fedora 42.
 
-  ###### Audio <!-- omit in toc -->
+###### x11 <!-- omit in toc -->
 
-  ```
-  libasound2-dev
-  ```
+```
+mesa-libGL-devel libXi-devel libXcursor-devel libXrandr-devel libXinerama-devel libXxf86vm-devel 
+```
 
-  ##### Fedora <!-- omit in toc -->
+###### Wayland <!-- omit in toc -->
 
-  ###### x11 <!-- omit in toc -->
+```
+mesa-libGL-devel wayland-devel libxkbcommon-devel
+```
 
-  ```
-  mesa-libGL-devel libXi-devel libXcursor-devel libXrandr-devel libXinerama-devel
-  ```
+###### Other
 
-  ###### Wayland <!-- omit in toc -->
+```
+gtk3-devel golang golang-tests python3 
+```
 
-  ```
-  mesa-libGL-devel wayland-devel libxkbcommon-devel
-  ```
-
-  ###### Other
-
-  ```
-  gtk3-devel
-  ```
-
-  ###### Audio <!-- omit in toc -->
-  ```
-  alsa-lib-devel
-  ```
+###### Audio <!-- omit in toc -->
+```
+alsa-lib-devel
+```
 
 **Building**
 
@@ -157,33 +137,46 @@ This will build the container and then run `mage dev` inside the container, outp
 2. Check that everything works.
    ```
    $ node --version
-   v18.12.1
+    v22.13.1
    $ mage --version
-   Mage Build Tool v1.14.0
-   Build Date: 2022-11-09T16:45:13Z
-   Commit: 300bbc8
-   built with: go1.19.3
+    Mage Build Tool <not set>
+    Build Date: <not set>
+    Commit: <not set>
+    built with: go1.24.5
    $ poetry --version
-   Poetry version 1.1.13
+    Poetry version 1.1.13
+   $ go version 
+    go version go1.24.5 linux/amd64
+   $ python3 --version
+    Python 3.13.2
    ```
 3. Clone the repository from GitHub
 
     ```
+    
     git clone https://github.com/sccreeper/goputer
     cd goputer
+    
     ```
 
-4. Build the project. (This step shouldn't take that long depending on your hardware)
+4. Activate the virtual environment for Python (unneeded if not using or building the Python frontend):
+  
+  ```
+  eval $(poetry env activate)
+  ```
+
+5. Build the project. (This step shouldn't take that long depending on your hardware)
    
    ```
-   mage dev
+   mage build
    ```
-    Alternatively you can run `mage all` to *not* build the examples.
 
-5. Go to the build directory and run the `hello_world` example.
+    Alternatively you can run `mage dev frontend.gp32,expansion.goputer.sys` to only build the `gp32` frontend
+
+6. Go to the build directory and run the `hello_world.gp` example.
    ```
    cd build
-   ./goputer run -f gp32 -e ./examples/hello_world
+   ./goputer run -f gp32 -e ./examples/hello_world.gp
    ```
 
 ---

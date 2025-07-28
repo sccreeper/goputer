@@ -9,8 +9,8 @@ GOOS=js GOARCH=wasm go build -ldflags "-s -w" -o ./static/main.wasm main.go
 
 echo Copying files...
 
-cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" ./static/
-cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" .
+cp "$(go env GOROOT)/lib/wasm/wasm_exec.js" ./static/
+cp "$(go env GOROOT)/lib/wasm/wasm_exec.js" .
 git rev-parse HEAD > ./static/ver
 date >> ./static/ver
 
