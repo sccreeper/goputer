@@ -77,7 +77,7 @@ export async function DownloadAll(e) {
 
         if (goputer.files.type(fileName) == "image") {
 
-            fileBytes = new Uint8Array(await imageMap.get(fileName).blob.bytes())
+            fileBytes = new Uint8Array(await imageMap.get(fileName).blob.arrayBuffer())
 
         } else {
 
@@ -114,13 +114,8 @@ export function DownloadProgram(e) {
 
     // Convert method return value to bytes first.
 
-    let programBytesArray = goputer.getProgramBytes()
-
-    let programBytes = new Uint8Array(programBytesArray.length)
-
-    for (let i = 0; i < programBytesArray.length; i++) {
-        programBytes[i] = programBytesArray[i]
-    }
+    let programBytes = new Uint8Array(goputer.getProgramLength())
+    goputer.getProgramBytes(programBytes)
 
     let date = new Date()
 

@@ -210,10 +210,18 @@ export const goputer = {
 
     /**
      * Returns the current program. Can be empty if no program has been set.
-     * @returns {number[]} 
+     * @param {Uint8Array} dest  
      */
-    getProgramBytes() {
-        return getProgramBytes()
+    getProgramBytes(dest) {
+        getProgramBytes(dest)
+    },
+
+    /**
+     * 
+     * @returns {number}
+     */
+    getProgramLength() {
+        return getProgramLength()
     },
 
     /**

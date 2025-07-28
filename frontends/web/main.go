@@ -323,9 +323,15 @@ func Disassemble(this js.Value, args []js.Value) any {
 
 }
 
+func GetProgramLength(this js.Value, args []js.Value) any {
+	return js.ValueOf(len(programBytes))
+}
+
 func GetProgramBytes(this js.Value, args []js.Value) any {
 
-	return js.ValueOf(programBytes)
+	js.CopyBytesToJS(args[0], programBytes)
+
+	return js.ValueOf(nil)
 
 }
 
@@ -416,6 +422,7 @@ func main() {
 
 	js.Global().Set("getProgramBytes", js.FuncOf(GetProgramBytes))
 	js.Global().Set("setProgramBytes", js.FuncOf(SetProgramBytes))
+	js.Global().Set("getProgramLength", js.FuncOf(GetProgramLength))
 
 	js.Global().Set("disassembleCode", js.FuncOf(Disassemble))
 

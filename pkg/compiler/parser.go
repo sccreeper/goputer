@@ -714,16 +714,17 @@ func (p *Parser) parseImmediate(imm string) (stringResult string, intResult int)
 		switch t.Type {
 		case Alpha:
 
-			if t.Data[:2] == "l:" {
+			switch t.Data[:2] {
+			case "l:":
 				if !slices.Contains(p.ProgramStructure.LabelNames, t.Data[2:]) {
 					p.parsingError(ErrSymbol, SymbolDoesNotExist)
 					return
 				}
 
-				val = p.ProgramStructure.ProgramLabels[t.Data].InstructionOffset * int(InstructionLength)	
+				val = p.ProgramStructure.ProgramLabels[t.Data[2:]].InstructionOffset * int(InstructionLength)
 
 				hasLabel = true
-			} else if t.Data[:2] == "d:" {
+			case "d:":
 				if !slices.Contains(p.ProgramStructure.DefinitionNames, t.Data[2:]) {
 					p.parsingError(ErrSymbol, SymbolDoesNotExist)
 					return
@@ -731,7 +732,7 @@ func (p *Parser) parseImmediate(imm string) (stringResult string, intResult int)
 
 				val = int(binary.LittleEndian.Uint32(p.ProgramStructure.Definitions[t.Data[2:]].ByteData[:4])) 
 
-			} else {
+			default:
 				p.parsingError(strconv.ErrSyntax, ErrorMessage("symbol in immediate must begin with l: or d:"))
 			}
 			

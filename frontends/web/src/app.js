@@ -179,18 +179,28 @@ export function handleMouseMove(e) {
 
 }
 
+/**
+ * 
+ * @param {KeyboardEvent} e 
+ */
 export function handleKeyDown(e) {
     
     if (globals.vmIsAlive) {
+        e.preventDefault()
         globals.keysDown.push(e.keyCode)
     }
 
 }
 
+/**
+ * 
+ * @param {KeyboardEvent} e 
+ */
 export function handleKeyUp(e) {
     
     if (globals.vmIsAlive) {
-        globals.keysUp.push(e.keyCode)
+        e.preventDefault()
+        globals.keysUp.push(e.keyCode) // I am aware this is depreceated however, this is the most practical way to get integer keycodes.
     }
 
 }
@@ -336,9 +346,11 @@ export function Cycle() {
         currentInstructionHTML.innerHTML = String(goputer.currentItn);
         programCounterHTML.innerHTML = getRegister(registerInts["prc"])
 
-        if (globals.registerPeekValue != null && GetRegisterText(registerInts[globals.registerPeekValue]) != globals.prevRegPeekValue) {
+        if (globals.registerPeekValue != null && GetRegisterText(registerInts[globals.registerPeekValue], document.getElementById("peek-format-select").value) != globals.prevRegPeekValue) {
 
-            globals.currentRegPeekValue = GetRegisterText(registerInts[globals.registerPeekValue])
+            console.log("updating register...")
+
+            globals.currentRegPeekValue = GetRegisterText(registerInts[globals.registerPeekValue], document.getElementById("peek-format-select").value)
             peekRegHTML.textContent = globals.currentRegPeekValue
             globals.prevRegPeekValue = globals.currentRegPeekValue
 

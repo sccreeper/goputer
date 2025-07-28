@@ -1,0 +1,70 @@
+#def red 0xFF0000FF
+
+#label draw_square
+
+lda @red
+mov d0 vc
+
+pop vx0
+pop vy0
+pop r15
+
+add vx0 r15
+mov a0 vx1
+
+add vy0 r15
+mov a0 vy1
+
+int va
+
+ret
+
+#label keypress
+// Left 65
+neq kc $65
+cndjmp $l:keypress+25
+sub r00 $5
+mov a0 r00
+iret
+// Up 87
+neq kc $87
+cndjmp $l:keypress+50
+sub r01 $5
+mov a0 r01
+iret
+// Right 68
+neq kc $68
+cndjmp $l:keypress+75
+add r00 $5
+mov a0 r00
+iret
+//Down 83
+neq kc $83
+cndjmp $l:keypress+95
+add r01 $5
+mov a0 r01
+iret
+
+#intsub kd keypress
+
+#label loop
+
+push $25
+push r01
+push r00
+
+clr vc
+inv vc
+mov a0 vc
+int vc
+
+call @draw_square
+
+jmp @loop
+
+#label start
+
+mov $10 r00
+mov $10 r01
+
+jmp @loop
