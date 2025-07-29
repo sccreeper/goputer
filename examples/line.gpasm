@@ -22,3 +22,4 @@ lda @white
 mov d0 vc
 
 int vl
+int vf

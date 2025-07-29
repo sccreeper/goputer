@@ -18,3 +18,4 @@ sr vt dl
 mov d0 vt
 
 int vt
+int vf

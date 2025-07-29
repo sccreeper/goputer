@@ -1,14 +1,15 @@
 //Pixel test
 #def white 0xFFFFFFFF
-#def pos 50
+#def offset 2880
 
 #label start
 
 lda @white
 mov d0 vc
 
-lda @pos
-mov d0 vx0
-mov d0 vy0
+lda @offset
+mov d0 r00
 
-int vp
+sta r00 $4
+
+int vf

@@ -9,6 +9,7 @@ mov r14 vc
 int vc
 mov r15 vc
 int vt
+int vf
 hlt r00
 jmp @loop
 

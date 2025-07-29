@@ -41,6 +41,7 @@ mov r00 vx0
 mov r00 vy0
 
 int va
+int vf
 
 lda @red
 mov d0 vc
@@ -50,6 +51,7 @@ mov a0 vx1
 mov a0 vy1
 
 int va
+int vf
 
 lda @blue
 mov d0 vc
@@ -59,6 +61,7 @@ mov a0 vx1
 mov a0 vy1
 
 int va
+int vf
 
 // Try setting an individual pixel
 
@@ -75,6 +78,7 @@ mov a0 r01
 // <address> <length>
 
 sta r00 r01
+int vf
 
 jmp @future_label
 
@@ -110,6 +114,7 @@ sub vy1 r01
 mov a0 vy1
 
 int vl
+int vf
 
 neq vy1 r00
 cndjmp @line_loop
@@ -138,7 +143,9 @@ incr vx0
 incr vy0
 
 inv vc
+mov a0 vc
 int vt
+int vf
 
 neq r00 vx0
 cndjmp @text_loop
@@ -161,6 +168,7 @@ lda @logo_rle
 mov dp d0
 
 int vi
+int vf
 
 lda @pos
 mov d0 r00
@@ -172,3 +180,4 @@ lda @logo_default
 mov dp d0
 
 int vi
+int vf

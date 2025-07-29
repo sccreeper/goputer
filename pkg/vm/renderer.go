@@ -3,7 +3,6 @@ package vm
 import (
 	_ "embed"
 	"encoding/binary"
-	"fmt"
 	"iter"
 	"math"
 	c "sccreeper/goputer/pkg/constants"
@@ -14,7 +13,7 @@ import (
 
 //go:embed assets/font.bin
 var fontBytes []byte
-var fontData [FontNumCharacters][]byte = [FontNumCharacters][]byte{}
+var fontData [FontNumCharacters][][2]byte = [FontNumCharacters][][2]byte{}
 
 const (
 	VideoBufferWidth       uint32 = 320
@@ -34,7 +33,7 @@ func init() {
 	// Populate character array
 
 	for i := 0; i < int(FontNumCharacters); i++ {
-		fontData[i] = make([]byte, 0, FontCharWidth*FontCharHeight)
+		fontData[i] = make([][2]byte, 0, FontCharWidth*FontCharHeight)
 
 		dataStart := i * int(FontCharWidth) * 4
 
@@ -42,7 +41,10 @@ func init() {
 			for x := 0; x < int(FontCharWidth); x++ {
 
 				pixelIndex := dataStart + (y * int(FontCharWidth*FontNumCharacters) * 4) + (x * 4)
-				fontData[i] = append(fontData[i], fontBytes[pixelIndex])
+
+				if fontBytes[pixelIndex] == 255 {
+					fontData[i] = append(fontData[i], [2]byte{byte(x), byte(y)})
+				}
 
 			}
 		}
@@ -148,14 +150,8 @@ func (m *VM) drawText() {
 
 		char -= 32
 
-		for y := 0; y < int(FontCharHeight); y++ {
-			for x := 0; x < int(FontCharWidth); x++ {
-
-				if fontData[char][(y*int(FontCharWidth))+x] == 255 {
-					m.putPixel(int(textOffsetX)+x, int(textOffsetY)+y, colour)
-				}
-
-			}
+		for _, v := range fontData[char] {
+			m.putPixel(int(textOffsetX+uint32(v[0])), int(textOffsetY+uint32(v[1])), colour)
 		}
 
 		textOffsetX += FontCharWidth + 1
@@ -327,22 +323,23 @@ func (m *VM) drawImage() {
 
 func (m *VM) clearVideo() {
 
-	// Set first row
+	if m.Registers[c.RVideoColour] == 0 {
+		
+		for i := 0; i < int(VideoBufferSize); i++ {
+			m.MemArray[i] = 0
+		}
 
-	var colour [4]byte = m.getVideoColour()
+	} else {
 
-	for x := range int(VideoBufferWidth) {
-		m.putPixel(x, 0, colour)
-	}
+		var colour [4]byte = m.getVideoColour()
 
-	for y := 1; y < int(VideoBufferHeight); y++ {
+		for i := 0; i < int(VideoBufferSize); i+=3 {
+			
+			m.MemArray[i] = colour[0]
+			m.MemArray[i+1] = colour[1]
+			m.MemArray[i+2] = colour[2]
 
-		var offset int = y * int(VideoBufferWidth) * int(VideoBytesPerPixel)
-
-		copy(
-			m.MemArray[offset:offset+int(VideoBufferWidth)*int(VideoBytesPerPixel)],
-			m.MemArray[:VideoBufferWidth*VideoBytesPerPixel],
-		)
+		}
 
 	}
 
@@ -350,19 +347,17 @@ func (m *VM) clearVideo() {
 
 func (m *VM) getVideoColour() (colour [4]byte) {
 
-	colour = [4]byte{}
-
 	colour[0] = byte(m.Registers[c.RVideoColour])
 	colour[1] = byte(m.Registers[c.RVideoColour] >> 8)
 	colour[2] = byte(m.Registers[c.RVideoColour] >> 16)
 	colour[3] = byte(m.Registers[c.RVideoColour] >> 24)
 
-	return colour
+	return
 
 }
 
 func (m *VM) putPixel(x int, y int, colour [4]byte) {
-	if x >= int(VideoBufferWidth) || x < 0 || y >= int(VideoBufferHeight) || y < 0 {
+	if x >= int(VideoBufferWidth) || x < 0 || y >= int(VideoBufferHeight) || y < 0 || colour[3] == 0 {
 		return
 	}
 
@@ -387,7 +382,7 @@ func (m *VM) putPixel(x int, y int, colour [4]byte) {
 // Performs a sort of TM blend on two pixels
 func blendPixel(src [4]byte, dest [3]byte) [3]byte {
 
-	var invertedAlpha int = 255 - int(src[3])
+	var invertedAlpha int = int(^src[3])
 
 	return [3]byte{
 		byte((int(src[0])*int(src[3]) + int(dest[0])*invertedAlpha) >> 8),
@@ -399,11 +394,20 @@ func blendPixel(src [4]byte, dest [3]byte) [3]byte {
 
 func Bresenham(a [2]int, b [2]int) iter.Seq[[2]int] {
 
-	var x int = int(a[0])
-	var y int = int(a[1])
+	var x int = a[0]
+	var y int = a[1]
 
-	var dx int = int(math.Abs(float64(b[0] - a[0])))
-	var dy int = -int(math.Abs(float64(b[1] - a[1])))
+	var dx int = b[0] - a[0]
+	if dx < 0 {
+		dx *= -1
+	}
+
+	var dy int = b[1] - a[1]
+	if dy < 0 {
+		dy *= -1
+	}
+	dy *= -1
+
 	var err int = dx + dy
 
 	var sx int = 1
@@ -453,26 +457,26 @@ func Bresenham(a [2]int, b [2]int) iter.Seq[[2]int] {
 
 }
 
-func PrintChar(char int) {
-	// Printable ASCII range
-	if char < ' ' || char > '~' {
-		char = 127
-	}
+// func PrintChar(char int) {
+// 	// Printable ASCII range
+// 	if char < ' ' || char > '~' {
+// 		char = 127
+// 	}
 
-	char -= 32
+// 	char -= 32
 
-	for i := 0; i < len(fontData[char]); i += int(FontCharWidth) {
-		var lineString string
+// 	for i := 0; i < len(fontData[char]); i += int(FontCharWidth) {
+// 		var lineString string
 
-		for _, v := range fontData[char][i : i+int(FontCharWidth)] {
-			if v == 255 {
-				lineString += "#"
-			} else {
-				lineString += " "
-			}
-		}
+// 		for _, v := range fontData[char][i : i+int(FontCharWidth)] {
+// 			if v == 255 {
+// 				lineString += "#"
+// 			} else {
+// 				lineString += " "
+// 			}
+// 		}
 
-		fmt.Println(lineString)
+// 		fmt.Println(lineString)
 
-	}
-}
+// 	}
+// }

@@ -39,38 +39,39 @@ var InterruptInts = map[string]Interrupt{
 	"vl":  7, //Draw a line from vx0,vy0 -> vx1,vy1
 	"iof": 8, //Flush IO registers to IO
 	"ioc": 9, //Set all IO to 0x0
+	"vf": 10, // Video flush
 
 	//Subscribable interrupts
 
-	"mm":   10, //Mouse move
-	"mu":   11, //Mouse up
-	"md":   12, //Mouse down
-	"io08": 13, //IO on/off 8-15
-	"io09": 14,
-	"io10": 15,
-	"io11": 16,
-	"io12": 17,
-	"io13": 18,
-	"io14": 19,
-	"io15": 20,
-	"ku":   21, //Key up
-	"kd":   22, //Key down
+	"mm":   11, //Mouse move
+	"mu":   12, //Mouse up
+	"md":   13, //Mouse down
+	"io08": 14, //IO on/off 8-15
+	"io09": 15,
+	"io10": 16,
+	"io11": 17,
+	"io12": 18,
+	"io13": 19,
+	"io14": 20,
+	"io15": 21,
+	"ku":   22, //Key up
+	"kd":   23, //Key down
 }
 
 var SubscribableInterrupts = map[string]Interrupt{
-	"mm":   10, //Mouse move
-	"mu":   11, //Mouse up
-	"md":   12, //Mouse down
-	"io08": 13, //IO on/off 8-15
-	"io09": 14,
-	"io10": 15,
-	"io11": 16,
-	"io12": 17,
-	"io13": 18,
-	"io14": 19,
-	"io15": 20,
-	"ku":   21, //Key up
-	"kd":   22, //Key down
+	"mm":   11, //Mouse move
+	"mu":   12, //Mouse up
+	"md":   13, //Mouse down
+	"io08": 14, //IO on/off 8-15
+	"io09": 15,
+	"io10": 16,
+	"io11": 17,
+	"io12": 18,
+	"io13": 19,
+	"io14": 20,
+	"io15": 21,
+	"ku":   22, //Key up
+	"kd":   23, //Key down
 }
 
 // Array with keys in same order as map
@@ -235,23 +236,24 @@ const (
 	IntVideoLine    Interrupt = 7
 	IntIOFlush      Interrupt = 8
 	IntIOClear      Interrupt = 9
+	IntVideoFlush   Interrupt = 10
 
 	//Subscribable interrupts
 
-	IntMouseMove Interrupt = 10
-	IntMouseUp   Interrupt = 11
-	IntMouseDown Interrupt = 12
-	IntIO08      Interrupt = 13
-	IntIO09      Interrupt = 14
-	IntIO10      Interrupt = 15
-	IntIO11      Interrupt = 16
-	IntIO12      Interrupt = 17
-	IntIO13      Interrupt = 18
-	IntIO14      Interrupt = 19
-	IntIO15      Interrupt = 20
+	IntMouseMove Interrupt = 11
+	IntMouseUp   Interrupt = 12
+	IntMouseDown Interrupt = 13
+	IntIO08      Interrupt = 14
+	IntIO09      Interrupt = 15
+	IntIO10      Interrupt = 16
+	IntIO11      Interrupt = 17
+	IntIO12      Interrupt = 18
+	IntIO13      Interrupt = 19
+	IntIO14      Interrupt = 20
+	IntIO15      Interrupt = 21
 
-	IntKeyboardUp   Interrupt = 21
-	IntKeyboardDown Interrupt = 22
+	IntKeyboardUp   Interrupt = 22
+	IntKeyboardDown Interrupt = 23
 )
 
 const (

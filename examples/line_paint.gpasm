@@ -14,6 +14,7 @@ mov r00 vx0
 mov r01 vy0
 
 int vl
+int vf
 
 mov mx r00
 mov my r01
@@ -24,6 +25,7 @@ iret
 lda @white
 mov d0 vc
 int vc
+int vf
 
 lda @black
 mov d0 vc
@@ -41,6 +43,7 @@ jmp @loop
 lda @white
 mov d0 vc
 int vc
+int vf
 
 lda @black
 mov d0 vc

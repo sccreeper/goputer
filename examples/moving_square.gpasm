@@ -54,11 +54,11 @@ push r01
 push r00
 
 clr vc
-inv vc
-mov a0 vc
 int vc
 
 call @draw_square
+
+int vf
 
 jmp @loop
 

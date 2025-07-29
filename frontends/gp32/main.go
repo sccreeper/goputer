@@ -39,7 +39,7 @@ func Run(program []byte, args []string) {
 
 	rl.InitWindow(640, 480+int32(rendering.TotalYOffset), fmt.Sprintf("gp32 - %s", args[0]))
 
-	var gp32 vm.VM
+	var gp32 *vm.VM
 
 	var ioStatus [16]bool = [16]bool{}
 	var ioToggleSwitches [8]rendering.IOSwitch = [8]rendering.IOSwitch{}
@@ -59,6 +59,10 @@ func Run(program []byte, args []string) {
 	var VideoIntermediate [vm.VideoBufferWidth * vm.VideoBufferHeight]color.RGBA = [vm.VideoBufferWidth * vm.VideoBufferHeight]color.RGBA{}
 	var IOStatusRenderTexture rl.RenderTexture2D = rl.LoadRenderTexture(640, int32(rendering.IOUISize))
 	var VMStatusRenderTexture rl.RenderTexture2D = rl.LoadRenderTexture(640, int32(rendering.DebugUISize))
+
+	for i := 0; i < len(VideoIntermediate); i++ {
+		VideoIntermediate[i].A = 255
+	}
 
 	//Clear backgrounds of both textures
 
@@ -82,7 +86,7 @@ func Run(program []byte, args []string) {
 		Button: 64,
 	}
 
-	vm.InitVM(&gp32, program, true)
+	gp32, _ = vm.NewVM(program, true)
 
 	expansions.SetAttribute("goputer.sys", "name", "gp32")
 
@@ -90,7 +94,7 @@ func Run(program []byte, args []string) {
 
 	var startTime int64 = time.Now().UnixMilli()
 	var cyclesCompleted int = 0
-	var shouldCycle bool = false
+	var shouldCycle bool = true
 
 	toggleManualButton := rendering.NewButton("Toggle step", 560, 0, 80, 24, func() {
 		shouldCycle = !shouldCycle
@@ -117,7 +121,7 @@ func Run(program []byte, args []string) {
 		rl.EndTextureMode()
 
 		rl.BeginTextureMode(VMStatusRenderTexture)
-		rendering.RenderVMDebug(&gp32)
+		rendering.RenderVMDebug(gp32)
 		toggleManualButton.Draw()
 		cycleButton.Draw()
 		rl.EndTextureMode()
@@ -151,28 +155,27 @@ func Run(program []byte, args []string) {
 					}
 
 				}
+			case c.IntVideoFlush:
+				// Update video texture
+
+				for i := 0; i < int(vm.VideoBufferSize/3); i ++ {
+
+
+					VideoIntermediate[i].R = gp32.MemArray[i*3]
+					VideoIntermediate[i].G = gp32.MemArray[(i*3)+1]
+					VideoIntermediate[i].B = gp32.MemArray[(i*3)+2]
+
+				}
+
+				rl.UpdateTexture(
+					VideoRenderTexture.Texture,
+					VideoIntermediate[:],
+				)
+			
 			default:
 				continue
 			}
 		}
-
-		// Update video texture
-
-		for i := 0; i < int(vm.VideoBufferSize); i += 3 {
-
-			VideoIntermediate[i/3] = color.RGBA{
-				gp32.MemArray[i],
-				gp32.MemArray[i+1],
-				gp32.MemArray[i+2],
-				255,
-			}
-
-		}
-
-		rl.UpdateTexture(
-			VideoRenderTexture.Texture,
-			VideoIntermediate[:],
-		)
 
 		rl.BeginTextureMode(VideoRenderTexture)
 

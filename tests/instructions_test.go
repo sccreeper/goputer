@@ -72,9 +72,7 @@ func TestInstructions(t *testing.T) {
 			// Create VM instance
 			// TODO: make this more time and memory efficient.
 
-			var test32 vm.VM
-
-			vm.InitVM(&test32, programBytes, false)
+			test32, _ := vm.NewVM(programBytes, false)
 
 			for {
 				if test32.Finished {
@@ -85,7 +83,7 @@ func TestInstructions(t *testing.T) {
 			}
 
 			if test32.Registers[constants.RegisterInts[v.CheckRegister]] != uint32(v.CheckValue) {
-				t.Errorf("Failed instruction test %s. Value should be %d but got %d", v.Name, v.CheckValue, test32.Registers[constants.RegisterInts[v.CheckRegister]])
+				t.Errorf("Failed instruction test %s. Value should be %d but got %d\n", v.Name, v.CheckValue, test32.Registers[constants.RegisterInts[v.CheckRegister]])
 			}
 		})
 
@@ -97,14 +95,12 @@ func TestInstructions(t *testing.T) {
 
 func TestJump(t *testing.T) {
 
-	var test32 vm.VM
-
 	programText, err := instructionTestFiles.ReadFile("test_files/instructions/test_jump.gpasm")
 	if err != nil {
 		panic(err)
 	}
 
-	vm.InitVM(&test32, compile(string(programText[:])), false)
+	test32, _ := vm.NewVM(compile(string(programText[:])), false)
 
 	var inJump bool = false
 	var jumpAddr uint32
@@ -136,14 +132,12 @@ func TestJump(t *testing.T) {
 
 func TestCall(t *testing.T) {
 
-	var test32 vm.VM
-
 	programText, err := instructionTestFiles.ReadFile("test_files/instructions/test_call.gpasm")
 	if err != nil {
 		panic(err)
 	}
 
-	vm.InitVM(&test32, compile(string(programText[:])), false)
+	test32, _ := vm.NewVM(compile(string(programText[:])), false)
 
 	var inCall bool = false
 	var callAddr uint32
@@ -179,14 +173,13 @@ func TestCall(t *testing.T) {
 
 func TestConditionalJump(t *testing.T) {
 
-	var test32 vm.VM
-
 	programText, err := instructionTestFiles.ReadFile("test_files/instructions/test_cndjump.gpasm")
 	if err != nil {
 		panic(err)
 	}
 
-	vm.InitVM(&test32, compile(string(programText[:])), false)
+	
+	test32, _ := vm.NewVM(compile(string(programText[:])), false)
 
 	var inJump bool = false
 	var jumpAddr uint32
@@ -217,14 +210,13 @@ func TestConditionalJump(t *testing.T) {
 }
 
 func TestConditionalCall(t *testing.T) {
-	var test32 vm.VM
 
 	programText, err := instructionTestFiles.ReadFile("test_files/instructions/test_cndcall.gpasm")
 	if err != nil {
 		panic(err)
 	}
 
-	vm.InitVM(&test32, compile(string(programText[:])), false)
+	test32, _ := vm.NewVM(compile(string(programText[:])), false)
 
 	var inCall bool = false
 	var jumpAddr uint32

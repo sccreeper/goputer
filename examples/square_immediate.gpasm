@@ -33,5 +33,6 @@ add vy1 $64
 mov a0 vy1
 
 int va
+int vf
 
 jmp $l:start+45

@@ -47,6 +47,8 @@ clr vx0
 clr vy0
 
 int vl
+
+int vf
 """},
     { name="Hello World", description="Basic hello world example", path="hello_world", program_text="""
 // Simple hello world example
@@ -63,6 +65,7 @@ lda @white
 mov d0 vc
 
 int vt
+int vf
 """},
     { name="IO Inputs", description="IO Inputs test", path="io_inputs",  program_text="""
 
@@ -117,6 +120,7 @@ mov r00 vx0
 mov r01 vy0
 
 int vl
+int vf
 
 mov mx r00
 mov my r01
@@ -128,6 +132,7 @@ iret
 lda @white
 mov d0 vc
 int vc
+int vf
 
 lda @black
 mov d0 vc
@@ -145,6 +150,7 @@ jmp @loop
 lda @white
 mov d0 vc
 int vc
+int vf
 
 lda @black
 mov d0 vc
@@ -202,6 +208,7 @@ sr vt dl
 mov d0 vt
 
 int vt
+int vf
 """},
 {name="Paint keyboard", description="Like paint but uses keyboard presses for drawing", path="paint_keyboard_press", program_text="""
 //Paint that uses clicks
@@ -221,6 +228,7 @@ jmp @loop
 clr a0
 clr io00
 int iof
+int vf
 
 ret
 
@@ -283,6 +291,7 @@ iret
 lda @bg
 mov d0 vc
 int vc
+int vf
 
 #intsub kd onpress
 

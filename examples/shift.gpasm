@@ -21,3 +21,4 @@ lda @test_string
 mov d0 vt
 
 int vt
+int vf

@@ -30,6 +30,7 @@ clr vx0
 clr vy0
 
 int vt
+int vf
 
 iret
 
@@ -49,5 +50,6 @@ lda @test_string
 
 mov d0 vt
 int vt
+int vf
 
 jmp @loop

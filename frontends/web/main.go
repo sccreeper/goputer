@@ -21,7 +21,7 @@ import (
 	_ "image/png"
 )
 
-var js32 vm.VM
+var js32 *vm.VM
 
 var programBytes []byte
 
@@ -169,17 +169,15 @@ func HandleError(errorType compiler.ErrorMessage, errorText string) {
 
 func Init() js.Func {
 
-	init_func := js.FuncOf(func(this js.Value, args []js.Value) any {
+	initFunc := js.FuncOf(func(this js.Value, args []js.Value) any {
 
-		js32 = vm.VM{}
-
-		vm.InitVM(&js32, programBytes, true)
+		js32, _ = vm.NewVM(programBytes, true)
 
 		return js.ValueOf(nil)
 
 	})
 
-	return init_func
+	return initFunc
 }
 
 // Methods for interacting with the VM

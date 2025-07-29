@@ -9,7 +9,7 @@ import (
 	"unsafe"
 )
 
-var py32 vm.VM
+var py32 *vm.VM
 var py32InteruptChannel chan constants.Interrupt = make(chan constants.Interrupt)
 var py32SubbedInterruptChannel chan constants.Interrupt = make(chan constants.Interrupt)
 
@@ -18,8 +18,7 @@ func main() {}
 //export Init
 func Init(programBytes *C.char, codeLength C.int) {
 
-	vm.InitVM(
-		&py32,
+	py32, _ = vm.NewVM(
 		C.GoBytes(unsafe.Pointer(programBytes), codeLength),
 		false,
 	)

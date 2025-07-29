@@ -15,6 +15,7 @@ jmp @loop
 clr a0
 clr io00
 int iof
+int vf
 
 ret
 

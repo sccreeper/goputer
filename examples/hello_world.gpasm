@@ -12,5 +12,6 @@ lda @white
 mov d0 vc
 
 int vt
+int vf
 
 //Exit (fingers crossed)

@@ -17,7 +17,7 @@ const (
 	MemSize          uint32 = VideoBufferSize + 65536 // 2 ^ 16
 	MaxRegister    uint16 = 55
 	InstructionCount uint16 = 34
-	InterruptCount   uint16 = 23
+	InterruptCount   uint16 = 24
 )
 
 type VM struct {
@@ -56,10 +56,12 @@ type VM struct {
 }
 
 // Initialize VM and registers, load code into "memory" etc.
-func InitVM(machine *VM, vmProgram []byte, expansionsSupported bool) error {
+func NewVM(vmProgram []byte, expansionsSupported bool) (*VM, error) {
+
+	machine := &VM{}
 
 	if len(vmProgram)-4 > int(MemSize) {
-		return errors.New("program too large")
+		return nil, errors.New("program too large")
 	}
 
 	//Extract program start index
@@ -85,8 +87,8 @@ func InitVM(machine *VM, vmProgram []byte, expansionsSupported bool) error {
 	machine.Registers[c.RStackZeroPointer] = comp.MemOffset - comp.CallStackSize - comp.DataStackSize
 	machine.Registers[c.RStackPointer] = machine.Registers[c.RStackZeroPointer]
 
-	machine.InterruptQueue = []c.Interrupt{}
-	machine.SubbedInterruptQueue = []c.Interrupt{}
+	machine.InterruptQueue = make([]c.Interrupt, 0, 16)
+	machine.SubbedInterruptQueue = make([]c.Interrupt, 0, 16)
 	machine.HandlingInterrupt = false
 
 	//Interrupt table
@@ -111,7 +113,7 @@ func InitVM(machine *VM, vmProgram []byte, expansionsSupported bool) error {
 		expansions.LoadExpansions()
 	}
 
-	return nil
+	return machine, nil
 
 }
 

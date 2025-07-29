@@ -16,6 +16,7 @@ add my r00
 mov a0 vy1
 
 int va
+int vf
 iret
 
 #intsub mm handle_mouse_move

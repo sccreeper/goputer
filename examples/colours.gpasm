@@ -10,4 +10,5 @@
 
 #label clear_screen
 int vc
+int vf
 ret

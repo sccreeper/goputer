@@ -6,3 +6,4 @@
 lda @colour
 mov d0 vc
 int vc
+int vf

@@ -3,6 +3,7 @@ import globals from "./globals.js"
 import { ShowError, ErrorTypes } from "./error";
 import { drawSceneSimple } from "./gl/index.js";
 import { goputer } from "./goputer.js";
+import { checkVisible } from "./util.js";
 
 var previousMousePos = {
     X: 0,
@@ -40,7 +41,7 @@ export function PeekRegister() {
 /**
  * Used in conjunction with PeekRegister
  * @param {number} regInt 
- * @param {string} format 
+ * @param {"hex"|"binary"|"text"|"decimal"} format 
  * @returns {string}
  */
 export function GetRegisterText(regInt, format) {
@@ -60,7 +61,7 @@ export function GetRegisterText(regInt, format) {
 
     } else {
 
-        goputer.getRegisterBytes(registerInts[globals.registerPeekValue], bytes)
+        goputer.getRegisterBytes(regInt, bytes)
     
     }
 
@@ -259,13 +260,18 @@ export function Cycle() {
                     )
 
                 }
+                break;
+            case interruptInts["vf"]:
+
+                goputer.updateFramebuffer();
+                
+                break;
 
             default:
                 break;
         }
 
         // Video
-        goputer.updateFramebuffer();
         drawSceneSimple(glContext)
 
         // Video brightness
@@ -343,12 +349,15 @@ export function Cycle() {
 
         //Update hardware info
 
-        currentInstructionHTML.innerHTML = String(goputer.currentItn);
-        programCounterHTML.innerHTML = getRegister(registerInts["prc"])
+        if (checkVisible(currentInstructionHTML)) {
+            currentInstructionHTML.textContent = String(goputer.currentItn);   
+        }
+
+        if (checkVisible(programCounterHTML)) {
+            programCounterHTML.textContent = GetRegisterText(registerInts["prc"], "hex")   
+        }
 
         if (globals.registerPeekValue != null && GetRegisterText(registerInts[globals.registerPeekValue], document.getElementById("peek-format-select").value) != globals.prevRegPeekValue) {
-
-            console.log("updating register...")
 
             globals.currentRegPeekValue = GetRegisterText(registerInts[globals.registerPeekValue], document.getElementById("peek-format-select").value)
             peekRegHTML.textContent = globals.currentRegPeekValue

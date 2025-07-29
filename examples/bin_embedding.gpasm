@@ -10,3 +10,4 @@ lda @white
 mov d0 vc
 
 int vt
+int vf
