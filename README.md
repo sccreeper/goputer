@@ -19,7 +19,8 @@ A computer emulator/virtual machine that intends to demonstrate how basic comput
   - [Docker](#docker)
   - [Linux](#linux)
       - [Other](#other)
-- [Testing](#testing)
+- [Development](#development)
+  - [Testing](#testing)
 - [Credits](#credits)
   - [GP32 Frontend](#gp32-frontend)
   - [goputerpy Frontend](#goputerpy-frontend)
@@ -181,7 +182,11 @@ alsa-lib-devel
 
 ---
 
-### Testing
+### Development
+
+In addition to the dependencies in [Building](#build-instructions), you should also have [`golangci-lint`](https://golangci-lint.run) (V2) installed.
+
+#### Testing
 
 There a small suite of tests written for testing the core of goputer.
 
@@ -226,6 +231,12 @@ go test ./tests -v
   - Icons used heavily by the UI.
 - Microtip - [ghosh/microtip](https://github.com/ghosh/microtip)
   - Tooltip library used in UI.
+- Mediabunny - [Vanilagy/mediabunny](https://github.com/Vanilagy/mediabunny)
+  - Used for recording and muxing MP4 files
+- Zip.js - [gildas-lormeau/zip.js](https://github.com/gildas-lormeau/zip.js/)
+  - Used to create and load ZIP archives
+- Dexie.js - [dexie/Dexie.js](https://github.com/dexie/Dexie.js)
+  - Used for interacting with IndexedDB.
 
 #### CLI tool
 

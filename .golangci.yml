@@ -1,0 +1,8 @@
+version: "2"
+
+default: all
+
+exclusions:
+
+  paths:
+    - cmd/goputer/standalone/standalone.go

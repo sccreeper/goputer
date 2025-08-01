@@ -4,8 +4,11 @@
         "cstring": "c",
         "typeinfo": "c"
     },
-    
     "go.lintTool": "golangci-lint",
+    "go.lintFlags": [
+        "--path-mode=abs",
+        "--fast-only"
+    ],
     "go.lintOnSave": "workspace",
     "go.formatTool": "custom",
     "go.alternateTools": {

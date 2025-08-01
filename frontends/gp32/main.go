@@ -6,10 +6,12 @@ import (
 	"image/color"
 	"log"
 	"math"
+	"os"
 	"sccreeper/goputer/frontends/gp32/rendering"
 	"sccreeper/goputer/frontends/gp32/sound"
 	c "sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/expansions"
+	"sccreeper/goputer/pkg/profiler"
 	"sccreeper/goputer/pkg/vm"
 	"time"
 
@@ -38,6 +40,7 @@ func Run(program []byte, args []string) {
 	fmt.Println()
 
 	rl.InitWindow(640, 480+int32(rendering.TotalYOffset), fmt.Sprintf("gp32 - %s", args[0]))
+	defer rl.CloseWindow()
 
 	var gp32 *vm.VM
 
@@ -88,6 +91,13 @@ func Run(program []byte, args []string) {
 
 	gp32, _ = vm.NewVM(program, true)
 
+	// Temporary implementation for profiling
+
+	pr, err := profiler.NewProfiler(gp32)
+	if err != nil {
+		panic(err)
+	}
+
 	expansions.SetAttribute("goputer.sys", "name", "gp32")
 
 	sound.SoundInit()
@@ -102,7 +112,7 @@ func Run(program []byte, args []string) {
 
 	cycleButton := rendering.NewButton("Cycle", 560, 24, 80, 24, func() {
 		if !shouldCycle {
-			gp32.Cycle()	
+			gp32.Cycle()
 		}
 	})
 
@@ -111,7 +121,7 @@ func Run(program []byte, args []string) {
 	for !rl.WindowShouldClose() {
 
 		if shouldCycle {
-			gp32.Cycle()	
+			pr.Cycle()
 		}
 
 		//Render IO
@@ -158,8 +168,7 @@ func Run(program []byte, args []string) {
 			case c.IntVideoFlush:
 				// Update video texture
 
-				for i := 0; i < int(vm.VideoBufferSize/3); i ++ {
-
+				for i := 0; i < int(vm.VideoBufferSize/3); i++ {
 
 					VideoIntermediate[i].R = gp32.MemArray[i*3]
 					VideoIntermediate[i].G = gp32.MemArray[(i*3)+1]
@@ -171,7 +180,7 @@ func Run(program []byte, args []string) {
 					VideoRenderTexture.Texture,
 					VideoIntermediate[:],
 				)
-			
+
 			default:
 				continue
 			}
@@ -406,7 +415,12 @@ func Run(program []byte, args []string) {
 		rl.EndDrawing()
 	}
 
-	rl.CloseWindow()
+	f, err := os.OpenFile("out.gppr", os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		panic(err)
+	}
+
+	pr.Dump(f)
 }
 
 func CorrectedMouseY() int32 {

@@ -11,10 +11,10 @@ import (
 )
 
 type DisassembledProgram struct {
-	ProgramDefinitions [][]byte                       `json:"program_definitions"`
+	ProgramDefinitions [][]byte               `json:"program_definitions"`
 	InterruptTable     map[c.Interrupt]uint32 `json:"interrupt_table"`
-	Instructions       []Instruction                  `json:"instructions"`
-	StartIndexes       []uint32                       `json:"start_indexes"`
+	Instructions       []Instruction          `json:"instructions"`
+	StartIndexes       []uint32               `json:"start_indexes"`
 }
 
 var regMap map[c.Register]string
@@ -40,7 +40,7 @@ func init() {
 }
 
 func DecodeInstructionString(b []byte) (string, error) {
-	
+
 	itn, err := DecodeInstruction(b)
 
 	return fmt.Sprintf("%s %s", instructionMap[c.Instruction(itn.Instruction)], strings.Join(itn.StringData, " ")), err
@@ -69,14 +69,14 @@ func DecodeInstruction(b []byte) (Instruction, error) {
 
 	argumentData := ""
 
-	if b[0] & byte(c.ItnFlagLongArgImmediate) == byte(c.ItnFlagLongArgImmediate) {
-		
+	if b[0]&byte(c.ItnFlagLongArgImmediate) == byte(c.ItnFlagLongArgImmediate) {
+
 		argumentData = fmt.Sprintf("$%d", binary.LittleEndian.Uint32(itnDataBytes))
 
 		i.StringData = append(i.StringData, argumentData)
 
-	} else if (b[0] & byte(c.ItnFlagLeftArgImmediate)) != 0 || (b[0] & byte(c.ItnFlagRightArgImmediate)) != 0 {
-		
+	} else if (b[0]&byte(c.ItnFlagLeftArgImmediate)) != 0 || (b[0]&byte(c.ItnFlagRightArgImmediate)) != 0 {
+
 		immediateValue := binary.LittleEndian.Uint32(itnDataBytes) & c.InstructionArgImmediateMask
 		immediateRegister := (binary.LittleEndian.Uint32(itnDataBytes) & c.InstructionArgRegisterMask) >> 26
 
@@ -183,8 +183,8 @@ func Disassemble(programBytes []byte, verbose bool) (DisassembledProgram, error)
 
 	//Break definitions up into individual byte arrays
 
-	var i uint32 = 0
-	var definitionLength uint32 = 0
+	var i uint32
+	var definitionLength uint32
 	for i = 0; i < uint32(len(dataBlockBytes)); i += definitionLength + 4 {
 
 		definitionLength = binary.LittleEndian.Uint32(dataBlockBytes[i : i+4])
