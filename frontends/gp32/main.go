@@ -121,7 +121,9 @@ func Run(program []byte, args []string) {
 	for !rl.WindowShouldClose() {
 
 		if shouldCycle {
-			pr.Cycle()
+			pr.StartCycle()
+			gp32.Cycle()
+			pr.EndCycle()
 		}
 
 		//Render IO

@@ -27,8 +27,9 @@ type Profiler struct {
 	TotalCycles uint64
 	Data        map[uint64]*ProfileEntry
 
-	cycleStart int64
-	cycleEnd   int64
+	cycleAddress uint32
+	cycleStart   time.Time
+	cycleLength  uint64
 }
 
 func NewProfiler(machine *vm.VM) (*Profiler, error) {
@@ -166,7 +167,8 @@ func (p *Profiler) Load(r io.ReadSeeker) (int, error) {
 
 func (p *Profiler) StartCycle() {
 
-	p.cycleStart = time.Now().UnixNano()
+	p.cycleStart = time.Now()
+	p.cycleAddress = p.vm.Registers[constants.RProgramCounter]
 
 }
 
@@ -180,23 +182,24 @@ func (p *Profiler) Cycle() {
 
 func (p *Profiler) EndCycle() {
 
-	p.cycleEnd = time.Now().UnixNano()
+	p.cycleLength = uint64(time.Since(p.cycleStart).Nanoseconds())
+
 	p.TotalCycles++
 
-	key := genKey(p.vm.CurrentInstruction, p.vm.Registers[constants.RProgramCounter])
+	key := genKey(p.vm.CurrentInstruction, p.cycleAddress)
 
 	if _, exists := p.Data[key]; exists {
 
-		p.Data[key].TotalCycleTime += uint64(p.cycleEnd - p.cycleStart)
+		p.Data[key].TotalCycleTime += p.cycleLength
 		p.Data[key].TotalTimesExecuted++
 
 	} else {
 
 		p.Data[key] = &ProfileEntry{
-			TotalCycleTime:     uint64(p.cycleEnd - p.cycleStart),
+			TotalCycleTime:     p.cycleLength,
 			TotalTimesExecuted: 1,
 
-			Address:     p.vm.Registers[constants.RProgramCounter],
+			Address:     p.cycleAddress,
 			Instruction: [5]byte(p.vm.CurrentInstruction),
 		}
 
