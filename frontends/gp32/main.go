@@ -121,9 +121,7 @@ func Run(program []byte, args []string) {
 	for !rl.WindowShouldClose() {
 
 		if shouldCycle {
-			pr.StartCycle()
-			gp32.Cycle()
-			pr.EndCycle()
+			pr.Cycle()
 		}
 
 		//Render IO
@@ -288,7 +286,7 @@ func Run(program []byte, args []string) {
 					if gp32.Subscribed(c.IntKeyboardDown) {
 						log.Println("Interrupt: Key down")
 
-						gp32.SubbedInterruptQueue = append(gp32.SubbedInterruptQueue, c.IntKeyboardDown)
+						gp32.SubscribedInterruptQueue = append(gp32.SubscribedInterruptQueue, c.IntKeyboardDown)
 					}
 				} else if rl.IsKeyUp(key) {
 					log.Println("Interrupt: Bozo")
@@ -299,7 +297,7 @@ func Run(program []byte, args []string) {
 					if gp32.Subscribed(c.IntKeyboardUp) {
 						log.Println("Interrupt: Key up")
 
-						gp32.SubbedInterruptQueue = append(gp32.SubbedInterruptQueue, c.IntKeyboardUp)
+						gp32.SubscribedInterruptQueue = append(gp32.SubscribedInterruptQueue, c.IntKeyboardUp)
 					}
 				} else {
 
@@ -308,11 +306,11 @@ func Run(program []byte, args []string) {
 					gp32.Registers[c.RKeyboardCurrent] = uint32(key)
 
 					if gp32.Subscribed(c.IntKeyboardDown) {
-						gp32.SubbedInterruptQueue = append(gp32.SubbedInterruptQueue, c.IntKeyboardDown)
+						gp32.SubscribedInterruptQueue = append(gp32.SubscribedInterruptQueue, c.IntKeyboardDown)
 					}
 
 					if gp32.Subscribed(c.IntKeyboardUp) {
-						gp32.SubbedInterruptQueue = append(gp32.SubbedInterruptQueue, c.IntKeyboardUp)
+						gp32.SubscribedInterruptQueue = append(gp32.SubscribedInterruptQueue, c.IntKeyboardUp)
 					}
 
 				}
@@ -333,7 +331,7 @@ func Run(program []byte, args []string) {
 			previousMouse.MouseY = uint32(CorrectedMouseY())
 
 			if gp32.Subscribed(c.IntMouseMove) {
-				gp32.SubbedInterruptQueue = append(gp32.SubbedInterruptQueue, c.IntMouseMove)
+				gp32.SubscribedInterruptQueue = append(gp32.SubscribedInterruptQueue, c.IntMouseMove)
 			}
 
 		}
@@ -349,7 +347,7 @@ func Run(program []byte, args []string) {
 				if gp32.Subscribed(c.IntMouseDown) {
 					log.Println("Interrupt: Mouse down")
 
-					gp32.SubbedInterruptQueue = append(gp32.SubbedInterruptQueue, c.IntMouseDown)
+					gp32.SubscribedInterruptQueue = append(gp32.SubscribedInterruptQueue, c.IntMouseDown)
 				}
 
 			} else if rl.IsMouseButtonReleased(rl.MouseButton(i)) && i != int(previousMouse.Button) {
@@ -358,7 +356,7 @@ func Run(program []byte, args []string) {
 				if gp32.Subscribed(c.IntMouseUp) {
 					log.Println("Interrupt: Mouse up")
 
-					gp32.SubbedInterruptQueue = append(gp32.SubbedInterruptQueue, c.IntMouseUp)
+					gp32.SubscribedInterruptQueue = append(gp32.SubscribedInterruptQueue, c.IntMouseUp)
 				}
 
 			}
@@ -383,7 +381,7 @@ func Run(program []byte, args []string) {
 					}
 
 					if gp32.Subscribed(c.Interrupt(int(c.IntIO08) + index)) {
-						gp32.SubbedInterruptQueue = append(gp32.SubbedInterruptQueue, c.Interrupt(int(c.IntIO08)+index))
+						gp32.SubscribedInterruptQueue = append(gp32.SubscribedInterruptQueue, c.Interrupt(int(c.IntIO08)+index))
 					}
 
 				}

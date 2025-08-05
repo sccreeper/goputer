@@ -15,7 +15,7 @@ import (
 
 const (
 	MemSize          uint32 = VideoBufferSize + 65536 // 2 ^ 16
-	MaxRegister    uint16 = 55
+	MaxRegister      uint16 = 55
 	InstructionCount uint16 = 34
 	InterruptCount   uint16 = 24
 )
@@ -34,20 +34,20 @@ type VM struct {
 	ProgramBounds      uint32
 	Finished           bool
 
-	LeftArg uint16
+	LeftArg  uint16
 	RightArg uint16
 	LongArg  uint32
 
-	LeftArgVal uint32
+	LeftArgVal  uint32
 	RightArgVal uint32
-	LongArgVal uint32
+	LongArgVal  uint32
 
-	IsImmediate bool
+	IsImmediate       bool
 	ImmediateArgIndex int
 
-	InterruptQueue       []c.Interrupt
-	SubbedInterruptQueue []c.Interrupt
-	HandlingInterrupt    bool
+	InterruptQueue           []c.Interrupt
+	SubscribedInterruptQueue []c.Interrupt
+	HandlingInterrupt        bool
 
 	ExecutionPaused    bool
 	ExecutionPauseTime int64
@@ -88,8 +88,11 @@ func NewVM(vmProgram []byte, expansionsSupported bool) (*VM, error) {
 	machine.Registers[c.RStackPointer] = machine.Registers[c.RStackZeroPointer]
 
 	machine.InterruptQueue = make([]c.Interrupt, 0, 16)
-	machine.SubbedInterruptQueue = make([]c.Interrupt, 0, 16)
+	machine.SubscribedInterruptQueue = make([]c.Interrupt, 0, 16)
 	machine.HandlingInterrupt = false
+
+	machine.ExecutionPaused = false
+	machine.ExecutionPauseTime = 0
 
 	//Interrupt table
 
@@ -127,16 +130,10 @@ func (m *VM) Cycle() {
 
 	// If we are in the middle of a halt, pause then continue
 
-	if m.ExecutionPaused {
-
-		if time.Now().UnixMilli()-m.ExecutionPauseTime >= int64(m.LeftArgVal) {
-			m.ExecutionPaused = false
-			m.Registers[c.RProgramCounter] += comp.InstructionLength
-			return
-		} else {
-			return
-		}
-
+	if m.ExecutionPaused && (time.Now().UnixMilli()-m.ExecutionPauseTime >= int64(m.LeftArgVal)) {
+		m.ExecutionPaused = false
+		m.Registers[c.RProgramCounter] += comp.InstructionLength
+		return
 	}
 
 	m.IsImmediate = false
@@ -151,12 +148,12 @@ func (m *VM) Cycle() {
 	m.LongArg = binary.LittleEndian.Uint32(m.CurrentInstruction[1:5])
 
 	if (m.CurrentInstruction[0] & byte(c.ItnFlagLongArgImmediate)) == byte(c.ItnFlagLongArgImmediate) {
-		
+
 		m.LeftArgVal = uint32(m.LeftArg)
 		m.RightArgVal = uint32(m.RightArg)
 		m.LongArgVal = m.LongArg
 
-	} else if (m.CurrentInstruction[0] & byte(c.ItnFlagLeftArgImmediate)) != 0 || (m.CurrentInstruction[0] & byte(c.ItnFlagRightArgImmediate)) != 0 {
+	} else if (m.CurrentInstruction[0]&byte(c.ItnFlagLeftArgImmediate)) != 0 || (m.CurrentInstruction[0]&byte(c.ItnFlagRightArgImmediate)) != 0 {
 		m.IsImmediate = true
 
 		immVal := m.LongArg & c.InstructionArgImmediateMask
@@ -192,11 +189,11 @@ func (m *VM) Cycle() {
 
 	//Interrupts
 
-	if !m.HandlingInterrupt && len(m.SubbedInterruptQueue) > 0 {
+	if len(m.SubscribedInterruptQueue) > 0 && !m.HandlingInterrupt {
 
 		// Pop from queue
 		var i c.Interrupt
-		i, m.SubbedInterruptQueue = m.SubbedInterruptQueue[0], m.SubbedInterruptQueue[1:]
+		i, m.SubscribedInterruptQueue = m.SubscribedInterruptQueue[0], m.SubscribedInterruptQueue[1:]
 
 		// Frontends should do the checking but this is just to be sure.
 		if m.Subscribed(i) {

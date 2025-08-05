@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math"
 	"sccreeper/goputer/pkg/compiler"
@@ -223,7 +222,7 @@ func GetBuffer(this js.Value, args []js.Value) any {
 
 	} else {
 
-		panic(errors.New(fmt.Sprintf("'%s' is not a buffer.", args[0].String())))
+		panic(fmt.Errorf("'%s' is not a buffer.", args[0].String()))
 
 	}
 
@@ -233,7 +232,7 @@ func SendInterrupt(this js.Value, args []js.Value) any {
 
 	if js32.Subscribed(constants.Interrupt(args[0].Int())) {
 
-		js32.SubbedInterruptQueue = append(js32.SubbedInterruptQueue, constants.Interrupt(args[0].Int()))
+		js32.SubscribedInterruptQueue = append(js32.SubscribedInterruptQueue, constants.Interrupt(args[0].Int()))
 
 		return js.ValueOf(nil)
 

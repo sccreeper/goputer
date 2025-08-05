@@ -46,7 +46,7 @@ func SendInterrupt(i C.uint) {
 
 	if py32.Subscribed(constants.Interrupt(i)) {
 
-		py32.SubbedInterruptQueue = append(py32.SubbedInterruptQueue, constants.Interrupt(i))
+		py32.SubscribedInterruptQueue = append(py32.SubscribedInterruptQueue, constants.Interrupt(i))
 
 	}
 
