@@ -1,11 +1,13 @@
 package main
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"os"
 	"sccreeper/goputer/pkg/compiler"
 	"sccreeper/goputer/pkg/profiler"
+	"sccreeper/goputer/pkg/util"
 	"slices"
 	"strconv"
 
@@ -21,11 +23,12 @@ const (
 	sortModeMeanExecutionTime
 )
 
-const menuTextString string = "[red]F1:[white] Sorting attribute [red]F2:[white] Sorting direction"
+const menuTextString string = "[red]F1:[white] Sorting attribute [red]F2:[white] Sorting direction [red]F3:[white] Toggle conditional formatting"
 
 var sortMode int
-
 var sortAscending bool = true
+
+var useConditionalFormatting bool = true
 
 var profileEntriesSlice []profiler.ProfileEntry
 
@@ -34,7 +37,15 @@ var (
 	flexRoot  *tview.Flex
 )
 
-func setDefaultTableView() {
+func formatColour[T util.Number](val T, min T, max T) tcell.Color {
+	return tcell.NewRGBColor(
+		255,
+		int32(util.Lerp(1.0-util.Normalise(val, min, max), 0, 200)),
+		int32(util.Lerp(1.0-util.Normalise(val, min, max), 0, 200)),
+	)
+}
+
+func renderDefaultTableView() {
 
 	sortArrow := "▼"
 
@@ -106,6 +117,31 @@ func setDefaultTableView() {
 }
 
 func setTableData() {
+
+	minTotalCycleTime := slices.MinFunc(profileEntriesSlice, func(a profiler.ProfileEntry, b profiler.ProfileEntry) int {
+		return cmp.Compare(a.TotalCycleTime, b.TotalCycleTime)
+	}).TotalCycleTime
+	maxTotalCycleTime := slices.MaxFunc(profileEntriesSlice, func(a profiler.ProfileEntry, b profiler.ProfileEntry) int {
+		return cmp.Compare(a.TotalCycleTime, b.TotalCycleTime)
+	}).TotalCycleTime
+
+	temp := slices.MinFunc(profileEntriesSlice, func(a profiler.ProfileEntry, b profiler.ProfileEntry) int {
+		return cmp.Compare(a.TotalCycleTime/a.TotalTimesExecuted, b.TotalCycleTime/b.TotalTimesExecuted)
+	})
+	minSingleCycleTime := temp.TotalCycleTime / temp.TotalTimesExecuted
+
+	temp = slices.MaxFunc(profileEntriesSlice, func(a profiler.ProfileEntry, b profiler.ProfileEntry) int {
+		return cmp.Compare(a.TotalCycleTime/a.TotalTimesExecuted, b.TotalCycleTime/b.TotalTimesExecuted)
+	})
+	maxSingleCycleTime := temp.TotalCycleTime / temp.TotalTimesExecuted
+
+	minTimesExecuted := slices.MinFunc(profileEntriesSlice, func(a profiler.ProfileEntry, b profiler.ProfileEntry) int {
+		return cmp.Compare(a.TotalTimesExecuted, b.TotalTimesExecuted)
+	}).TotalTimesExecuted
+	maxTimesExecuted := slices.MaxFunc(profileEntriesSlice, func(a profiler.ProfileEntry, b profiler.ProfileEntry) int {
+		return cmp.Compare(a.TotalTimesExecuted, b.TotalTimesExecuted)
+	}).TotalTimesExecuted
+
 	for r, v := range profileEntriesSlice {
 
 		mainTable.SetCell(
@@ -150,6 +186,12 @@ func setTableData() {
 			).SetAlign(tview.AlignRight),
 		)
 
+		if useConditionalFormatting {
+			mainTable.GetCell(r+1, 2).SetTextColor(formatColour(v.TotalTimesExecuted, minTimesExecuted, maxTimesExecuted))
+			mainTable.GetCell(r+1, 3).SetTextColor(formatColour(v.TotalCycleTime, minTotalCycleTime, maxTotalCycleTime))
+			mainTable.GetCell(r+1, 4).SetTextColor(formatColour(v.TotalCycleTime/v.TotalTimesExecuted, minSingleCycleTime, maxSingleCycleTime))
+		}
+
 	}
 }
 
@@ -165,43 +207,19 @@ func changeSortingOrder(changeSortMode bool) {
 		switch sortMode {
 		case sortModeAddress:
 			slices.SortFunc(profileEntriesSlice, func(a profiler.ProfileEntry, b profiler.ProfileEntry) int {
-				if a.Address < b.Address {
-					return -1
-				} else if a.Address > b.Address {
-					return 1
-				} else {
-					return 0
-				}
+				return cmp.Compare(a.Address, b.Address)
 			})
 		case sortModeTimesExecuted:
 			slices.SortFunc(profileEntriesSlice, func(a profiler.ProfileEntry, b profiler.ProfileEntry) int {
-				if a.TotalTimesExecuted < b.TotalTimesExecuted {
-					return -1
-				} else if a.TotalTimesExecuted > b.TotalTimesExecuted {
-					return 1
-				} else {
-					return 0
-				}
+				return cmp.Compare(a.TotalTimesExecuted, b.TotalTimesExecuted)
 			})
 		case sortModeMeanExecutionTime:
 			slices.SortFunc(profileEntriesSlice, func(a profiler.ProfileEntry, b profiler.ProfileEntry) int {
-				if a.TotalCycleTime/a.TotalTimesExecuted < b.TotalCycleTime/b.TotalTimesExecuted {
-					return -1
-				} else if a.TotalCycleTime/a.TotalTimesExecuted > b.TotalCycleTime/b.TotalTimesExecuted {
-					return 1
-				} else {
-					return 0
-				}
+				return cmp.Compare(a.TotalCycleTime/a.TotalTimesExecuted, b.TotalCycleTime/b.TotalTimesExecuted)
 			})
 		case sortModeTotalExecutionTime:
 			slices.SortFunc(profileEntriesSlice, func(a profiler.ProfileEntry, b profiler.ProfileEntry) int {
-				if a.TotalCycleTime < b.TotalCycleTime {
-					return -1
-				} else if a.TotalCycleTime > b.TotalCycleTime {
-					return 1
-				} else {
-					return 0
-				}
+				return cmp.Compare(a.TotalCycleTime, b.TotalCycleTime)
 			})
 		}
 	}
@@ -251,15 +269,20 @@ func profile(ctx *cli.Context) error {
 
 		if event.Key() == tcell.KeyF1 {
 			changeSortingOrder(true)
-			setDefaultTableView()
+			renderDefaultTableView()
+
 			return nil
 		} else if event.Key() == tcell.KeyF2 {
 			sortAscending = !sortAscending
 
 			changeSortingOrder(false)
-			setDefaultTableView()
+			renderDefaultTableView()
 
 			return nil
+		} else if event.Key() == tcell.KeyF3 {
+			useConditionalFormatting = !useConditionalFormatting
+
+			renderDefaultTableView()
 		}
 
 		return event
@@ -279,7 +302,7 @@ func profile(ctx *cli.Context) error {
 	flexRoot.AddItem(mainTable, 0, 3, false)
 	flexRoot.AddItem(menuText, 5, 1, false)
 
-	setDefaultTableView()
+	renderDefaultTableView()
 
 	if err := app.SetRoot(flexRoot, true).EnableMouse(true).Run(); err != nil {
 		panic(err)
