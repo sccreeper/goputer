@@ -11,6 +11,7 @@ import (
 	"sccreeper/goputer/pkg/util"
 	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -31,14 +32,15 @@ var sortAscending bool = true
 
 var useConditionalFormatting bool = true
 
-var useGrouping bool
+var groupingEnabled bool
 
 var profileEntriesSlice []profiler.ProfileEntry
 var profileEntriesSliceGrouped []profiler.ProfileEntry
 
 var (
-	mainTable *tview.Table
-	flexRoot  *tview.Flex
+	mainTable              *tview.Table
+	flexRoot               *tview.Flex
+	instructionSearchInput *tview.InputField
 )
 
 func formatColour[T util.Number](val T, min T, max T) tcell.Color {
@@ -59,11 +61,11 @@ func renderDefaultTableView() {
 
 	var colOffset int
 
-	if useGrouping {
+	if groupingEnabled {
 		colOffset = -1
 	}
 
-	if !useGrouping {
+	if !groupingEnabled {
 
 		mainTable.SetCell(
 			0, 0,
@@ -134,7 +136,7 @@ func setTableData() {
 
 	var sliceToUse []profiler.ProfileEntry
 
-	if useGrouping {
+	if groupingEnabled {
 		sliceToUse = profileEntriesSliceGrouped
 	} else {
 		sliceToUse = profileEntriesSlice
@@ -165,13 +167,13 @@ func setTableData() {
 	}).TotalTimesExecuted
 
 	var colOffset int
-	if useGrouping {
+	if groupingEnabled {
 		colOffset = -1
 	}
 
 	for r, v := range sliceToUse {
 
-		if !useGrouping {
+		if !groupingEnabled {
 			mainTable.SetCell(
 				r+1, 0,
 				tview.NewTableCell(
@@ -184,7 +186,7 @@ func setTableData() {
 
 		var itnString string
 
-		if !useGrouping {
+		if !groupingEnabled {
 			itnString, _ = compiler.DecodeInstructionString(v.Instruction[:])
 		} else {
 			itnString = constants.InstructionIntsReversed[uint32(v.Instruction[0])]
@@ -233,7 +235,7 @@ func changeSortingOrder(changeSortMode bool) {
 		sortMode++
 
 		if sortMode > sortModeMeanExecutionTime {
-			if useGrouping {
+			if groupingEnabled {
 				sortMode = sortModeTimesExecuted
 			} else {
 				sortMode = sortModeAddress
@@ -241,7 +243,7 @@ func changeSortingOrder(changeSortMode bool) {
 		}
 
 		var sliceToUse []profiler.ProfileEntry
-		if useGrouping {
+		if groupingEnabled {
 			sliceToUse = profileEntriesSliceGrouped
 		} else {
 			sliceToUse = profileEntriesSlice
@@ -267,7 +269,7 @@ func changeSortingOrder(changeSortMode bool) {
 		}
 	}
 
-	if useGrouping {
+	if groupingEnabled {
 		if sortAscending && !changeSortMode {
 			slices.Reverse(profileEntriesSliceGrouped)
 		} else if !sortAscending {
@@ -361,13 +363,19 @@ func profile(ctx *cli.Context) error {
 
 			renderDefaultTableView()
 		} else if event.Key() == tcell.KeyF4 {
-			useGrouping = !useGrouping
+			groupingEnabled = !groupingEnabled
 			sortMode = sortModeTimesExecuted
 
 			mainTable.Clear()
 
 			changeSortingOrder(false)
 			renderDefaultTableView()
+
+			return nil
+		} else if event.Key() == tcell.KeyCtrlF {
+			app.SetFocus(instructionSearchInput)
+
+			return nil
 		}
 
 		return event
@@ -380,12 +388,46 @@ func profile(ctx *cli.Context) error {
 	mainTable = tview.NewTable().SetFixed(1, 5)
 	mainTable.Box = tableContainer
 
+	bottomGrid := tview.NewGrid().SetRows(2).SetColumns(1)
+	bottomGrid.SetBorder(true)
+	bottomGrid.SetSize(2, 0, 0, 1)
+
+	instructionSearchInput = tview.NewInputField().SetLabel("Instruction: ").SetFieldWidth(16)
+	instructionSearchInput.SetChangedFunc(func(text string) {
+
+		var sliceToUse []profiler.ProfileEntry
+
+		if groupingEnabled {
+			sliceToUse = profileEntriesSliceGrouped
+		} else {
+			sliceToUse = profileEntriesSlice
+		}
+
+		for i, v := range sliceToUse {
+
+			itnString, err := compiler.DecodeInstructionString(v.Instruction[:])
+			if err != nil {
+				panic(err)
+			}
+
+			if strings.Contains(strings.ToLower(itnString), strings.ToLower(text)) {
+
+				mainTable.SetOffset(i, 0)
+				return
+
+			}
+
+		}
+	})
+
 	menuText := tview.NewTextView().SetText(menuTextString)
-	menuText.SetBorder(true)
 	menuText.SetDynamicColors(true)
 
+	bottomGrid.AddItem(menuText, 0, 0, 1, 1, 1, 1, false)
+	bottomGrid.AddItem(instructionSearchInput, 1, 0, 1, 1, 1, 1, false)
+
 	flexRoot.AddItem(mainTable, 0, 3, false)
-	flexRoot.AddItem(menuText, 5, 1, false)
+	flexRoot.AddItem(bottomGrid, 5, 1, false)
 
 	renderDefaultTableView()
 
