@@ -10,6 +10,12 @@ func init() {
 		InterruptIntsReversed[v] = k
 	}
 
+	InstructionIntsReversed = make(map[uint32]string)
+
+	for k, v := range InstructionInts {
+		InstructionIntsReversed[v] = k
+	}
+
 }
 
 // Custom types
@@ -24,22 +30,23 @@ type DefType uint8
 type SoundWaveType uint32
 
 var InterruptIntsReversed map[Interrupt]string
+var InstructionIntsReversed map[uint32]string
 
 //Maps are used by compiler
 
 var InterruptInts = map[string]Interrupt{
 
-	"ss":  0, //Stop sound
-	"sf":  1, //Flush sound registers
-	"va":  2, //Render area
-	"vp":  3, //Render polygon
-	"vt":  4, //Flush video text
-	"vc":  5, //Clear video
-	"vi":  6, //Draw image
-	"vl":  7, //Draw a line from vx0,vy0 -> vx1,vy1
-	"iof": 8, //Flush IO registers to IO
-	"ioc": 9, //Set all IO to 0x0
-	"vf": 10, // Video flush
+	"ss":  0,  //Stop sound
+	"sf":  1,  //Flush sound registers
+	"va":  2,  //Render area
+	"vp":  3,  //Render polygon
+	"vt":  4,  //Flush video text
+	"vc":  5,  //Clear video
+	"vi":  6,  //Draw image
+	"vl":  7,  //Draw a line from vx0,vy0 -> vx1,vy1
+	"iof": 8,  //Flush IO registers to IO
+	"ioc": 9,  //Set all IO to 0x0
+	"vf":  10, // Video flush
 
 	//Subscribable interrupts
 
@@ -315,6 +322,10 @@ const (
 	IInterruptCallReturn Instruction = 33
 )
 
+const (
+	HighestInstruction uint32 = uint32(IInterruptCallReturn)
+)
+
 var InstructionArgumentCounts map[Instruction][]int = map[Instruction][]int{
 
 	IJump:                    {1},
@@ -482,12 +493,12 @@ const (
 )
 
 const (
-	ItnFlagLeftArgImmediate InstructionFlag = 0b10_000000
+	ItnFlagLeftArgImmediate  InstructionFlag = 0b10_000000
 	ItnFlagRightArgImmediate InstructionFlag = 0b01_000000
-	ItnFlagLongArgImmediate InstructionFlag = 0b11_000000
+	ItnFlagLongArgImmediate  InstructionFlag = 0b11_000000
 
-	InstructionMask byte = 0b00_111111
-	FlagMask byte = ^InstructionMask
+	InstructionMask             byte   = 0b00_111111
+	FlagMask                    byte   = ^InstructionMask
 	InstructionArgImmediateMask uint32 = 0b000000_11_11111111_11111111_11111111
-	InstructionArgRegisterMask uint32 = ^InstructionArgImmediateMask
+	InstructionArgRegisterMask  uint32 = ^InstructionArgImmediateMask
 )
