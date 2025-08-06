@@ -13,12 +13,12 @@ import (
 	"runtime"
 	"sccreeper/goputer/pkg/expansions"
 	"sccreeper/goputer/pkg/util"
+	"slices"
 	"strings"
 
 	"github.com/BurntSushi/toml"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
-	"golang.org/x/exp/slices"
 )
 
 type FrontendBuildConfig struct {

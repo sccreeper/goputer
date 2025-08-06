@@ -11,9 +11,9 @@ import (
 	"plugin"
 	"runtime"
 	"sccreeper/goputer/pkg/util"
+	"slices"
 
 	"github.com/BurntSushi/toml"
-	"golang.org/x/exp/slices"
 )
 
 const (

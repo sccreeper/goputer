@@ -9,6 +9,7 @@ require (
 	github.com/BurntSushi/toml v1.5.0
 	github.com/faiface/beep v1.1.0
 	github.com/fatih/color v1.18.0
+	github.com/gdamore/tcell/v2 v2.8.1
 	github.com/gen2brain/raylib-go/raylib v0.0.0-20250409052854-a4292f0f0412
 	github.com/magefile/mage v1.15.0
 	github.com/rivo/tview v0.0.0-20250625164341-a4a78f1e05cb
@@ -31,7 +32,6 @@ require (
 	github.com/fyne-io/image v0.1.1 // indirect
 	github.com/fyne-io/oksvg v0.1.0 // indirect
 	github.com/gdamore/encoding v1.0.1 // indirect
-	github.com/gdamore/tcell/v2 v2.8.1 // indirect
 	github.com/go-gl/gl v0.0.0-20231021071112-07e5d0ea2e71 // indirect
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20250301202403-da16c1255728 // indirect
 	github.com/go-text/render v0.2.0 // indirect
