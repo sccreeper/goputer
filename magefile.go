@@ -13,12 +13,12 @@ import (
 	"runtime"
 	"sccreeper/goputer/pkg/expansions"
 	"sccreeper/goputer/pkg/util"
+	"slices"
 	"strings"
 
 	"github.com/BurntSushi/toml"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
-	"golang.org/x/exp/slices"
 )
 
 type FrontendBuildConfig struct {
@@ -146,7 +146,6 @@ func All(includeList string) {
 	os.Chdir(previousDir)
 
 	copyFile("./cmd/gpimg/gpimg", "./build/gpimg")
-	copyFile("./.github/logo-32.png", "./build/logo.png")
 
 	//Copy the examples
 
@@ -276,6 +275,9 @@ func Dev(includeList string) {
 
 	compPath = filepath.Join(compPath, "build", "goputer")
 
+	previousDir, err := os.Getwd()
+	util.CheckError(err)
+
 	fmt.Println("Building example programs...")
 
 	os.Chdir("./build/examples/")
@@ -295,6 +297,14 @@ func Dev(includeList string) {
 		}
 
 	}
+
+	err = os.Chdir(previousDir)
+	util.CheckError(err)
+
+	fmt.Println("Copying testing bins...")
+
+	sh.Copy("./build/profile.gppr", "./bin/profile.gppr")
+	sh.Copy("./build/logo.png", "./.github/logo-32.png")
 
 }
 

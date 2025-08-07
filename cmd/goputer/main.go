@@ -106,6 +106,20 @@ func main() {
 				},
 			},
 			{
+				Name:    "profile",
+				Aliases: []string{"p"},
+				Usage:   "Load a profile (.gppr) file",
+				Action:  profile,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "file",
+						Aliases:  []string{"f"},
+						Usage:    "File to load",
+						Required: true,
+					},
+				},
+			},
+			{
 				Name:   "list",
 				Usage:  "Lists plugins available",
 				Action: _listFrontends,

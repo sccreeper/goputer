@@ -93,3 +93,15 @@ func Clamp[T Number](number T, min T, max T) T {
 		return number
 	}
 }
+
+func Normalise[T Number](val T, min T, max T) float64 {
+
+	return (float64(val) - float64(min)) / (float64(max) - float64(min))
+
+}
+
+func Lerp[T constraints.Float](scale T, min T, max T) T {
+
+	return (scale * (max - min)) + min
+
+}

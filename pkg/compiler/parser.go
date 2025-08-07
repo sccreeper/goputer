@@ -9,10 +9,9 @@ import (
 	"regexp"
 	c "sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/util"
+	"slices"
 	"strconv"
 	"strings"
-
-	"golang.org/x/exp/slices"
 )
 
 // Regex expressions
@@ -80,7 +79,7 @@ type Parser struct {
 	Verbose bool //Should there be output when parsing the file.
 
 	ErrorHandler func(error_type ErrorMessage, error_text string) //The error handler method, required.
-	FileReader   func(path string) ([]byte, error)             //The file reader method, required.
+	FileReader   func(path string) ([]byte, error)                //The file reader method, required.
 }
 
 // Parser method
@@ -444,7 +443,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 							hasImmediate = true
 							immediateIndex = argIndex
-						}	
+						}
 					}
 
 				}
@@ -496,10 +495,10 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 			//If does exist, continue
 
 			instructionToBeAdded := Instruction{
-				ArgumentCount: uint32(len(strings.Split(line, " ")) - 1),
-				StringData:    lineSplit[1:],
-				Instruction:   c.InstructionInts[strings.Split(line, " ")[0]],
-				HasImmediate: hasImmediate,
+				ArgumentCount:  uint32(len(strings.Split(line, " ")) - 1),
+				StringData:     lineSplit[1:],
+				Instruction:    c.InstructionInts[strings.Split(line, " ")[0]],
+				HasImmediate:   hasImmediate,
 				ImmediateIndex: immediateIndex,
 			}
 
@@ -643,14 +642,14 @@ const (
 
 // Evaluates an immediate expression and returns a constant.
 // If the value begins with ':' it tells the bytecode generator that a label was involved and thus to offset by the respective number of bytes.
-// 
+//
 // Expressions through left-to-right. Brackets are not supported.
 // e.g.
-// 
+//
 // 45 + 2 * 2
-// 
+//
 // 47 * 2
-// 
+//
 // 84
 func (p *Parser) parseImmediate(imm string) (stringResult string, intResult int) {
 
@@ -671,12 +670,12 @@ func (p *Parser) parseImmediate(imm string) (stringResult string, intResult int)
 	}
 
 	for _, char := range imm {
-		
+
 		if strings.Contains(integers, string(char)) && tokens[len(tokens)-1].Type == Integer || strings.Contains(alpha, string(char)) && tokens[len(tokens)-1].Type == Alpha {
 			tokens[len(tokens)-1].Data += string(char)
 			continue
 		} else {
-			
+
 			// Type mismatch
 
 			var tokenType tokenType
@@ -699,7 +698,6 @@ func (p *Parser) parseImmediate(imm string) (stringResult string, intResult int)
 
 		}
 
-
 	}
 
 	var hasLabel bool
@@ -710,7 +708,7 @@ func (p *Parser) parseImmediate(imm string) (stringResult string, intResult int)
 	for _, t := range tokens {
 
 		var val int
-		
+
 		switch t.Type {
 		case Alpha:
 
@@ -730,12 +728,12 @@ func (p *Parser) parseImmediate(imm string) (stringResult string, intResult int)
 					return
 				}
 
-				val = int(binary.LittleEndian.Uint32(p.ProgramStructure.Definitions[t.Data[2:]].ByteData[:4])) 
+				val = int(binary.LittleEndian.Uint32(p.ProgramStructure.Definitions[t.Data[2:]].ByteData[:4]))
 
 			default:
 				p.parsingError(strconv.ErrSyntax, ErrorMessage("symbol in immediate must begin with l: or d:"))
 			}
-			
+
 		case Integer:
 
 			if !intValueRegex.Match([]byte(t.Data)) {
@@ -751,7 +749,7 @@ func (p *Parser) parseImmediate(imm string) (stringResult string, intResult int)
 			}
 
 			val = x
-			
+
 		case Operator:
 			operation = t.Data[0]
 			continue

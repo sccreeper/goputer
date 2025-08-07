@@ -8,6 +8,7 @@ import (
 	"sccreeper/goputer/pkg/util"
 	"sccreeper/goputer/pkg/vm"
 	"testing"
+	"time"
 
 	"github.com/BurntSushi/toml"
 )
@@ -90,6 +91,77 @@ func TestInstructions(t *testing.T) {
 	}
 
 }
+
+func BenchmarkInstructions(b *testing.B) {
+
+	var benchmarkDetails TestArray
+
+	tomlFile, err := instructionTestFiles.ReadFile("test_files/instructions/instruction_tests.toml")
+	if err != nil {
+		panic(err)
+	}
+
+	toml.Unmarshal(tomlFile, &benchmarkDetails)
+
+	// Start VM runtime
+
+	for _, v := range benchmarkDetails.Tests {
+
+		programBytes := compile(v.CodeText)
+		test32, _ := vm.NewVM(programBytes, false)
+
+		initialProgramCounter := test32.Registers[constants.RProgramCounter]
+
+		b.Run(v.Name, func(b *testing.B) {
+
+			for b.Loop() {
+
+				for {
+					if test32.Finished {
+						break
+					}
+
+					test32.Cycle()
+				}
+
+				test32.Finished = false
+				test32.Registers[constants.RProgramCounter] = initialProgramCounter
+
+			}
+
+		})
+
+	}
+
+}
+
+func BenchmarkTimeNow(b *testing.B) {
+
+	for b.Loop() {
+
+		time.Now()
+
+	}
+
+}
+
+// func BenchmarkKeyChecking(b *testing.B) {
+
+// 	b.Run("map_test", func(b *testing.B) {
+
+// 		testMap := make(map[int]string, 0)
+
+// 		for b.Loop() {
+
+// 			if _, exists := testMap[b.N]; !exists {
+// 				testMap[b.N] = "hello world"
+// 			}
+
+// 		}
+
+// 	})
+
+// }
 
 // Basic instructions
 
@@ -178,7 +250,6 @@ func TestConditionalJump(t *testing.T) {
 		panic(err)
 	}
 
-	
 	test32, _ := vm.NewVM(compile(string(programText[:])), false)
 
 	var inJump bool = false

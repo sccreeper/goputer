@@ -15,10 +15,10 @@ import (
 )
 
 //go:embed {{.plugin}}
-var plugin_bytes []byte
+var pluginBytes []byte
 
 //go:embed {{.program_code}}
-var program_code []byte
+var programCode []byte
 
 var ProgramCheck string
 var PluginCheck string
@@ -26,41 +26,43 @@ var PluginCheck string
 func main() {
 
 	//Decompress
-	plugin_bytes = decompress(plugin_bytes)
-	program_code = decompress(program_code)
+	pluginBytes = decompress(pluginBytes)
+	programCode = decompress(programCode)
 
 	//Create temporary plugin and load
 
-	plugin_file, err := os.CreateTemp(os.TempDir(), "*")
-	check_err(err)
+	pluginFile, err := os.CreateTemp(os.TempDir(), "*")
+	checkErr(err)
 
-	plugin_file.Write(plugin_bytes)
+	pluginFile.Write(pluginBytes)
 
 	//Verify file integrity
 
-	if ProgramCheck != checksum(program_code) {
+	if ProgramCheck != checksum(programCode) {
 		log.Println("Invalid checksum!")
-		log.Println(checksum(program_code))
+		log.Println(checksum(programCode))
 		os.Exit(1)
 	}
 
-	frontend_plugin, err := plugin.Open(plugin_file.Name())
-	check_err(err)
+	frontend_plugin, err := plugin.Open(pluginFile.Name())
+	checkErr(err)
 
-	plugin_file_bytes, err := os.ReadFile(plugin_file.Name())
+	plugin_file_bytes, err := os.ReadFile(pluginFile.Name())
+	checkErr(err)
 
-	if PluginCheck != checksum(plugin_file_bytes) || PluginCheck != checksum(plugin_bytes) {
+	if PluginCheck != checksum(plugin_file_bytes) || PluginCheck != checksum(pluginBytes) {
 		log.Println("Invalid checksum")
 		os.Exit(1)
 	}
 
 	run_func, err := frontend_plugin.Lookup("Run")
+	checkErr(err)
 
-	run_func.(func([]byte, []string))(program_code, []string{filepath.Base(os.Args[0])})
+	run_func.(func([]byte, []string))(programCode, []string{filepath.Base(os.Args[0])})
 
 }
 
-func check_err(err error) {
+func checkErr(err error) {
 
 	if err != nil {
 		panic(err)
@@ -80,6 +82,7 @@ func checksum(b []byte) string {
 func decompress(b []byte) []byte {
 
 	z, err := zlib.NewReader(bytes.NewBuffer(b))
+	checkErr(err)
 	defer z.Close()
 
 	data, err := io.ReadAll(z)

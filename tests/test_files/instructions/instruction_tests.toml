@@ -3,8 +3,7 @@
 tests=[
 {name="move",is_file=false, text="""
 #label start
-incr r00
-mov r00 r01
+mov $1 r01
 """, check_value=1, check_reg="r01"},
 {name="load_store", is_file=false,text="""
 #def x 1
@@ -21,46 +20,35 @@ mov d0 r01
 {name="push_pop",is_file=false, check_reg="r01", check_value=1,text="""
 #label start
 
-incr r00
-push r00
+push $1
 pop r01
 """},
 
 {name="add", is_file=false, check_reg="a0", check_value=2, text="""
 #label start
 
-incr r00
-incr r01
-add r00 r01
+mov $1 r00
+add r00 $1
 """},
 
 {name="multiply", is_file=false, check_reg="a0", check_value=4, text="""
 #label start
 
-incr r00
-incr r00
+mov $2 r00
 mul r00 r00
 """},
 
 {name="divide", is_file=false, check_reg="a0", check_value=2, text="""
 #label start
 
-incr r00
-incr r00
-incr r00
-incr r00
-
-incr r01
-incr r01
-
-div r00 r01
+mov $10 r00
+div r00 $5
 """},
 {name="subtract", is_file=false, check_reg="a0", check_value=0, text="""
 #label start
 
-incr r00
-incr r01
-
+mov $1 r00
+mov $1 r01
 sub r01 r00
 """},
 {name="increment", is_file=false, check_reg="r00", check_value=1, text="""
@@ -71,26 +59,19 @@ incr r00
 {name="decrement", is_file=false, check_reg="r00", check_value=1, text="""
 #label start
 
-incr r00
-incr r00
+mov $2 r00
 decr r00
 """},
 {name="square_root", is_file=false, check_reg="a0", check_value=2, text="""
 #label start
 
-incr r00
-incr r00
-incr r00
-incr r00
-
+mov $4 r00
 sqrt r00
 """},
 {name="power", is_file=false, check_reg="a0", check_value=4, text="""
 #label start
 
-incr r00
-incr r00
-
+mov $2 r00
 pow r00 r00
 """},
 {name="clear", is_file=false, check_reg="r00", check_value=0, text="""
@@ -102,10 +83,7 @@ clr r00
 {name="sl", is_file=false, check_reg="a0", check_value=8, text="""
 #label start
 
-incr r00
-incr r00
-incr r00
-incr r00
+mov $4 r00
 
 incr r01
 
@@ -115,10 +93,7 @@ sl r00 r01
 {name="sr", is_file=false, check_reg="a0", check_value=2, text="""
 #label start
 
-incr r00
-incr r00
-incr r00
-incr r00
+mov $4 r00
 
 incr r01
 
@@ -135,105 +110,64 @@ inv r00
 {name="or", is_file=false, check_reg="a0", check_value=1020, text="""
 #label start
 
-#def x 1000
-#def y 500
-
-lda @x
-mov d0 r00
-
-lda @y
-mov d0 r01
+mov $500 r00
+mov $1000 r01
 
 or r00 r01
 """},
 {name="xor", is_file=false, check_reg="a0", check_value=540, text="""
 #label start
 
-#def x 1000
-#def y 500
-
-lda @x
-mov d0 r00
-
-lda @y
-mov d0 r01
+mov $1000 r00
+mov $500 r01
 
 xor r00 r01
 """},
 {name="and", is_file=false, check_reg="a0", check_value=480, text="""
 #label start
 
-#def x 1000
-#def y 500
-
-lda @x
-mov d0 r00
-
-lda @y
-mov d0 r01
+mov $1000 r00
+mov $500 r01
 
 and r00 r01
 """},
 {name="eq", is_file=false, check_reg="a0", check_value=4294967295, text="""
 #label start
 
-#def x 1000
-
-lda @x
-mov d0 r00
-mov d0 r01
+mov $1000 r00
+mov $1000 r01
 
 eq r00 r01
 """},
 {name="neq", is_file=false, check_reg="a0", check_value=0, text="""
 #label start
 
-#def x 1000
-
-lda @x
-mov d0 r00
-mov d0 r01
+mov $1000 r00
+mov $1000 r01
 
 neq r00 r01
 """},
 {name="gt", is_file=false, check_reg="a0", check_value=4294967295, text="""
 #label start
 
-#def x 1000
-
-lda @x
-mov d0 r00
-mov d0 r01
-
-incr r00
+mov $1001 r00
+mov $1000 r01
 
 gt r00 r01
 """},
 {name="lt", is_file=false, check_reg="a0", check_value=0, text="""
 #label start
 
-#def x 1000
-
-lda @x
-mov d0 r00
-mov d0 r01
-
-incr r00
+mov $1001 r00
+mov $1000 r01
 
 lt r00 r01
 """},
 {name="modulo", is_file=false, check_reg="a0", check_value=1, text="""
-
-#def five 5
-#def two 2
-
 #label start
 
-lda @five
-mov d0 r00
-
-lda @two
-mov d0 r01
+mov $5 r00
+mov $2 r01
 
 mod r00 r01
 
