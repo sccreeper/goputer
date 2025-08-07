@@ -420,6 +420,7 @@ func Run(program []byte, args []string) {
 		panic(err)
 	}
 
+	pr.Finish()
 	pr.Dump(f)
 }
 

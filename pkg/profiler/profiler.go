@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"sccreeper/goputer/pkg/compiler"
 	"sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/util"
@@ -20,6 +21,9 @@ type ProfileEntry struct {
 
 	Address     uint32
 	Instruction [5]byte
+
+	StandardDeviation float64
+	sumOfSquares      float64
 }
 
 type Profiler struct {
@@ -42,6 +46,26 @@ func NewProfiler(machine *vm.VM) (*Profiler, error) {
 		vm:   machine,
 		Data: make(map[uint64]*ProfileEntry),
 	}, nil
+
+}
+
+func (p *Profiler) Finish() {
+
+	for _, v := range p.Data {
+
+		if v.TotalTimesExecuted == 1 {
+			continue
+		}
+
+		variance := (v.sumOfSquares / float64(v.TotalTimesExecuted)) - math.Pow(float64(v.TotalCycleTime)/float64(v.TotalTimesExecuted), 2)
+
+		if math.Signbit(variance) {
+			variance = 0.0
+		}
+
+		v.StandardDeviation = math.Sqrt(variance)
+
+	}
 
 }
 
@@ -82,6 +106,7 @@ func (p *Profiler) Dump(w io.WriteSeeker) (int, error) {
 		dataToWrite = binary.LittleEndian.AppendUint32(dataToWrite, v.Address)
 		dataToWrite = binary.LittleEndian.AppendUint64(dataToWrite, v.TotalCycleTime)
 		dataToWrite = binary.LittleEndian.AppendUint64(dataToWrite, v.TotalTimesExecuted)
+		dataToWrite = binary.LittleEndian.AppendUint64(dataToWrite, math.Float64bits(v.StandardDeviation))
 
 		_, err = w.Seek(0, io.SeekEnd)
 		if err != nil {
@@ -137,7 +162,7 @@ func (p *Profiler) Load(r io.ReadSeeker) (int, error) {
 
 	for i := 0; i < int(numEntries); i++ {
 
-		var entryBytes [25]byte = [25]byte{}
+		var entryBytes [33]byte = [33]byte{}
 
 		n, err = r.Read(entryBytes[:])
 		if err == io.EOF {
@@ -157,6 +182,7 @@ func (p *Profiler) Load(r io.ReadSeeker) (int, error) {
 
 			TotalCycleTime:     binary.LittleEndian.Uint64(entryBytes[9:17]),
 			TotalTimesExecuted: binary.LittleEndian.Uint64(entryBytes[17:25]),
+			StandardDeviation:  math.Float64frombits(binary.LittleEndian.Uint64(entryBytes[25:33])),
 		}
 
 	}
@@ -192,6 +218,7 @@ func (p *Profiler) EndCycle() {
 
 		p.Data[key].TotalCycleTime += p.cycleLength
 		p.Data[key].TotalTimesExecuted++
+		p.Data[key].sumOfSquares += math.Pow(float64(p.cycleLength), 2)
 
 	} else {
 

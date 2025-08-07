@@ -105,7 +105,7 @@ func renderDefaultTableView() {
 	mainTable.SetCell(
 		0, colOffset+3,
 		tview.NewTableCell(
-			"Total execution time",
+			"Total execution time (ns)",
 		).SetBackgroundColor(tcell.ColorWhite).SetTextColor(tcell.ColorBlack),
 	)
 	if sortMode == sortModeTotalExecutionTime {
@@ -118,9 +118,17 @@ func renderDefaultTableView() {
 	mainTable.SetCell(
 		0, colOffset+4,
 		tview.NewTableCell(
-			"Mean execution time",
+			"Mean execution time (ns)",
 		).SetBackgroundColor(tcell.ColorWhite).SetTextColor(tcell.ColorBlack),
 	)
+
+	if !groupingEnabled {
+		mainTable.SetCell(
+			0, colOffset+5,
+			tview.NewTableCell("σ").SetBackgroundColor(tcell.ColorWhite).SetTextColor(tcell.ColorBlack).SetAlign(tview.AlignRight),
+		)
+	}
+
 	if sortMode == sortModeMeanExecutionTime {
 		mainTable.GetCell(0, colOffset+4).
 			SetBackgroundColor(tcell.ColorBlack).
@@ -209,16 +217,25 @@ func setTableData() {
 		mainTable.SetCell(
 			r+1, colOffset+3,
 			tview.NewTableCell(
-				fmt.Sprintf("%d ns", v.TotalCycleTime),
+				fmt.Sprintf("%d", v.TotalCycleTime),
 			).SetAlign(tview.AlignRight),
 		)
 
 		mainTable.SetCell(
 			r+1, colOffset+4,
 			tview.NewTableCell(
-				fmt.Sprintf("%d ns", v.TotalCycleTime/v.TotalTimesExecuted),
+				fmt.Sprintf("%d", v.TotalCycleTime/v.TotalTimesExecuted),
 			).SetAlign(tview.AlignRight),
 		)
+
+		if !groupingEnabled {
+			mainTable.SetCell(
+				r+1, colOffset+5,
+				tview.NewTableCell(
+					fmt.Sprintf("%f", v.StandardDeviation),
+				).SetAlign(tview.AlignRight),
+			)
+		}
 
 		if useConditionalFormatting {
 			mainTable.GetCell(r+1, colOffset+2).SetTextColor(formatColour(v.TotalTimesExecuted, minTimesExecuted, maxTimesExecuted))
@@ -370,6 +387,8 @@ func profile(ctx *cli.Context) error {
 
 			changeSortingOrder(false)
 			renderDefaultTableView()
+
+			mainTable.ScrollToBeginning()
 
 			return nil
 		} else if event.Key() == tcell.KeyCtrlF {
