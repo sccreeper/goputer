@@ -2,9 +2,11 @@ package main
 
 import (
 	"cmp"
+	"encoding/csv"
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sccreeper/goputer/pkg/compiler"
 	"sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/profiler"
@@ -301,6 +303,40 @@ func changeSortingOrder(changeSortMode bool) {
 	}
 }
 
+func exportCsv(ctx *cli.Context) error {
+
+	filePath := filepath.Base(ctx.String("file")) + ".csv"
+
+	csvFile, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+
+	w := csv.NewWriter(csvFile)
+
+	w.Write([]string{"address", "instruction", "timesExecuted", "totalExecutionTime", "meanExecutionTime", "standardDeviation"})
+
+	for _, v := range profileEntriesSlice {
+		itnString, _ := compiler.DecodeInstructionString(v.Instruction[:])
+
+		w.Write(
+			[]string{
+				strconv.Itoa(int(v.Address)),
+				itnString,
+				strconv.Itoa(int(v.TotalTimesExecuted)),
+				strconv.Itoa(int(v.TotalCycleTime)),
+				strconv.Itoa(int(v.TotalCycleTime) / int(v.TotalTimesExecuted)),
+				fmt.Sprintf("%f", v.StandardDeviation),
+			},
+		)
+	}
+
+	w.Flush()
+
+	return nil
+
+}
+
 func profile(ctx *cli.Context) error {
 
 	filePath := ctx.String("file")
@@ -391,6 +427,12 @@ func profile(ctx *cli.Context) error {
 			mainTable.ScrollToBeginning()
 
 			return nil
+		} else if event.Key() == tcell.KeyF5 {
+
+			exportCsv(ctx)
+
+			return nil
+
 		} else if event.Key() == tcell.KeyCtrlF {
 			app.SetFocus(instructionSearchInput)
 
