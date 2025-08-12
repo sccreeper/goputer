@@ -4,7 +4,7 @@ name = "GP32"
 description = "Default graphical frontend"
 authour = "Oscar Peace (sccreeper)"
 repository = "https://github.com/sccreeper/goputer"
-is_plugin = true
+run = ["./gp32", "-e", "$executable", "$use_profiler:--useprofiler", "$profiler_out:--profilerout", "$profiler_out"]
 
 [build]
 
