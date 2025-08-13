@@ -17,5 +17,7 @@
     "go.formatFlags": [
         "fmt",
         "--stdin"
-    ]
+    ],
+
+    "python.defaultInterpreterPath": "./.venv/bin/python"
 }
