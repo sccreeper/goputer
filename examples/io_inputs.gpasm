@@ -23,8 +23,8 @@ iret
 #intsub io15 handle_io
 
 #label hang_loop
-jmp hang_loop
+jmp @hang_loop
 
 
 #label start
-jmp hang_loop
+jmp @hang_loop

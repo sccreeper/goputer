@@ -5,7 +5,7 @@ mkdir ./build
 
 echo Building WASM...
 
-GOOS=js GOARCH=wasm go build -ldflags "-s -w" -o ./static/main.wasm main.go
+GOOS=js GOARCH=wasm go build -ldflags "-s -w" -o ./static/main.wasm .
 
 echo Copying files...
 

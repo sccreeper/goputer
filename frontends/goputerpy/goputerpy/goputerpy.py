@@ -54,6 +54,12 @@ _get_arg.restype = ctypes.c_uint32
 _get_current_instruction = _lib.GetCurrentInstruction
 _get_current_instruction.restype = ctypes.c_uint32
 
+_get_instruction_string = _lib.GetInstructionString
+_get_instruction_string.restype = ctypes.c_void_p
+
+_copy_video_buffer = _lib.CopyFrameBuffer
+_copy_video_buffer.restype = ctypes.c_void_p
+
 print("SO loaded!")
 
 _vm_inited = False
@@ -142,3 +148,27 @@ def GetSmallArgs() -> tuple[2]:
 
 def GetInstruction() -> int:
     return int(_get_current_instruction())
+
+def GetInstructionString() -> str:
+
+    itn_ptr = _get_instruction_string()
+    itn_bytes = ctypes.string_at(itn_ptr)
+    _free(itn_ptr)
+
+    return itn_bytes.decode("utf-8")
+
+FRAMEBUFFER_SIZE = 320 * 240 * 3
+
+video_buffer = None
+
+def InitVideoBuffer() -> None:
+    global video_buffer
+
+    _lib.GetVideoBufferPtr.restype = ctypes.POINTER(ctypes.c_uint8)
+
+    ptr = _lib.GetVideoBufferPtr()
+
+    video_buffer = (ctypes.c_uint8 * FRAMEBUFFER_SIZE).from_address(ctypes.addressof(ptr.contents))
+
+def UpdateVideoBuffer() -> None:
+    _copy_video_buffer()

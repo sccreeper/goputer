@@ -188,7 +188,7 @@ export function handleKeyDown(e) {
     
     if (globals.vmIsAlive) {
         e.preventDefault()
-        globals.keysDown.push(e.keyCode)
+        globals.keysDown.push(goputer.mappedKey(e.code))
     }
 
 }
@@ -201,7 +201,7 @@ export function handleKeyUp(e) {
     
     if (globals.vmIsAlive) {
         e.preventDefault()
-        globals.keysUp.push(e.keyCode) // I am aware this is depreceated however, this is the most practical way to get integer keycodes.
+        globals.keysUp.push(goputer.mappedKey(e.code)) // I am aware this is depreceated however, this is the most practical way to get integer keycodes.
     }
 
 }
@@ -311,9 +311,10 @@ export function Cycle() {
 
         //Keyboard
 
-        if (globals.keysDown.length > 0 ) {
+        while (globals.keysDown.length > 0) {
             
             goputer.setRegister(registerInts["kc"], globals.keysDown.pop())
+            goputer.setRegister(registerInts["kp"], 1)
 
             if (goputer.isSubscribed(interruptInts["kd"])) {
                 goputer.sendInterrupt(interruptInts["kd"])
@@ -321,9 +322,10 @@ export function Cycle() {
 
         }
 
-        if (globals.keysUp.length > 0) {
+        while (globals.keysUp.length > 0) {
             
-            goputer.setRegister(registerInts["kp"], globals.keysUp.pop())
+            goputer.setRegister(registerInts["kc"], globals.keysUp.pop())
+            goputer.setRegister(registerInts["kp"], 0)
 
             if (goputer.isSubscribed(interruptInts["ku"])) {
                 goputer.sendInterrupt(interruptInts["ku"])

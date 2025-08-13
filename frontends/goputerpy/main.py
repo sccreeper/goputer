@@ -8,6 +8,7 @@ from goputerpy import goputerpy as gppy
 from goputerpy import constants as c
 from goputerpy import util
 from goputerpy.sound import SoundManager
+from goputerpy.keycodes import map_keycode
 
 def correct_mouse_y(y: int) -> int:
     return y - r.TOTAL_Y_OFFSET
@@ -32,8 +33,8 @@ screen = pg.display.set_mode(size)
 pg.display.set_caption(f"goputerpy - {os.path.basename(sys.argv[1])}")
 font = pg.font.SysFont(None, 32)
 
-video_surface = pg.surface.Surface((640, 480))
-brightness_surface = pg.surface.Surface((640, 480))
+video_surface = pg.surface.Surface((320, 240))
+brightness_surface = pg.surface.Surface((320, 240))
 io_surface = pg.surface.Surface((640, r.IO_UI_SIZE))
 debug_surface = pg.surface.Surface((640, r.DEBUG_UI_SIZE))
 
@@ -51,6 +52,7 @@ sound_manager = SoundManager()
 
 #goputer init
 gppy.Init(list(f_bytes))
+gppy.InitVideoBuffer()
 
 #io init
 
@@ -68,79 +70,18 @@ for i in range(8):
         Switch((i + 8) * r.IO_SWITCH_SIZE, i)
     )
 
-video_text = ""
-
 prev_mouse_pos = (0, 0)
 
 clock = pg.time.Clock()
-
 
 while True:
 
     #Handle called interrupts
 
     match gppy.GetInterrupt():
-        case c.Interrupt.IntVideoText:
-            #Decode string
-            text = gppy.GetBuffer(c.Register.RVideoText)
-
-            if [0] == 0:
-                video_text = ""
-            else:
-                for b in text:
-                    video_text += b.decode()
-
-                # Handle newlines
-
-                text_lines = video_text.splitlines()
-
-                line_count = 0
-
-                for l in text_lines:
-                    txt_img = font.render(
-                        l.replace("\x00", ""), 
-                        True, 
-                        util.convert_colour(gppy.GetRegister(c.Register.RVideoColour)),
-                        )
-                    
-                    video_surface.blit(txt_img, (gppy.GetRegister(c.Register.RVideoX0), gppy.GetRegister(c.Register.RVideoY0)  + (line_count * 32)))
-
-                    line_count += 1
-
-        case c.Interrupt.IntVideoClear:
-            video_surface.fill(util.convert_colour(gppy.GetRegister(c.Register.RVideoColour)))
-
-        case c.Interrupt.IntVideoArea:
-            pg.draw.rect(
-            video_surface, 
-            util.convert_colour(gppy.GetRegister(c.Register.RVideoColour)),
-            pg.Rect(
-                gppy.GetRegister(c.Register.RVideoX0),
-                gppy.GetRegister(c.Register.RVideoY0),
-                gppy.GetRegister(c.Register.RVideoX1) - gppy.GetRegister(c.Register.RVideoX0),
-                gppy.GetRegister(c.Register.RVideoY1) - gppy.GetRegister(c.Register.RVideoY0),
-            )
-            )
-        
-        case c.Interrupt.IntVideoLine:
-            pg.draw.line(
-                video_surface,
-                util.convert_colour(gppy.GetRegister(c.Register.RVideoColour)),
-                pg.Vector2(
-                    x=gppy.GetRegister(c.Register.RVideoX0),
-                    y=gppy.GetRegister(c.Register.RVideoY0),
-                    ),
-                pg.Vector2(
-                    x=gppy.GetRegister(c.Register.RVideoX1),
-                    y=gppy.GetRegister(c.Register.RVideoY1),
-                )
-            )
-        case c.Interrupt.IntVideoPixel:
-            video_surface.set_at(
-                (gppy.GetRegister(c.Register.RVideoX0),
-                gppy.GetRegister(c.Register.RVideoY0)),
-                util.convert_colour(gppy.GetRegister(c.Register.RVideoColour)),
-                )
+        case c.Interrupt.IntVideoFlush:
+            gppy.UpdateVideoBuffer()
+            video_surface = pg.image.frombuffer(gppy.video_buffer, (320, 240), "RGB")
         case c.Interrupt.IntSoundFlush:
             sound_manager.play(
                 gppy.GetRegister(c.Register.RSoundTone),
@@ -162,8 +103,8 @@ while True:
         
             case pg.MOUSEMOTION:
                 if pg.mouse.get_pos()[0] != prev_mouse_pos[0] or pg.mouse.get_pos()[1] != prev_mouse_pos[1]:
-                    gppy.SetRegister(c.Register.RMouseX, pg.mouse.get_pos()[0])
-                    gppy.SetRegister(c.Register.RMouseY, correct_mouse_y(pg.mouse.get_pos()[1]))
+                    gppy.SetRegister(c.Register.RMouseX, int(pg.mouse.get_pos()[0] / 2))
+                    gppy.SetRegister(c.Register.RMouseY, int(correct_mouse_y(pg.mouse.get_pos()[1]) / 2))
 
                     prev_mouse_pos = pg.mouse.get_pos()
 
@@ -199,16 +140,16 @@ while True:
                         gppy.SendInterrupt(c.Interrupt.IntMouseUp)
             
             case pg.KEYDOWN:
-                gppy.SetRegister(c.Register.RKeyboardCurrent, event.key)
+                gppy.SetRegister(c.Register.RKeyboardCurrent, map_keycode(event.key))
 
                 if gppy.IsSubscribed(c.Interrupt.IntKeyboardDown):
                     gppy.SendInterrupt(c.Interrupt.IntKeyboardDown)
 
             case pg.KEYUP:
-                gppy.SetRegister(c.Register.RKeyboardPressed, event.key)
+                gppy.SetRegister(c.Register.RKeyboardPressed, map_keycode(event.key))
 
                 if gppy.IsSubscribed(c.Interrupt.IntKeyboardUp):
-                    gppy.SendInterrupt(c.Interrupt.IntKeyboardDown)
+                    gppy.SendInterrupt(c.Interrupt.IntKeyboardUp)
 
             case _:
                 continue
@@ -242,7 +183,7 @@ while True:
     #Draw debug UI
 
     prc_img = font.render(f"Program counter: {util.convert_to_hex(gppy.GetRegister(c.Register.RProgramCounter))}", True, r.WHITE)
-    itn_img = font.render(f"Current instruction: {util.generate_instruction_string(gppy.GetInstruction(), gppy.GetLargeArg(), gppy.GetSmallArgs())}", True, r.WHITE)
+    itn_img = font.render(f"Current instruction: {gppy.GetInstructionString()}", True, r.WHITE)
 
     debug_surface.fill(r.GREY)
 
@@ -252,7 +193,7 @@ while True:
     screen.fill(r.BLACK)
     screen.blit(debug_surface, (0, 0))
     screen.blit(io_surface, (0, r.DEBUG_UI_SIZE + r.SEPERATOR_SIZE))
-    screen.blit(video_surface, (0, r.TOTAL_Y_OFFSET))
+    screen.blit(pg.transform.scale_by(video_surface, 2.0), (0, r.TOTAL_Y_OFFSET))
 
     if gppy.IsFinished():
         pg.display.flip()
@@ -262,7 +203,7 @@ while True:
 
     gppy.Cycle()
 
-    clock.tick(120)
+    clock.tick()
 
 #Hang once finished executing code
 while True:

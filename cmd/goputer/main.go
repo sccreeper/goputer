@@ -8,16 +8,14 @@ import (
 	"runtime"
 
 	"github.com/urfave/cli/v2"
-
-	_ "embed"
 )
 
 func main() {
 
 	if runtime.GOOS == "windows" {
-		PluginExt = ".dll"
+		pluginExt = ".dll"
 	} else {
-		PluginExt = ".so"
+		pluginExt = ".so"
 	}
 
 	app := &cli.App{
@@ -36,37 +34,37 @@ func main() {
 					&cli.BoolFlag{
 						Name:        "json",
 						Usage:       "Enable JSON outputting",
-						Destination: &UseJson,
+						Destination: &useJson,
 					},
 					&cli.StringFlag{
 						Name:        "jsonpath",
 						Usage:       "Output program structure/data in `FILE` ",
-						Destination: &JsonPath,
+						Destination: &jsonPath,
 					},
 					&cli.StringFlag{
 						Name:        "output",
 						Aliases:     []string{"o"},
 						Usage:       "Output binary to `FILE`",
-						Destination: &OutputPath,
+						Destination: &programCompileOut,
 					},
 					&cli.BoolFlag{
 						Name:        "verbose",
 						Aliases:     []string{"v"},
 						Usage:       "Verbose log output",
-						Destination: &BeVerbose,
+						Destination: &beVerbose,
 					},
 					&cli.BoolFlag{
 						Name:        "standalone",
 						Aliases:     []string{"s"},
 						Usage:       "Create a standalone executable",
-						Destination: &IsStandalone,
+						Destination: &isStandalone,
 						Required:    false,
 					},
 					&cli.StringFlag{
 						Name:        "frontend",
 						Aliases:     []string{"f"},
 						Usage:       "Frontend to create standalone with",
-						Destination: &FrontendToUse,
+						Destination: &frontendToUse,
 						Required:    false,
 					},
 				},
@@ -80,7 +78,7 @@ func main() {
 					&cli.BoolFlag{
 						Name:        "verbose",
 						Aliases:     []string{"v"},
-						Destination: &BeVerbose,
+						Destination: &beVerbose,
 					},
 				},
 			},
@@ -88,20 +86,30 @@ func main() {
 				Name:    "run",
 				Aliases: []string{"r"},
 				Usage:   "Run programs",
-				Action:  _run,
+				Action:  runFrontend,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:    "frontend",
 						Aliases: []string{"f"},
 						Usage:   "Frontend to use",
 						// DefaultText: "gp32",
-						Destination: &FrontendToUse,
+						Destination: &frontendToUse,
 					},
 					&cli.StringFlag{
 						Name:        "exec",
 						Aliases:     []string{"e"},
 						Usage:       "Executable to run",
-						Destination: &GPExec,
+						Destination: &gpExec,
+					},
+					&cli.BoolFlag{
+						Name:        "useprofiler",
+						Usage:       "Wether or not to use the profiler",
+						Destination: &useProfiler,
+					},
+					&cli.StringFlag{
+						Name:        "profilerout",
+						Usage:       "Output profiler to `FILE`",
+						Destination: &profilerOut,
 					},
 				},
 			},
@@ -122,7 +130,7 @@ func main() {
 			{
 				Name:   "list",
 				Usage:  "Lists plugins available",
-				Action: _listFrontends,
+				Action: listFrontends,
 			},
 		},
 	}

@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"path/filepath"
 	"plugin"
 	"runtime"
 	"sccreeper/goputer/pkg/util"
@@ -17,8 +18,11 @@ import (
 )
 
 const (
-	ExpansionDir          string = "expansions"
-	ExpansionManifestName string = "expansion.toml"
+	expansionManifestName string = "expansion.toml"
+)
+
+var (
+	expansionDir string = "expansions"
 )
 
 type ExpansionManifest struct {
@@ -71,7 +75,9 @@ func LoadExpansions() {
 
 	var brokenPlugins []string = make([]string, 0)
 
-	directories, err := os.ReadDir(ExpansionDir)
+	expansionDir = filepath.Join(os.Getenv("GOPUTER_ROOT"), expansionDir)
+
+	directories, err := os.ReadDir(expansionDir)
 	util.CheckError(err)
 
 	for _, v := range directories {
@@ -84,7 +90,7 @@ func LoadExpansions() {
 			continue
 		} else {
 
-			if _, err := os.Stat(path.Join(ExpansionDir, v.Name(), "expansion.toml")); err != nil {
+			if _, err := os.Stat(path.Join(expansionDir, v.Name(), expansionManifestName)); err != nil {
 				log.Printf("Plugin manifest for %s is incorrect\n", v.Name())
 				log.Println(err.Error())
 				continue
@@ -94,7 +100,7 @@ func LoadExpansions() {
 				var expLoaded ExpansionLoaded
 
 				// Load TOML
-				configBytes, err := os.ReadFile(path.Join(ExpansionDir, v.Name(), "expansion.toml"))
+				configBytes, err := os.ReadFile(path.Join(expansionDir, v.Name(), "expansion.toml"))
 				loaderError(err, v.Name())
 
 				toml.Unmarshal(configBytes, &expConfig)
@@ -109,7 +115,7 @@ func LoadExpansions() {
 				if expLoaded.Manifest.Info.Native {
 					// Load symbols from plugin file.
 
-					expLoaded.ExpansionObjectFile, err = plugin.Open(path.Join(ExpansionDir, v.Name(), fmt.Sprintf("%s.%s", v.Name(), nativeExtension)))
+					expLoaded.ExpansionObjectFile, err = plugin.Open(path.Join(expansionDir, v.Name(), fmt.Sprintf("%s.%s", v.Name(), nativeExtension)))
 					loaderError(err, v.Name())
 
 					handlerTemp, err := expLoaded.ExpansionObjectFile.Lookup("Handler")

@@ -7,6 +7,8 @@ import (
 	"log"
 	"math"
 	"os"
+	"path/filepath"
+	"sccreeper/goputer/frontends/gp32/keyboard"
 	"sccreeper/goputer/frontends/gp32/rendering"
 	"sccreeper/goputer/frontends/gp32/sound"
 	c "sccreeper/goputer/pkg/constants"
@@ -17,12 +19,18 @@ import (
 
 	"github.com/faiface/beep/speaker"
 	rl "github.com/gen2brain/raylib-go/raylib"
+	"github.com/urfave/cli/v2"
 )
 
 var Name string = "GP32"
 var Description string = "Default graphical front end"
 var Authour string = "Oscar Peace (sccreeper)"
 var Repository string = "https://github.com/sccreeper/goputer"
+
+var useProfiler bool
+var profilerOut string
+
+var programPath string
 
 //To avoid double firing interrupts
 
@@ -32,14 +40,20 @@ type PreviousMousePos struct {
 	Button uint32
 }
 
-func Run(program []byte, args []string) {
+func Run(ctx *cli.Context) error {
+
+	log.Println("Reading file...")
+
+	programBytes, err := os.ReadFile(programPath)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	//Init
 
 	log.Println("GP32 frontend starting...")
-	fmt.Println()
 
-	rl.InitWindow(640, 480+int32(rendering.TotalYOffset), fmt.Sprintf("gp32 - %s", args[0]))
+	rl.InitWindow(640, 480+int32(rendering.TotalYOffset), fmt.Sprintf("gp32 - %s", programPath))
 	defer rl.CloseWindow()
 
 	var gp32 *vm.VM
@@ -89,13 +103,18 @@ func Run(program []byte, args []string) {
 		Button: 64,
 	}
 
-	gp32, _ = vm.NewVM(program, true)
+	gp32, _ = vm.NewVM(programBytes, true)
 
-	// Temporary implementation for profiling
+	var pr *profiler.Profiler
 
-	pr, err := profiler.NewProfiler(gp32)
-	if err != nil {
-		panic(err)
+	if useProfiler {
+
+		var err error
+		pr, err = profiler.NewProfiler(gp32)
+		if err != nil {
+			panic(err)
+		}
+
 	}
 
 	expansions.SetAttribute("goputer.sys", "name", "gp32")
@@ -121,7 +140,11 @@ func Run(program []byte, args []string) {
 	for !rl.WindowShouldClose() {
 
 		if shouldCycle {
-			pr.Cycle()
+			if useProfiler {
+				pr.Cycle()
+			} else {
+				gp32.Cycle()
+			}
 		}
 
 		//Render IO
@@ -276,34 +299,26 @@ func Run(program []byte, args []string) {
 
 			if key != 0 {
 
-				log.Println("Interrupt: Key pressed")
-
 				if rl.IsKeyDown(key) {
 
-					gp32.Registers[c.RKeyboardCurrent] = uint32(key)
+					gp32.Registers[c.RKeyboardCurrent] = uint32(keyboard.MapKey(key))
 					gp32.Registers[c.RKeyboardPressed] = 1
 
 					if gp32.Subscribed(c.IntKeyboardDown) {
-						log.Println("Interrupt: Key down")
-
 						gp32.SubscribedInterruptQueue = append(gp32.SubscribedInterruptQueue, c.IntKeyboardDown)
 					}
 				} else if rl.IsKeyUp(key) {
-					log.Println("Interrupt: Bozo")
 
-					gp32.Registers[c.RKeyboardCurrent] = uint32(key)
+					gp32.Registers[c.RKeyboardCurrent] = uint32(keyboard.MapKey(key))
 					gp32.Registers[c.RKeyboardPressed] = 0
 
 					if gp32.Subscribed(c.IntKeyboardUp) {
-						log.Println("Interrupt: Key up")
-
 						gp32.SubscribedInterruptQueue = append(gp32.SubscribedInterruptQueue, c.IntKeyboardUp)
 					}
 				} else {
 
-					log.Println("Interrupt: Triggering ku, kd")
-
-					gp32.Registers[c.RKeyboardCurrent] = uint32(key)
+					gp32.Registers[c.RKeyboardCurrent] = uint32(keyboard.MapKey(key))
+					gp32.Registers[c.RKeyboardPressed] = 0
 
 					if gp32.Subscribed(c.IntKeyboardDown) {
 						gp32.SubscribedInterruptQueue = append(gp32.SubscribedInterruptQueue, c.IntKeyboardDown)
@@ -415,17 +430,64 @@ func Run(program []byte, args []string) {
 		rl.EndDrawing()
 	}
 
-	f, err := os.OpenFile("out.gppr", os.O_WRONLY|os.O_CREATE, 0600)
-	if err != nil {
-		panic(err)
+	if useProfiler {
+		f, err := os.OpenFile(
+			filepath.Join(os.Getenv("GOPUTER_CWD"), ctx.String("profilerout")),
+			os.O_WRONLY|os.O_CREATE,
+			0600,
+		)
+
+		if err != nil {
+			panic(err)
+		}
+
+		pr.Finish()
+		pr.Dump(f)
 	}
 
-	pr.Finish()
-	pr.Dump(f)
+	return nil
 }
 
 func CorrectedMouseY() int32 {
 
 	return (rl.GetMouseY() - int32(rendering.TotalYOffset)) / 2
+
+}
+
+func main() {
+
+	if _, exists := os.LookupEnv("GOPUTER_ROOT"); !exists {
+		log.Fatal("GOPUTER_ROOT not set")
+	}
+
+	app := &cli.App{
+		Name:   "gp32 Frontend",
+		Usage:  "golang frontend for goputer",
+		Action: Run,
+
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:        "executable",
+				Aliases:     []string{"e"},
+				Usage:       "Run `FILE`",
+				Required:    true,
+				Destination: &programPath,
+			},
+			&cli.BoolFlag{
+				Name:        "useprofiler",
+				Destination: &useProfiler,
+			},
+			&cli.StringFlag{
+				Name:        "profilerout",
+				Usage:       "Output to `FILE`",
+				DefaultText: "out.gppr",
+				Destination: &profilerOut,
+			},
+		},
+	}
+
+	if err := app.Run(os.Args); err != nil {
+		log.Fatal(err)
+	}
 
 }

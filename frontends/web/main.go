@@ -1,4 +1,4 @@
-//go:build js && wasm
+//go:build js
 
 // WASM "proxy" layer between JS and goputer
 package main
@@ -46,7 +46,7 @@ var fileMap map[string]File
 
 //Custom compile and run methods.
 
-func Compile() js.Func {
+func compile() js.Func {
 
 	compileFunc := js.FuncOf(func(this js.Value, args []js.Value) any {
 
@@ -82,7 +82,7 @@ func fileReader(path string) ([]byte, error) {
 	}
 }
 
-func UpdateFile(this js.Value, args []js.Value) any {
+func updateFile(this js.Value, args []js.Value) any {
 
 	fileData := make([]byte, args[2].Int())
 	js.CopyBytesToGo(fileData, args[1])
@@ -112,7 +112,7 @@ func UpdateFile(this js.Value, args []js.Value) any {
 	return js.ValueOf(nil)
 }
 
-func GetFile(this js.Value, args []js.Value) any {
+func getFile(this js.Value, args []js.Value) any {
 
 	js.CopyBytesToJS(args[1], fileMap[args[0].String()].Data)
 
@@ -120,11 +120,11 @@ func GetFile(this js.Value, args []js.Value) any {
 
 }
 
-func GetFileSize(this js.Value, args []js.Value) any {
+func getFileSize(this js.Value, args []js.Value) any {
 	return js.ValueOf(len(fileMap[args[0].String()].Data))
 }
 
-func DoesFileExist(this js.Value, args []js.Value) any {
+func doesFileExist(this js.Value, args []js.Value) any {
 
 	_, exists := fileMap[args[0].String()]
 
@@ -132,11 +132,11 @@ func DoesFileExist(this js.Value, args []js.Value) any {
 
 }
 
-func GetFileType(this js.Value, args []js.Value) any {
+func getFileType(this js.Value, args []js.Value) any {
 	return js.ValueOf(string(fileMap[args[0].String()].Type))
 }
 
-func RemoveFile(this js.Value, args []js.Value) any {
+func removeFile(this js.Value, args []js.Value) any {
 
 	delete(fileMap, args[0].String())
 
@@ -144,7 +144,7 @@ func RemoveFile(this js.Value, args []js.Value) any {
 
 }
 
-func GetFiles(this js.Value, args []js.Value) any {
+func getFiles(this js.Value, args []js.Value) any {
 
 	keys := make([]interface{}, 0)
 
@@ -156,7 +156,7 @@ func GetFiles(this js.Value, args []js.Value) any {
 
 }
 
-func NumFiles(this js.Value, args []js.Value) any {
+func numFiles(this js.Value, args []js.Value) any {
 	return js.ValueOf(len(fileMap))
 }
 
@@ -166,7 +166,7 @@ func HandleError(errorType compiler.ErrorMessage, errorText string) {
 
 }
 
-func Init() js.Func {
+func initVm() js.Func {
 
 	initFunc := js.FuncOf(func(this js.Value, args []js.Value) any {
 
@@ -181,7 +181,7 @@ func Init() js.Func {
 
 // Methods for interacting with the VM
 
-func SetRegister(this js.Value, args []js.Value) any {
+func setRegister(this js.Value, args []js.Value) any {
 
 	js32.Registers[constants.Register(args[0].Int())] = uint32(args[1].Int())
 
@@ -189,13 +189,13 @@ func SetRegister(this js.Value, args []js.Value) any {
 
 }
 
-func GetRegister(this js.Value, args []js.Value) any {
+func getRegister(this js.Value, args []js.Value) any {
 
 	return js.ValueOf(js32.Registers[constants.Register(args[0].Int())])
 
 }
 
-func GetRegisterBytes(this js.Value, args []js.Value) any {
+func getRegisterBytes(this js.Value, args []js.Value) any {
 
 	src := make([]byte, 4)
 	binary.LittleEndian.PutUint32(src, js32.Registers[constants.Register(args[0].Int())])
@@ -206,7 +206,7 @@ func GetRegisterBytes(this js.Value, args []js.Value) any {
 
 }
 
-func GetBuffer(this js.Value, args []js.Value) any {
+func getBuffer(this js.Value, args []js.Value) any {
 
 	if args[0].String() == "text" {
 
@@ -228,7 +228,7 @@ func GetBuffer(this js.Value, args []js.Value) any {
 
 }
 
-func SendInterrupt(this js.Value, args []js.Value) any {
+func sendInterrupt(this js.Value, args []js.Value) any {
 
 	if js32.Subscribed(constants.Interrupt(args[0].Int())) {
 
@@ -242,7 +242,7 @@ func SendInterrupt(this js.Value, args []js.Value) any {
 
 }
 
-func GetInterrupt(this js.Value, args []js.Value) any {
+func getInterrupt(this js.Value, args []js.Value) any {
 
 	if len(js32.InterruptQueue) > 0 {
 
@@ -257,7 +257,7 @@ func GetInterrupt(this js.Value, args []js.Value) any {
 
 }
 
-func IsSubscribed(this js.Value, args []js.Value) any {
+func isSubscribed(this js.Value, args []js.Value) any {
 
 	return js.ValueOf(
 		js32.Subscribed(
@@ -266,13 +266,13 @@ func IsSubscribed(this js.Value, args []js.Value) any {
 
 }
 
-func IsFinished(this js.Value, args []js.Value) any {
+func isFinished(this js.Value, args []js.Value) any {
 
 	return js.ValueOf(js32.Finished)
 
 }
 
-func UpdateFrameBuffer(this js.Value, args []js.Value) any {
+func updateFrameBuffer(this js.Value, args []js.Value) any {
 
 	js.CopyBytesToJS(js.Global().Get("textureData"), js32.MemArray[:vm.VideoBufferSize])
 
@@ -280,7 +280,7 @@ func UpdateFrameBuffer(this js.Value, args []js.Value) any {
 
 }
 
-func Cycle(this js.Value, args []js.Value) any {
+func cycle(this js.Value, args []js.Value) any {
 
 	js32.Cycle()
 
@@ -288,7 +288,7 @@ func Cycle(this js.Value, args []js.Value) any {
 
 }
 
-func GetCurrentInstruction(this js.Value, args []js.Value) any {
+func getCurrentInstruction(this js.Value, args []js.Value) any {
 
 	itn, err := compiler.DecodeInstructionString(js32.CurrentInstruction)
 
@@ -300,7 +300,7 @@ func GetCurrentInstruction(this js.Value, args []js.Value) any {
 
 }
 
-func Disassemble(this js.Value, args []js.Value) any {
+func disassemble(this js.Value, args []js.Value) any {
 
 	programIntArray := make([]byte, 0)
 
@@ -320,11 +320,11 @@ func Disassemble(this js.Value, args []js.Value) any {
 
 }
 
-func GetProgramLength(this js.Value, args []js.Value) any {
+func getProgramLength(this js.Value, args []js.Value) any {
 	return js.ValueOf(len(programBytes))
 }
 
-func GetProgramBytes(this js.Value, args []js.Value) any {
+func getProgramBytes(this js.Value, args []js.Value) any {
 
 	js.CopyBytesToJS(args[0], programBytes)
 
@@ -332,7 +332,7 @@ func GetProgramBytes(this js.Value, args []js.Value) any {
 
 }
 
-func SetProgramBytes(this js.Value, args []js.Value) any {
+func setProgramBytes(this js.Value, args []js.Value) any {
 
 	programBytes = make([]byte, args[1].Int())
 
@@ -344,7 +344,7 @@ func SetProgramBytes(this js.Value, args []js.Value) any {
 
 //Other
 
-func ConvertColour(this js.Value, args []js.Value) any {
+func convertColour(this js.Value, args []js.Value) any {
 
 	b := make([]byte, 4)
 	binary.LittleEndian.PutUint32(b[:], uint32(args[0].Int()))
@@ -353,7 +353,7 @@ func ConvertColour(this js.Value, args []js.Value) any {
 
 }
 
-func ConvertHex(this js.Value, args []js.Value) any {
+func convertHex(this js.Value, args []js.Value) any {
 
 	if args[1].Bool() {
 		return js.ValueOf(util.ConvertHex[int](args[0].Int() + int(compiler.StackSize)))
@@ -388,42 +388,44 @@ func main() {
 
 	// VM init methods
 
-	js.Global().Set("compileCode", Compile())
-	js.Global().Set("initVM", Init())
+	js.Global().Set("compileCode", compile())
+	js.Global().Set("initVM", initVm())
 
 	//VM interaction methods
 
-	js.Global().Set("setRegister", js.FuncOf(SetRegister))
-	js.Global().Set("getRegister", js.FuncOf(GetRegister))
-	js.Global().Set("getRegisterBytes", js.FuncOf(GetRegisterBytes))
-	js.Global().Set("getBuffer", js.FuncOf(GetBuffer))
+	js.Global().Set("setRegister", js.FuncOf(setRegister))
+	js.Global().Set("getRegister", js.FuncOf(getRegister))
+	js.Global().Set("getRegisterBytes", js.FuncOf(getRegisterBytes))
+	js.Global().Set("getBuffer", js.FuncOf(getBuffer))
 
-	js.Global().Set("getInterrupt", js.FuncOf(GetInterrupt))
-	js.Global().Set("sendInterrupt", js.FuncOf(SendInterrupt))
-	js.Global().Set("isSubscribed", js.FuncOf(IsSubscribed))
+	js.Global().Set("getInterrupt", js.FuncOf(getInterrupt))
+	js.Global().Set("sendInterrupt", js.FuncOf(sendInterrupt))
+	js.Global().Set("isSubscribed", js.FuncOf(isSubscribed))
 
-	js.Global().Set("currentItn", js.FuncOf(GetCurrentInstruction))
+	js.Global().Set("currentItn", js.FuncOf(getCurrentInstruction))
 
-	js.Global().Set("cycleVM", js.FuncOf(Cycle))
+	js.Global().Set("cycleVM", js.FuncOf(cycle))
 
-	js.Global().Set("isFinished", js.FuncOf(IsFinished))
+	js.Global().Set("isFinished", js.FuncOf(isFinished))
 
-	js.Global().Set("updateFile", js.FuncOf(UpdateFile))
-	js.Global().Set("removeFile", js.FuncOf(RemoveFile))
-	js.Global().Set("getFile", js.FuncOf(GetFile))
-	js.Global().Set("getFiles", js.FuncOf(GetFiles))
-	js.Global().Set("numFiles", js.FuncOf(NumFiles))
-	js.Global().Set("getFileSize", js.FuncOf(GetFileSize))
-	js.Global().Set("doesFileExist", js.FuncOf(DoesFileExist))
-	js.Global().Set("getFileType", js.FuncOf(GetFileType))
+	js.Global().Set("updateFile", js.FuncOf(updateFile))
+	js.Global().Set("removeFile", js.FuncOf(removeFile))
+	js.Global().Set("getFile", js.FuncOf(getFile))
+	js.Global().Set("getFiles", js.FuncOf(getFiles))
+	js.Global().Set("numFiles", js.FuncOf(numFiles))
+	js.Global().Set("getFileSize", js.FuncOf(getFileSize))
+	js.Global().Set("doesFileExist", js.FuncOf(doesFileExist))
+	js.Global().Set("getFileType", js.FuncOf(getFileType))
 
-	js.Global().Set("getProgramBytes", js.FuncOf(GetProgramBytes))
-	js.Global().Set("setProgramBytes", js.FuncOf(SetProgramBytes))
-	js.Global().Set("getProgramLength", js.FuncOf(GetProgramLength))
+	js.Global().Set("getProgramBytes", js.FuncOf(getProgramBytes))
+	js.Global().Set("setProgramBytes", js.FuncOf(setProgramBytes))
+	js.Global().Set("getProgramLength", js.FuncOf(getProgramLength))
 
-	js.Global().Set("disassembleCode", js.FuncOf(Disassemble))
+	js.Global().Set("disassembleCode", js.FuncOf(disassemble))
 
-	js.Global().Set("updateFramebuffer", js.FuncOf(UpdateFrameBuffer))
+	js.Global().Set("updateFramebuffer", js.FuncOf(updateFrameBuffer))
+
+	js.Global().Set("getMappedKey", js.FuncOf(mapKeycode))
 
 	fileMap = make(map[string]File)
 	fileMap["main.gpasm"] = File{
@@ -479,8 +481,8 @@ func main() {
 	js.Global().Set("memOffset", js.ValueOf(int(compiler.StackSize)))
 	js.Global().Set("memSize", js.ValueOf(int(vm.MemSize-vm.VideoBufferSize))) // usable memory size
 
-	js.Global().Set("convertColour", js.FuncOf(ConvertColour))
-	js.Global().Set("convertHex", js.FuncOf(ConvertHex))
+	js.Global().Set("convertColour", js.FuncOf(convertColour))
+	js.Global().Set("convertHex", js.FuncOf(convertHex))
 
 	<-make(chan bool)
 

@@ -10,21 +10,25 @@ var Commit string
 // CLI flags
 
 // build & run flags
-var UseJson bool
-var JsonPath string
-var OutputPath string
-var BeVerbose bool = false
-var IsStandalone bool
-var FrontendToUse string
-var GPExec string
+var useJson bool
+var jsonPath string
+
+var programCompileOut string
+var beVerbose bool = false
+var isStandalone bool
+
+var frontendToUse string
+var gpExec string
+var useProfiler bool
+var profilerOut string
 
 //Colours
 
-var GreenBoldUnderline = color.New([]color.Attribute{color.FgGreen, color.Bold, color.Underline}...)
-var Bold = color.New([]color.Attribute{color.Bold}...)
-var Underline = color.New([]color.Attribute{color.FgWhite, color.Underline}...)
-var Grey = color.New([]color.Attribute{color.FgHiBlack}...)
+var greenBoldUnderline = color.New([]color.Attribute{color.FgGreen, color.Bold, color.Underline}...)
+var bold = color.New([]color.Attribute{color.Bold}...)
+var underline = color.New([]color.Attribute{color.FgWhite, color.Underline}...)
+var grey = color.New([]color.Attribute{color.FgHiBlack}...)
 
 //Other
 
-var PluginExt string
+var pluginExt string

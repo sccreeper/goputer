@@ -130,9 +130,11 @@ func (m *VM) Cycle() {
 
 	// If we are in the middle of a halt, pause then continue
 
-	if m.ExecutionPaused && (time.Now().UnixMilli()-m.ExecutionPauseTime >= int64(m.LeftArgVal)) {
+	if m.ExecutionPaused && (time.Now().UnixMilli()-m.ExecutionPauseTime) >= int64(m.LeftArgVal) {
 		m.ExecutionPaused = false
 		m.Registers[c.RProgramCounter] += comp.InstructionLength
+		return
+	} else if m.ExecutionPaused {
 		return
 	}
 

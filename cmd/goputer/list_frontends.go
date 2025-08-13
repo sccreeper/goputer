@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"sccreeper/goputer/pkg/util"
 
@@ -12,11 +11,11 @@ import (
 
 type FrontendInfo struct {
 	Info struct {
-		Name        string `toml:"name"`
-		Description string `toml:"description"`
-		Authour     string `toml:"authour"`
-		Repository  string `toml:"repository"`
-		IsPlugin    bool   `toml:"is_plugin"`
+		Name        string   `toml:"name"`
+		Description string   `toml:"description"`
+		Authour     string   `toml:"authour"`
+		Repository  string   `toml:"repository"`
+		RunCommand  []string `toml:"run"`
 	} `toml:"info"`
 
 	Build struct {
@@ -25,12 +24,12 @@ type FrontendInfo struct {
 	} `toml:"build"`
 }
 
-func _listFrontends(ctx *cli.Context) error {
+func listFrontends(ctx *cli.Context) error {
 
-	plugin_dir, err := ioutil.ReadDir("./frontends/")
+	pluginDir, err := os.ReadDir("./frontends/")
 	util.CheckError(err)
 
-	for _, v := range plugin_dir {
+	for _, v := range pluginDir {
 
 		//Load TOML
 
@@ -43,24 +42,24 @@ func _listFrontends(ctx *cli.Context) error {
 		util.CheckError(err)
 
 		fmt.Println()
-		Bold.Print(frontendInfo.Info.Name + "\n")
+		bold.Print(frontendInfo.Info.Name + "\n")
 		fmt.Println()
 
-		fmt.Printf("%s %s\n", Bold.Sprintf("Description:"), frontendInfo.Info.Description)
-		fmt.Printf("%s %s\n", Bold.Sprintf("Authour:"), frontendInfo.Info.Authour)
-		fmt.Printf("%s %s\n", Bold.Sprintf("Repository:"), frontendInfo.Info.Repository)
+		fmt.Printf("%s %s\n", bold.Sprintf("Description:"), frontendInfo.Info.Description)
+		fmt.Printf("%s %s\n", bold.Sprintf("Authour:"), frontendInfo.Info.Authour)
+		fmt.Printf("%s %s\n", bold.Sprintf("Repository:"), frontendInfo.Info.Repository)
 
-		if frontendInfo.Info.IsPlugin {
-			fmt.Printf("%s %s\n", Bold.Sprintf("Is Plugin:"), "Yes")
+		if len(frontendInfo.Info.RunCommand) > 0 {
+			fmt.Printf("%s %s\n", bold.Sprintf("Is executable?:"), "Yes")
 		} else {
-			fmt.Printf("%s %s\n", Bold.Sprintf("Is Plugin:"), "No")
+			fmt.Printf("%s %s\n", bold.Sprintf("Is executable?:"), "No")
 		}
 
 	}
 
 	fmt.Println()
 
-	fmt.Printf("Found %d frontend(s)", len(plugin_dir))
+	fmt.Printf("Found %d frontend(s)", len(pluginDir))
 
 	return nil
 }

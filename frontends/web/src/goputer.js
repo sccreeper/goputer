@@ -241,6 +241,15 @@ export const goputer = {
     },
 
     /**
+     * Maps a JS event.code to goputer's internal keycodes
+     * @param {string} key
+     * @returns {number} 
+     */
+    mappedKey(key) {
+        return getMappedKey(key)
+    },
+
+    /**
      * @param {any[]} bin
      * @returns {any}
      */

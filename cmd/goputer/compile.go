@@ -49,32 +49,32 @@ func _compiler(ctx *cli.Context) error {
 	//Determine output path
 
 	if ctx.String("output") == "" {
-		OutputPath = strings.TrimSuffix(filePath, filepath.Ext(filePath)) + ".gp"
+		programCompileOut = strings.TrimSuffix(filePath, filepath.Ext(filePath)) + ".gp"
 	} else if ctx.String("output") != "" {
 		if filepath.Ext(ctx.String("output")) != ".gp" {
-			OutputPath = ctx.String("output") + ".gp"
+			programCompileOut = ctx.String("output") + ".gp"
 		} else {
-			OutputPath = ctx.String("output")
+			programCompileOut = ctx.String("output")
 		}
 	}
 
 	//Determine JSON path
 
-	if UseJson {
-		if JsonPath == "" {
-			JsonPath = fmt.Sprintf("%s.json", strings.TrimSuffix(OutputPath, filepath.Ext(OutputPath)))
-		} else if UseJson {
-			JsonPath = ctx.String("jsonpath")
+	if useJson {
+		if jsonPath == "" {
+			jsonPath = fmt.Sprintf("%s.json", strings.TrimSuffix(programCompileOut, filepath.Ext(programCompileOut)))
+		} else if useJson {
+			jsonPath = ctx.String("jsonpath")
 		}
 	}
 
 	compilerConfig := compiler.CompilerConfig{
 
-		OutputPath: OutputPath,
+		OutputPath: programCompileOut,
 		FilePath:   filepath.Base(filePath),
-		OutputJSON: UseJson,
-		JSONPath:   JsonPath,
-		Verbose:    BeVerbose,
+		OutputJSON: useJson,
+		JSONPath:   jsonPath,
+		Verbose:    beVerbose,
 	}
 
 	os.Chdir(filepath.Dir(filePath))
@@ -88,7 +88,7 @@ func _compiler(ctx *cli.Context) error {
 	os.Chdir(prevDir)
 
 	//If standalone write to disk differently
-	if IsStandalone {
+	if isStandalone {
 
 		standaloneBytes := _standalone(assembledProgram.ProgramBytes)
 		tempFile, err := os.Create("./alone_temp.go")
@@ -103,7 +103,7 @@ func _compiler(ctx *cli.Context) error {
 		programHash := sha256.New()
 		programHash.Write(assembledProgram.ProgramBytes)
 
-		pluginFile, err := os.ReadFile(fmt.Sprintf("./frontends/%s/%s%s", FrontendToUse, FrontendToUse, PluginExt))
+		pluginFile, err := os.ReadFile(fmt.Sprintf("./frontends/%s/%s%s", frontendToUse, frontendToUse, pluginExt))
 		util.CheckError(err)
 
 		pluginHash := sha256.New()
@@ -156,11 +156,11 @@ func _compiler(ctx *cli.Context) error {
 	//JSON
 
 	if compilerConfig.OutputJSON {
-		err = os.WriteFile(JsonPath, []byte(assembledProgram.ProgramJson), 0666)
+		err = os.WriteFile(jsonPath, []byte(assembledProgram.ProgramJson), 0666)
 
 		util.CheckError(err)
 
-		log.Printf("Outputted JSON structure to '%s'", JsonPath)
+		log.Printf("Outputted JSON structure to '%s'", jsonPath)
 	}
 
 	return nil

@@ -73,32 +73,34 @@ class Register(IntEnum):
     RSoundWave  = 55
 
 class Interrupt(IntEnum):
-    IntSoundStop   = 0
-    IntSoundFlush  = 1
-    IntVideoArea   = 2
-    IntVideoPixel  = 3
-    IntVideoText   = 4
-    IntVideoClear  = 5
-    IntVideoLine   = 6
-    IntIOFlush     = 7
-    IntIOClear     = 8
+    IntSoundStop     = 0
+    IntSoundFlush    = 1
+    IntVideoArea     = 2
+    IntVideoPolygon  = 3
+    IntVideoText     = 4
+    IntVideoClear    = 5
+    IntVideoImage    = 6
+    IntVideoLine     = 7
+    IntIOFlush       = 8
+    IntIOClear       = 9
+    IntVideoFlush    = 10
 
-    #Subscribable s
+    #Subscribable interrupts
 
-    IntMouseMove  = 9
-    IntMouseUp    = 10
-    IntMouseDown  = 11
-    IntIO08       = 12
-    IntIO09       = 13
-    IntIO10       = 14
-    IntIO11       = 15
-    IntIO12       = 16
-    IntIO13       = 17
-    IntIO14       = 18
-    IntIO15       = 19
+    IntMouseMove  = 11
+    IntMouseUp    = 12
+    IntMouseDown  = 13
+    IntIO08       = 14
+    IntIO09       = 15
+    IntIO10       = 16
+    IntIO11       = 17
+    IntIO12       = 18
+    IntIO13       = 19
+    IntIO14       = 20
+    IntIO15       = 21
 
-    IntKeyboardUp    = 20
-    IntKeyboardDown  = 21
+    IntKeyboardUp    = 22
+    IntKeyboardDown  = 23
 
 class SoundWave(IntEnum):
     SWSquare = 0
@@ -158,51 +160,6 @@ Instructions = {
     
 	"ret": 32,
     "iret": 33
-}
-
-InstructionArgCounts = {
-    Instructions["jmp"] : 1,
-	Instructions["cndjmp"] : 1,
-	Instructions["inv"] : 1,
-	Instructions["call"] : 1,
-	Instructions["lda"] : 1,
-	Instructions["sta"] : 1,
-	Instructions["incr"]: 1,
-	Instructions["decr"] : 1,
-	Instructions["hlt"] : 1,
-	Instructions["sqrt"] : 1,
-	Instructions["call"] : 1,
-	Instructions["cndcall"] : 1,
-	Instructions["clr"] : 1,
-    Instructions["emi"] : 1,
-    Instructions["pop"] : 1,
-    Instructions["push"] : 1,
-    
-	Instructions["add"] : 2,
-    Instructions["mul"] : 2,
-    Instructions["div"] : 2,
-    Instructions["sub"] : 2,
-    
-	Instructions["gt"] : 2,
-    Instructions["lt"] : 2,
-    
-	Instructions["or"] : 2,
-    Instructions["xor"] : 2,
-    Instructions["and"] : 2,
-    
-	Instructions["eq"] : 2,
-    Instructions["neq"] : 2,
-    
-	Instructions["sl"] : 2,
-    Instructions["sr"] : 2,
-
-	Instructions["pow"] : 2,
-     
-	Instructions["mod"] : 2,
-     
-	Instructions["ret"] : 0,
-    Instructions["iret"] : 0,
-    	
 }
 
 InterruptInts = {

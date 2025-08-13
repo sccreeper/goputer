@@ -1,17 +1,23 @@
 package main
 
+/*
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+*/
 import "C"
 import (
 	"log"
 	"math"
+	"runtime"
+	"sccreeper/goputer/pkg/compiler"
 	"sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/vm"
 	"unsafe"
 )
 
 var py32 *vm.VM
-var py32InteruptChannel chan constants.Interrupt = make(chan constants.Interrupt)
-var py32SubbedInterruptChannel chan constants.Interrupt = make(chan constants.Interrupt)
+var videoBuffer *C.uint8_t
 
 func main() {}
 
@@ -133,5 +139,34 @@ func GetCurrentInstruction() C.uint {
 func GetArgs() C.uint {
 
 	return C.uint(py32.LongArg)
+
+}
+
+//export GetInstructionString
+func GetInstructionString() *C.char {
+
+	itn, _ := compiler.DecodeInstructionString(py32.CurrentInstruction)
+	return C.CString(itn)
+
+}
+
+//export GetVideoBufferPtr
+func GetVideoBufferPtr() *C.uint8_t {
+
+	videoBuffer = (*C.uint8_t)(C.malloc(C.size_t(320 * 240 * 3)))
+
+	var pinner runtime.Pinner
+	pinner.Pin(videoBuffer)
+
+	C.memset(unsafe.Pointer(videoBuffer), 0, C.size_t(320*240*3))
+
+	return videoBuffer
+
+}
+
+//export CopyFrameBuffer
+func CopyFrameBuffer() {
+
+	C.memcpy(unsafe.Pointer(videoBuffer), unsafe.Pointer(&py32.MemArray[0]), C.size_t(320*240*3))
 
 }
