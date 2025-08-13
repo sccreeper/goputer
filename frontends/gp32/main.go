@@ -8,6 +8,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"sccreeper/goputer/frontends/gp32/keyboard"
 	"sccreeper/goputer/frontends/gp32/rendering"
 	"sccreeper/goputer/frontends/gp32/sound"
 	c "sccreeper/goputer/pkg/constants"
@@ -298,34 +299,26 @@ func Run(ctx *cli.Context) error {
 
 			if key != 0 {
 
-				log.Println("Interrupt: Key pressed")
-
 				if rl.IsKeyDown(key) {
 
-					gp32.Registers[c.RKeyboardCurrent] = uint32(key)
+					gp32.Registers[c.RKeyboardCurrent] = uint32(keyboard.MapKey(key))
 					gp32.Registers[c.RKeyboardPressed] = 1
 
 					if gp32.Subscribed(c.IntKeyboardDown) {
-						log.Println("Interrupt: Key down")
-
 						gp32.SubscribedInterruptQueue = append(gp32.SubscribedInterruptQueue, c.IntKeyboardDown)
 					}
 				} else if rl.IsKeyUp(key) {
-					log.Println("Interrupt: Bozo")
 
-					gp32.Registers[c.RKeyboardCurrent] = uint32(key)
+					gp32.Registers[c.RKeyboardCurrent] = uint32(keyboard.MapKey(key))
 					gp32.Registers[c.RKeyboardPressed] = 0
 
 					if gp32.Subscribed(c.IntKeyboardUp) {
-						log.Println("Interrupt: Key up")
-
 						gp32.SubscribedInterruptQueue = append(gp32.SubscribedInterruptQueue, c.IntKeyboardUp)
 					}
 				} else {
 
-					log.Println("Interrupt: Triggering ku, kd")
-
-					gp32.Registers[c.RKeyboardCurrent] = uint32(key)
+					gp32.Registers[c.RKeyboardCurrent] = uint32(keyboard.MapKey(key))
+					gp32.Registers[c.RKeyboardPressed] = 0
 
 					if gp32.Subscribed(c.IntKeyboardDown) {
 						gp32.SubscribedInterruptQueue = append(gp32.SubscribedInterruptQueue, c.IntKeyboardDown)

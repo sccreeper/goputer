@@ -8,6 +8,7 @@ from goputerpy import goputerpy as gppy
 from goputerpy import constants as c
 from goputerpy import util
 from goputerpy.sound import SoundManager
+from goputerpy.keycodes import map_keycode
 
 def correct_mouse_y(y: int) -> int:
     return y - r.TOTAL_Y_OFFSET
@@ -139,13 +140,13 @@ while True:
                         gppy.SendInterrupt(c.Interrupt.IntMouseUp)
             
             case pg.KEYDOWN:
-                gppy.SetRegister(c.Register.RKeyboardCurrent, event.key)
+                gppy.SetRegister(c.Register.RKeyboardCurrent, map_keycode(event.key))
 
                 if gppy.IsSubscribed(c.Interrupt.IntKeyboardDown):
                     gppy.SendInterrupt(c.Interrupt.IntKeyboardDown)
 
             case pg.KEYUP:
-                gppy.SetRegister(c.Register.RKeyboardPressed, event.key)
+                gppy.SetRegister(c.Register.RKeyboardPressed, map_keycode(event.key))
 
                 if gppy.IsSubscribed(c.Interrupt.IntKeyboardUp):
                     gppy.SendInterrupt(c.Interrupt.IntKeyboardUp)

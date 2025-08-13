@@ -20,26 +20,26 @@ int va
 ret
 
 #label keypress
-// Left 65
-neq kc $65
+// Left 1 (A)
+neq kc $1
 cndjmp $l:keypress+25
 sub r00 $5
 mov a0 r00
 iret
-// Up 87
-neq kc $87
+// Up 23 (W)
+neq kc $23
 cndjmp $l:keypress+50
 sub r01 $5
 mov a0 r01
 iret
-// Right 68
-neq kc $68
+// Right 4 (D)
+neq kc $4
 cndjmp $l:keypress+75
 add r00 $5
 mov a0 r00
 iret
-//Down 83
-neq kc $83
+//Down 19 (S)
+neq kc $19
 cndjmp $l:keypress+95
 add r01 $5
 mov a0 r01
