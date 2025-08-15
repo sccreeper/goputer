@@ -3,18 +3,19 @@
 package expansions
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"log"
 	"os"
 	"path"
 	"path/filepath"
-	"plugin"
 	"runtime"
 	"sccreeper/goputer/pkg/util"
 	"slices"
 
 	"github.com/BurntSushi/toml"
+	"github.com/Shopify/go-lua"
 )
 
 const (
@@ -27,14 +28,13 @@ var (
 
 type ExpansionManifest struct {
 	Info struct {
-		Name               string   `toml:"name"`
-		Description        string   `toml:"description"`
-		Authour            string   `toml:"authour"`
-		Repository         string   `toml:"repository"`
-		Native             bool     `toml:"native"`
-		SupportedPlatforms []string `toml:"supported_platforms"`
-		ID                 string   `toml:"id"`
-		Attributes         []string `toml:"attributes"`
+		Name        string `toml:"name"`
+		Description string `toml:"description"`
+		Authour     string `toml:"authour"`
+		Repository  string `toml:"repository"`
+
+		ID         string   `toml:"id"`
+		Attributes []string `toml:"attributes"`
 	} `toml:"info"`
 
 	Build struct {
@@ -45,10 +45,10 @@ type ExpansionManifest struct {
 }
 
 type ExpansionLoaded struct {
-	ExpansionObjectFile *plugin.Plugin
-	Handler             func([]byte) []byte
-	SetAttribute        func(string, interface{})
-	GetAttribute        func(string) interface{}
+	LuaVM        *lua.State
+	Handler      func([]byte) []byte
+	SetAttribute func(string, []byte)
+	GetAttribute func(string) []byte
 
 	Manifest ExpansionManifest
 }
@@ -104,45 +104,76 @@ func LoadExpansions() {
 				loaderError(err, v.Name())
 
 				toml.Unmarshal(configBytes, &expConfig)
-				loaderError(err, v.Name())
+				if loaderError(err, v.Name()) {
+					continue
+				}
 
-				// Load so/lua
-				// TODO: Lua
 				expLoaded = ExpansionLoaded{
+					LuaVM:    lua.NewState(),
 					Manifest: expConfig,
 				}
 
-				if expLoaded.Manifest.Info.Native {
-					// Load symbols from plugin file.
+				lua.OpenLibraries(expLoaded.LuaVM)
+				setStubs(expLoaded.LuaVM)
 
-					expLoaded.ExpansionObjectFile, err = plugin.Open(path.Join(expansionDir, v.Name(), fmt.Sprintf("%s.%s", v.Name(), nativeExtension)))
-					loaderError(err, v.Name())
-
-					handlerTemp, err := expLoaded.ExpansionObjectFile.Lookup("Handler")
-					if loaderError(err, v.Name()) {
-						continue
-					}
-					expLoaded.Handler = handlerTemp.(func([]byte) []byte)
-
-					getAttributeTemp, err := expLoaded.ExpansionObjectFile.Lookup("GetAttribute")
-					if loaderError(err, v.Name()) {
-						continue
-					}
-					expLoaded.GetAttribute = getAttributeTemp.(func(string) interface{})
-
-					setAttributeTemp, err := expLoaded.ExpansionObjectFile.Lookup("SetAttribute")
-					if loaderError(err, v.Name()) {
-						continue
-					}
-					expLoaded.SetAttribute = setAttributeTemp.(func(string, interface{}))
-
-					expansions[expLoaded.Manifest.Info.ID] = expLoaded
-
-					log.Printf("Loaded expansion %s successfully.", v.Name())
-
-				} else {
-					loaderError(errors.New("lua expansions are not supported yet"), v.Name())
+				err = lua.DoFile(expLoaded.LuaVM, filepath.Join(expansionDir, v.Name(), fmt.Sprintf("%s.lua", expConfig.Info.ID)))
+				if loaderError(err, v.Name()) {
+					continue
 				}
+
+				if !checkForFunction(expLoaded.LuaVM, "Handler") {
+					loaderError(errors.New("no handler function"), v.Name())
+					continue
+				}
+
+				expLoaded.Handler = func(b []byte) []byte {
+					expLoaded.LuaVM.Global("Handler")
+
+					expLoaded.LuaVM.NewTable()
+					for i, v := range b {
+						expLoaded.LuaVM.PushInteger(int(v))
+						expLoaded.LuaVM.RawSetInt(-2, i+1)
+					}
+
+					expLoaded.LuaVM.Call(1, 1)
+
+					return getBytesFromStack(expLoaded.LuaVM)
+
+				}
+
+				if !checkForFunction(expLoaded.LuaVM, "SetAttribute") {
+					loaderError(errors.New("no set attribute function"), v.Name())
+					continue
+				}
+
+				expLoaded.SetAttribute = func(s string, data []byte) {
+					expLoaded.LuaVM.Global("SetAttribute")
+					expLoaded.LuaVM.PushString(s)
+					expLoaded.LuaVM.NewTable()
+
+					for i, v := range data {
+						expLoaded.LuaVM.PushInteger(int(v))
+						expLoaded.LuaVM.RawSetInt(-2, i+1)
+					}
+
+					expLoaded.LuaVM.Call(2, 0)
+				}
+
+				if !checkForFunction(expLoaded.LuaVM, "GetAttribute") {
+					loaderError(errors.New("no get attribute function"), v.Name())
+					continue
+				}
+
+				expLoaded.GetAttribute = func(s string) []byte {
+					expLoaded.LuaVM.Global("GetAttribute")
+					expLoaded.LuaVM.PushString(s)
+					expLoaded.LuaVM.Call(1, 1)
+
+					return getBytesFromStack(expLoaded.LuaVM)
+
+				}
+
+				expansions[v.Name()] = expLoaded
 
 			}
 
@@ -175,9 +206,11 @@ func LoadExpansions() {
 		log.Printf("%d: %s\n", k, v)
 	}
 
+	busLocationBytes := make([]byte, 0)
+
 	//Set bus locations for system module
 	for k, v := range busLocations {
-		expansions["goputer.sys"].GetAttribute("expansions").(map[string]uint32)[v] = k
+		busLocationBytes = append(busLocationBytes, []byte(fmt.Sprintf("%s\x00%d\x00", v, k))...)
 	}
 
 }
@@ -203,21 +236,18 @@ func ModuleExists(location uint32) bool {
 
 }
 
-func SetAttribute(id string, attribute string, value interface{}) {
+func SetAttribute(id string, attribute string, value []byte) {
 	expansions[id].SetAttribute(attribute, value)
 }
 
-func GetAttribute(id string, attribute string) interface{} {
+func GetAttribute(id string, attribute string) []byte {
 	return expansions[id].GetAttribute(attribute)
 }
 
 func loaderError(e error, expansionName string) bool {
 
 	if e != nil {
-		log.Printf(`
-		Error:
-		%s
-		`, e.Error())
+		log.Printf("Error: %s\n", e.Error())
 		log.Printf("Failed to load expansion '%s'!\n", expansionName)
 
 		return true
@@ -225,5 +255,87 @@ func loaderError(e error, expansionName string) bool {
 	} else {
 		return false
 	}
+
+}
+
+func checkForFunction(vm *lua.State, name string) bool {
+	vm.Global(name)
+	if !vm.IsFunction(-1) {
+		return false
+	}
+	vm.Pop(1)
+
+	return true
+}
+
+func getBytesFromStack(vm *lua.State) (result []byte) {
+	result = make([]byte, 0)
+	vm.Length(-1)
+	length, _ := vm.ToInteger(-1)
+	vm.Pop(1)
+
+	for i := 1; i <= length; i++ {
+		vm.RawGetInt(-1, i)
+		if num, ok := vm.ToInteger(-1); ok {
+			result = append(result, byte(num))
+		}
+		vm.Pop(1)
+	}
+
+	vm.Pop(1)
+	return result
+}
+
+func setStubs(vm *lua.State) {
+
+	vm.NewTable()
+
+	vm.PushGoFunction(func(state *lua.State) int {
+
+		if !vm.IsNumber(1) {
+			vm.PushNil()
+			return 1
+		}
+
+		num, _ := vm.ToInteger(1)
+
+		var data [4]byte = [4]byte{}
+		binary.LittleEndian.PutUint32(data[:], uint32(num))
+
+		vm.NewTable()
+		for i, v := range data {
+			vm.PushInteger(int(v))
+			vm.RawSetInt(-2, i+1)
+		}
+
+		return 1
+
+	})
+	vm.SetField(-2, "toLittleEndian")
+
+	vm.PushGoFunction(func(state *lua.State) int {
+
+		if !vm.IsTable(1) {
+			vm.PushNil()
+			return 1
+		}
+
+		numBytes := getBytesFromStack(vm)
+
+		if len(numBytes) != 4 {
+			vm.PushNil()
+			return 1
+		}
+
+		result := binary.LittleEndian.Uint32(numBytes)
+
+		vm.PushInteger(int(result))
+
+		return 1
+
+	})
+	vm.SetField(-2, "fromLittleEndian")
+
+	vm.SetGlobal("Gp")
 
 }

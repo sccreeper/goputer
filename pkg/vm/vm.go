@@ -51,12 +51,10 @@ type VM struct {
 
 	ExecutionPaused    bool
 	ExecutionPauseTime int64
-
-	ExpansionsSupported bool
 }
 
 // Initialize VM and registers, load code into "memory" etc.
-func NewVM(vmProgram []byte, expansionsSupported bool) (*VM, error) {
+func NewVM(vmProgram []byte) (*VM, error) {
 
 	machine := &VM{}
 
@@ -79,7 +77,6 @@ func NewVM(vmProgram []byte, expansionsSupported bool) (*VM, error) {
 	machine.Finished = false
 	machine.ProgramBounds = comp.MemOffset + uint32(len(vmProgram[:len(vmProgram)-int(comp.PadSize)]))
 	machine.Registers[c.RVideoBrightness] = 255
-	machine.ExpansionsSupported = expansionsSupported
 
 	machine.Registers[c.RCallStackZeroPointer] = comp.MemOffset - comp.CallStackSize
 	machine.Registers[c.RCallStackPointer] = machine.Registers[c.RCallStackZeroPointer]
@@ -110,11 +107,7 @@ func NewVM(vmProgram []byte, expansionsSupported bool) (*VM, error) {
 	//Copy program into memory
 	copy(machine.MemArray[comp.MemOffset:], vmProgram[:len(vmProgram)-int(comp.PadSize)])
 
-	// Load expansions
-
-	if expansionsSupported {
-		expansions.LoadExpansions()
-	}
+	expansions.LoadExpansions()
 
 	return machine, nil
 
@@ -358,7 +351,7 @@ func (m *VM) Cycle() {
 
 		}
 	case c.IExpansionModuleInteract:
-		if expansions.ModuleExists(m.LongArgVal) && m.ExpansionsSupported {
+		if expansions.ModuleExists(m.LongArgVal) {
 			data := expansions.Interaction(m.LongArgVal, m.DataBuffer[:])
 
 			m.Registers[c.RDataLength] = uint32(len(data))

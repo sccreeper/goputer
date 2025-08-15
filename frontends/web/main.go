@@ -170,7 +170,7 @@ func initVm() js.Func {
 
 	initFunc := js.FuncOf(func(this js.Value, args []js.Value) any {
 
-		js32, _ = vm.NewVM(programBytes, true)
+		js32, _ = vm.NewVM(programBytes)
 
 		return js.ValueOf(nil)
 

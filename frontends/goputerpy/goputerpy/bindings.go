@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"sccreeper/goputer/pkg/compiler"
 	"sccreeper/goputer/pkg/constants"
+	"sccreeper/goputer/pkg/expansions"
 	"sccreeper/goputer/pkg/vm"
 	"unsafe"
 )
@@ -26,7 +27,6 @@ func Init(programBytes *C.char, codeLength C.int) {
 
 	py32, _ = vm.NewVM(
 		C.GoBytes(unsafe.Pointer(programBytes), codeLength),
-		false,
 	)
 
 	log.Println("VM Created")
@@ -168,5 +168,28 @@ func GetVideoBufferPtr() *C.uint8_t {
 func CopyFrameBuffer() {
 
 	C.memcpy(unsafe.Pointer(videoBuffer), unsafe.Pointer(&py32.MemArray[0]), C.size_t(320*240*3))
+
+}
+
+//export SetExpansionModuleAttribute
+func SetExpansionModuleAttribute(id *C.char, attrib *C.char, val *C.uint8_t, bytesLength C.int) {
+
+	idStr := C.GoString(id)
+	nameStr := C.GoString(attrib)
+	valBytes := C.GoBytes(unsafe.Pointer(val), bytesLength)
+
+	expansions.SetAttribute(idStr, nameStr, valBytes)
+}
+
+//export GetExpansionModuleAttribute
+func GetExpansionModuleAttribute(id *C.char, attrib *C.char) *C.char {
+
+	idStr := C.GoString(id)
+	defer C.free(unsafe.Pointer(&idStr))
+
+	attribString := C.GoString(id)
+	defer C.free(unsafe.Pointer(&attribString))
+
+	return C.CString(string(expansions.GetAttribute(idStr, attribString)))
 
 }

@@ -60,6 +60,14 @@ _get_instruction_string.restype = ctypes.c_void_p
 _copy_video_buffer = _lib.CopyFrameBuffer
 _copy_video_buffer.restype = ctypes.c_void_p
 
+_set_exp_attribute = _lib.SetExpansionModuleAttribute
+_set_exp_attribute.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_size_t]
+_set_exp_attribute.restype = ctypes.c_void_p
+
+_get_exp_attribute = _lib.GetExpansionModuleAttribute
+_get_exp_attribute.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+_get_exp_attribute.restype = ctypes.c_void_p
+
 print("SO loaded!")
 
 _vm_inited = False
@@ -172,3 +180,14 @@ def InitVideoBuffer() -> None:
 
 def UpdateVideoBuffer() -> None:
     _copy_video_buffer()
+
+def SetExpAttribute(exp: str, attrib: str, val: bytes) -> None:
+    _set_exp_attribute(exp.encode("utf-8"), attrib.encode("utf-8"), val, len(val))
+
+def GetExpAttribute(exp: str, attrib: str) -> bytes:
+    
+    res_ptr = _get_exp_attribute(exp.encode("utf-8"), attrib.encode("utf-8"))
+    res_bytes = ctypes.string_at(res_ptr)
+    _free(res_ptr)
+
+    return res_bytes

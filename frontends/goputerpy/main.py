@@ -53,6 +53,7 @@ sound_manager = SoundManager()
 #goputer init
 gppy.Init(list(f_bytes))
 gppy.InitVideoBuffer()
+gppy.SetExpAttribute("goputer.sys", "name", "goputerpy".encode("utf-8"))
 
 #io init
 
