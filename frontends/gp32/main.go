@@ -103,7 +103,8 @@ func Run(ctx *cli.Context) error {
 		Button: 64,
 	}
 
-	gp32, _ = vm.NewVM(programBytes)
+	gp32, _ = vm.NewVM(programBytes, expansions.ModuleExists, expansions.Interaction)
+	expansions.LoadExpansions(gp32)
 
 	var pr *profiler.Profiler
 

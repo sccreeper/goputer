@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+	"sccreeper/goputer/pkg/vm"
 )
 
 const (
@@ -47,7 +48,7 @@ func init() {
 }
 
 // Doesn't need to do anything for WASM just needs to be present.
-func LoadExpansions() {}
+func LoadExpansions(vm *vm.VM) {}
 
 func Interaction(location uint32, data []byte) []byte {
 

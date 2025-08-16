@@ -11,7 +11,10 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"sccreeper/goputer/pkg/compiler"
+	"sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/util"
+	"sccreeper/goputer/pkg/vm"
 	"slices"
 
 	"github.com/BurntSushi/toml"
@@ -71,7 +74,7 @@ func init() {
 }
 
 // Desktop method for loading expansions
-func LoadExpansions() {
+func LoadExpansions(vm *vm.VM) {
 
 	var brokenPlugins []string = make([]string, 0)
 
@@ -114,7 +117,7 @@ func LoadExpansions() {
 				}
 
 				lua.OpenLibraries(expLoaded.LuaVM)
-				setStubs(expLoaded.LuaVM)
+				setStubs(expLoaded.LuaVM, vm)
 
 				err = lua.DoFile(expLoaded.LuaVM, filepath.Join(expansionDir, v.Name(), fmt.Sprintf("%s.lua", expConfig.Info.ID)))
 				if loaderError(err, v.Name()) {
@@ -137,7 +140,7 @@ func LoadExpansions() {
 
 					expLoaded.LuaVM.Call(1, 1)
 
-					return getBytesFromStack(expLoaded.LuaVM)
+					return getBytesFromStack(expLoaded.LuaVM, -1, true)
 
 				}
 
@@ -169,7 +172,7 @@ func LoadExpansions() {
 					expLoaded.LuaVM.PushString(s)
 					expLoaded.LuaVM.Call(1, 1)
 
-					return getBytesFromStack(expLoaded.LuaVM)
+					return getBytesFromStack(expLoaded.LuaVM, -1, true)
 
 				}
 
@@ -258,84 +261,353 @@ func loaderError(e error, expansionName string) bool {
 
 }
 
-func checkForFunction(vm *lua.State, name string) bool {
-	vm.Global(name)
-	if !vm.IsFunction(-1) {
+func checkForFunction(l *lua.State, name string) bool {
+	l.Global(name)
+	if !l.IsFunction(-1) {
 		return false
 	}
-	vm.Pop(1)
+	l.Pop(1)
 
 	return true
 }
 
-func getBytesFromStack(vm *lua.State) (result []byte) {
+func getBytesFromStack(l *lua.State, index int, pop bool) (result []byte) {
 	result = make([]byte, 0)
-	vm.Length(-1)
-	length, _ := vm.ToInteger(-1)
-	vm.Pop(1)
+	l.Length(index)
+	length, _ := l.ToInteger(-1)
+	l.Pop(1)
 
 	for i := 1; i <= length; i++ {
-		vm.RawGetInt(-1, i)
-		if num, ok := vm.ToInteger(-1); ok {
+		l.RawGetInt(index, i)
+		if num, ok := l.ToInteger(-1); ok {
 			result = append(result, byte(num))
 		}
-		vm.Pop(1)
+		l.Pop(1)
 	}
 
-	vm.Pop(1)
+	if pop {
+		l.Pop(1)
+	}
 	return result
 }
 
-func setStubs(vm *lua.State) {
+func setStubs(l *lua.State, vm *vm.VM) {
 
-	vm.NewTable()
+	l.NewTable()
 
-	vm.PushGoFunction(func(state *lua.State) int {
+	l.PushGoFunction(func(state *lua.State) int {
 
-		if !vm.IsNumber(1) {
-			vm.PushNil()
+		if !l.IsNumber(1) {
+			l.PushNil()
 			return 1
 		}
 
-		num, _ := vm.ToInteger(1)
+		num, _ := l.ToInteger(1)
+		l.Pop(1)
 
 		var data [4]byte = [4]byte{}
 		binary.LittleEndian.PutUint32(data[:], uint32(num))
 
-		vm.NewTable()
+		l.NewTable()
 		for i, v := range data {
-			vm.PushInteger(int(v))
-			vm.RawSetInt(-2, i+1)
+			l.PushInteger(int(v))
+			l.RawSetInt(-2, i+1)
 		}
 
 		return 1
 
 	})
-	vm.SetField(-2, "toLittleEndian")
+	l.SetField(-2, "toLittleEndian")
 
-	vm.PushGoFunction(func(state *lua.State) int {
+	l.PushGoFunction(func(state *lua.State) int {
 
-		if !vm.IsTable(1) {
-			vm.PushNil()
+		if !l.IsTable(1) {
+			l.PushNil()
 			return 1
 		}
 
-		numBytes := getBytesFromStack(vm)
+		numBytes := getBytesFromStack(l, -1, true)
 
 		if len(numBytes) != 4 {
-			vm.PushNil()
+			l.PushNil()
 			return 1
 		}
 
 		result := binary.LittleEndian.Uint32(numBytes)
 
-		vm.PushInteger(int(result))
+		l.PushInteger(int(result))
 
 		return 1
 
 	})
-	vm.SetField(-2, "fromLittleEndian")
+	l.SetField(-2, "fromLittleEndian")
 
-	vm.SetGlobal("Gp")
+	l.PushGoFunction(func(state *lua.State) int {
+
+		if !l.IsNumber(1) || !l.IsNumber(2) {
+			l.PushBoolean(false)
+			return 1
+		}
+
+		addr, _ := l.ToInteger(1)
+		val, _ := l.ToInteger(2)
+		l.Pop(2)
+
+		if addr < 0 || addr >= len(vm.MemArray) {
+			l.PushBoolean(false)
+			return 1
+		}
+
+		vm.MemArray[addr] = byte(val)
+
+		l.PushBoolean(true)
+		return 1
+
+	})
+	l.SetField(-2, "setMemoryAddress")
+
+	l.PushGoFunction(func(state *lua.State) int {
+		if !l.IsNumber(1) {
+			l.PushNil()
+			return 1
+		}
+
+		addr, _ := l.ToInteger(1)
+		l.Pop(1)
+
+		if addr < 0 || addr >= len(vm.MemArray) {
+			l.PushNil()
+			return 1
+		}
+
+		l.PushInteger(int(vm.MemArray[addr]))
+		return 1
+
+	})
+	l.SetField(-2, "getMemoryAddress")
+
+	l.PushGoFunction(func(state *lua.State) int {
+		if !l.IsNumber(1) || !l.IsTable(2) {
+			l.PushBoolean(false)
+			return 1
+		}
+
+		addr, _ := l.ToInteger(1)
+		data := getBytesFromStack(l, -1, true)
+
+		if addr < 0 || addr+len(data) > len(vm.MemArray) {
+			l.PushBoolean(false)
+			return 1
+		}
+
+		copy(
+			vm.MemArray[addr:addr+len(data)],
+			data[:],
+		)
+
+		l.PushBoolean(true)
+		return 1
+
+	})
+	l.SetField(-2, "setMemoryRange")
+
+	l.PushGoFunction(func(state *lua.State) int {
+		if !l.IsNumber(1) || !l.IsNumber(2) {
+			l.PushNil()
+			return 1
+		}
+
+		addr, _ := l.ToInteger(1)
+		size, _ := l.ToInteger(2)
+		l.Pop(2)
+
+		if addr < 0 || addr+size > len(vm.MemArray) || size <= 0 {
+			l.PushNil()
+			return 1
+		}
+
+		l.NewTable()
+		for i := range size {
+			l.PushInteger(int(vm.MemArray[addr+i]))
+			l.RawSetInt(-2, i+1)
+		}
+
+		return 1
+	})
+	l.SetField(-2, "getMemoryRange")
+
+	l.PushGoFunction(func(state *lua.State) int {
+		if !l.IsNumber(1) || !l.IsNumber(2) || !l.IsNumber(3) {
+			l.PushBoolean(false)
+			return 1
+		}
+
+		addr, _ := l.ToInteger(1)
+		size, _ := l.ToInteger(2)
+		value, _ := l.ToInteger(3)
+		l.Pop(3)
+
+		if addr < 0 || addr+size > len(vm.MemArray) {
+			l.PushBoolean(false)
+			return 1
+		}
+
+		for i := addr; i < addr+size; i++ {
+			vm.MemArray[i] = byte(value)
+		}
+
+		l.PushBoolean(true)
+		return 1
+
+	})
+	l.SetField(-2, "clearMemoryRange")
+
+	l.PushGoFunction(func(state *lua.State) int {
+
+		if !l.IsString(1) {
+			l.PushNil()
+			return 1
+		}
+
+		reg, _ := l.ToString(1)
+		l.Pop(1)
+
+		if _, exists := constants.RegisterInts[reg]; !exists {
+			l.PushNil()
+			return 1
+		}
+
+		l.PushInteger(int(vm.Registers[constants.RegisterInts[reg]]))
+		return 1
+
+	})
+	l.SetField(-2, "getRegister")
+
+	l.PushGoFunction(func(state *lua.State) int {
+		if !l.IsString(1) || !l.IsNumber(2) {
+			l.PushBoolean(false)
+			return 1
+		}
+
+		reg, _ := l.ToString(1)
+		val, _ := l.ToInteger(2)
+
+		if _, exists := constants.RegisterInts[reg]; !exists {
+			l.PushBoolean(false)
+			return 1
+		}
+
+		vm.Registers[constants.RegisterInts[reg]] = uint32(val)
+
+		l.PushBoolean(true)
+		return 1
+
+	})
+	l.SetField(-2, "setRegister")
+
+	l.PushGoFunction(func(state *lua.State) int {
+		if !l.IsString(1) || !l.IsTable(2) || !l.IsNumber(3) {
+			l.PushBoolean(false)
+			return 1
+		}
+
+		buf, _ := l.ToString(1)
+		val := getBytesFromStack(l, 2, false)
+		offset, _ := l.ToInteger(3)
+		l.Pop(3)
+
+		if buf != "d0" && buf != "vt" {
+			l.PushBoolean(false)
+			return 1
+		} else if offset+len(val) > 128 {
+			l.PushBoolean(false)
+			return 1
+		}
+
+		if buf == "d0" {
+			for i := range val {
+				vm.DataBuffer[offset+i] = val[i]
+			}
+		} else {
+			for i := range val {
+				vm.TextBuffer[offset+i] = val[i]
+			}
+		}
+
+		l.PushBoolean(true)
+		return 1
+
+	})
+	l.SetField(-2, "setBuffer")
+
+	l.PushGoFunction(func(state *lua.State) int {
+		if !l.IsString(1) || !l.IsNumber(2) || !l.IsNumber(3) {
+			l.PushNil()
+			return 1
+		}
+
+		buf, _ := l.ToString(1)
+		offset, _ := l.ToInteger(2)
+		length, _ := l.ToInteger(3)
+		l.Pop(3)
+
+		if buf != "d0" && buf != "vt" {
+			l.PushNil()
+			return 1
+		} else if offset+length > 128 {
+			l.PushNil()
+			return 1
+		}
+
+		var data []byte
+		if buf == "d0" {
+			data = vm.DataBuffer[offset : offset+length]
+		} else {
+			data = vm.TextBuffer[offset : offset+length]
+		}
+
+		l.NewTable()
+		for i, v := range data {
+			l.PushInteger(int(v))
+			l.RawSetInt(-2, i+1)
+		}
+
+		return 1
+	})
+	l.SetField(-2, "getBuffer")
+
+	l.PushGoFunction(func(state *lua.State) int {
+		vm.Finished = true
+		return 0
+	})
+	l.SetField(-2, "stop")
+
+	l.PushGoFunction(func(state *lua.State) int {
+		if !l.IsNumber(1) {
+			l.PushNil()
+			return 1
+		}
+
+		addr, _ := l.ToInteger(1)
+		l.Pop(1)
+
+		if addr < 0 || addr+int(compiler.InstructionLength) > len(vm.MemArray) {
+			l.PushNil()
+			return 1
+		}
+
+		res, err := compiler.DecodeInstructionString(vm.MemArray[addr : addr+int(compiler.InstructionLength)])
+		if err != nil {
+			l.PushNil()
+			return 1
+		}
+
+		l.PushString(res)
+		return 1
+
+	})
+	l.SetField(-2, "decodeInstructionToString")
+
+	l.SetGlobal("Gp")
 
 }

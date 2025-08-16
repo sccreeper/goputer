@@ -27,7 +27,11 @@ func Init(programBytes *C.char, codeLength C.int) {
 
 	py32, _ = vm.NewVM(
 		C.GoBytes(unsafe.Pointer(programBytes), codeLength),
+		expansions.ModuleExists,
+		expansions.Interaction,
 	)
+
+	expansions.LoadExpansions(py32)
 
 	log.Println("VM Created")
 

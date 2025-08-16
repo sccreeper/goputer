@@ -6,7 +6,6 @@ import (
 	"math"
 	comp "sccreeper/goputer/pkg/compiler"
 	c "sccreeper/goputer/pkg/constants"
-	"sccreeper/goputer/pkg/expansions"
 	"sccreeper/goputer/pkg/util"
 	"time"
 )
@@ -51,10 +50,13 @@ type VM struct {
 
 	ExecutionPaused    bool
 	ExecutionPauseTime int64
+
+	ExpansionModuleExists func(location uint32) bool
+	ExpansionInteraction  func(location uint32, data []byte) []byte
 }
 
 // Initialize VM and registers, load code into "memory" etc.
-func NewVM(vmProgram []byte) (*VM, error) {
+func NewVM(vmProgram []byte, expansionModuleExists func(location uint32) bool, expansionInteraction func(location uint32, data []byte) []byte) (*VM, error) {
 
 	machine := &VM{}
 
@@ -106,8 +108,6 @@ func NewVM(vmProgram []byte) (*VM, error) {
 
 	//Copy program into memory
 	copy(machine.MemArray[comp.MemOffset:], vmProgram[:len(vmProgram)-int(comp.PadSize)])
-
-	expansions.LoadExpansions()
 
 	return machine, nil
 
@@ -351,8 +351,8 @@ func (m *VM) Cycle() {
 
 		}
 	case c.IExpansionModuleInteract:
-		if expansions.ModuleExists(m.LongArgVal) {
-			data := expansions.Interaction(m.LongArgVal, m.DataBuffer[:])
+		if m.ExpansionModuleExists(m.LongArgVal) {
+			data := m.ExpansionInteraction(m.LongArgVal, m.DataBuffer[:])
 
 			m.Registers[c.RDataLength] = uint32(len(data))
 			m.Registers[c.RDataPointer] = 0
