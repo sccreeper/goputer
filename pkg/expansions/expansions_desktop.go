@@ -70,6 +70,11 @@ func init() {
 
 	expansions = make(map[string]ExpansionLoaded)
 	busLocations = make(map[uint32]string)
+	registryReferences = make(map[string]map[string]int)
+
+	for _, v := range vm.HookNames {
+		registryReferences[v] = make(map[string]int)
+	}
 
 }
 
@@ -291,7 +296,10 @@ func getBytesFromStack(l *lua.State, index int, pop bool) (result []byte) {
 	return result
 }
 
-func setStubs(l *lua.State, vm *vm.VM) {
+var nextListenerRef int
+var registryReferences map[string]map[string]int
+
+func setStubs(l *lua.State, gpVm *vm.VM) {
 
 	l.NewTable()
 
@@ -353,12 +361,12 @@ func setStubs(l *lua.State, vm *vm.VM) {
 		val, _ := l.ToInteger(2)
 		l.Pop(2)
 
-		if addr < 0 || addr >= len(vm.MemArray) {
+		if addr < 0 || addr >= len(gpVm.MemArray) {
 			l.PushBoolean(false)
 			return 1
 		}
 
-		vm.MemArray[addr] = byte(val)
+		gpVm.MemArray[addr] = byte(val)
 
 		l.PushBoolean(true)
 		return 1
@@ -375,12 +383,12 @@ func setStubs(l *lua.State, vm *vm.VM) {
 		addr, _ := l.ToInteger(1)
 		l.Pop(1)
 
-		if addr < 0 || addr >= len(vm.MemArray) {
+		if addr < 0 || addr >= len(gpVm.MemArray) {
 			l.PushNil()
 			return 1
 		}
 
-		l.PushInteger(int(vm.MemArray[addr]))
+		l.PushInteger(int(gpVm.MemArray[addr]))
 		return 1
 
 	})
@@ -395,13 +403,13 @@ func setStubs(l *lua.State, vm *vm.VM) {
 		addr, _ := l.ToInteger(1)
 		data := getBytesFromStack(l, -1, true)
 
-		if addr < 0 || addr+len(data) > len(vm.MemArray) {
+		if addr < 0 || addr+len(data) > len(gpVm.MemArray) {
 			l.PushBoolean(false)
 			return 1
 		}
 
 		copy(
-			vm.MemArray[addr:addr+len(data)],
+			gpVm.MemArray[addr:addr+len(data)],
 			data[:],
 		)
 
@@ -421,14 +429,14 @@ func setStubs(l *lua.State, vm *vm.VM) {
 		size, _ := l.ToInteger(2)
 		l.Pop(2)
 
-		if addr < 0 || addr+size > len(vm.MemArray) || size <= 0 {
+		if addr < 0 || addr+size > len(gpVm.MemArray) || size <= 0 {
 			l.PushNil()
 			return 1
 		}
 
 		l.NewTable()
 		for i := range size {
-			l.PushInteger(int(vm.MemArray[addr+i]))
+			l.PushInteger(int(gpVm.MemArray[addr+i]))
 			l.RawSetInt(-2, i+1)
 		}
 
@@ -447,13 +455,13 @@ func setStubs(l *lua.State, vm *vm.VM) {
 		value, _ := l.ToInteger(3)
 		l.Pop(3)
 
-		if addr < 0 || addr+size > len(vm.MemArray) {
+		if addr < 0 || addr+size > len(gpVm.MemArray) {
 			l.PushBoolean(false)
 			return 1
 		}
 
 		for i := addr; i < addr+size; i++ {
-			vm.MemArray[i] = byte(value)
+			gpVm.MemArray[i] = byte(value)
 		}
 
 		l.PushBoolean(true)
@@ -477,7 +485,7 @@ func setStubs(l *lua.State, vm *vm.VM) {
 			return 1
 		}
 
-		l.PushInteger(int(vm.Registers[constants.RegisterInts[reg]]))
+		l.PushInteger(int(gpVm.Registers[constants.RegisterInts[reg]]))
 		return 1
 
 	})
@@ -497,7 +505,7 @@ func setStubs(l *lua.State, vm *vm.VM) {
 			return 1
 		}
 
-		vm.Registers[constants.RegisterInts[reg]] = uint32(val)
+		gpVm.Registers[constants.RegisterInts[reg]] = uint32(val)
 
 		l.PushBoolean(true)
 		return 1
@@ -526,11 +534,11 @@ func setStubs(l *lua.State, vm *vm.VM) {
 
 		if buf == "d0" {
 			for i := range val {
-				vm.DataBuffer[offset+i] = val[i]
+				gpVm.DataBuffer[offset+i] = val[i]
 			}
 		} else {
 			for i := range val {
-				vm.TextBuffer[offset+i] = val[i]
+				gpVm.TextBuffer[offset+i] = val[i]
 			}
 		}
 
@@ -561,9 +569,9 @@ func setStubs(l *lua.State, vm *vm.VM) {
 
 		var data []byte
 		if buf == "d0" {
-			data = vm.DataBuffer[offset : offset+length]
+			data = gpVm.DataBuffer[offset : offset+length]
 		} else {
-			data = vm.TextBuffer[offset : offset+length]
+			data = gpVm.TextBuffer[offset : offset+length]
 		}
 
 		l.NewTable()
@@ -577,7 +585,7 @@ func setStubs(l *lua.State, vm *vm.VM) {
 	l.SetField(-2, "getBuffer")
 
 	l.PushGoFunction(func(state *lua.State) int {
-		vm.Finished = true
+		gpVm.Finished = true
 		return 0
 	})
 	l.SetField(-2, "stop")
@@ -591,12 +599,12 @@ func setStubs(l *lua.State, vm *vm.VM) {
 		addr, _ := l.ToInteger(1)
 		l.Pop(1)
 
-		if addr < 0 || addr+int(compiler.InstructionLength) > len(vm.MemArray) {
+		if addr < 0 || addr+int(compiler.InstructionLength) > len(gpVm.MemArray) {
 			l.PushNil()
 			return 1
 		}
 
-		res, err := compiler.DecodeInstructionString(vm.MemArray[addr : addr+int(compiler.InstructionLength)])
+		res, err := compiler.DecodeInstructionString(gpVm.MemArray[addr : addr+int(compiler.InstructionLength)])
 		if err != nil {
 			l.PushNil()
 			return 1
@@ -607,6 +615,104 @@ func setStubs(l *lua.State, vm *vm.VM) {
 
 	})
 	l.SetField(-2, "decodeInstructionToString")
+
+	l.PushGoFunction(func(state *lua.State) int {
+		val, ok := l.ToString(1)
+
+		if !ok {
+			return 0
+		} else {
+			log.Println(val)
+		}
+
+		return 0
+	})
+	l.SetField(-2, "log")
+
+	// Hooks
+
+	l.NewTable()
+
+	l.PushGoFunction(func(state *lua.State) int {
+
+		if !l.IsString(1) || !l.IsString(2) || !l.IsFunction(3) {
+			log.Println("incorrect args when adding hook")
+			l.PushBoolean(false)
+			return 1
+		}
+
+		name, _ := l.ToString(1)
+		event, _ := l.ToString(2)
+
+		ref := nextListenerRef
+
+		l.PushValue(3)
+		l.RawSetInt(lua.RegistryIndex, ref)
+
+		l.Pop(3)
+
+		if !slices.Contains(vm.HookNames, event) {
+			log.Println("unable to add hook")
+			l.PushBoolean(false)
+			return 1
+		}
+
+		err := gpVm.AddHook(
+			name,
+			vm.VMHook(slices.Index(vm.HookNames, event)),
+			func() {
+
+				l.RawGetInt(lua.RegistryIndex, ref)
+				l.Call(0, 0)
+
+			},
+		)
+
+		if err != nil {
+			log.Printf("unable to add hook: %s\n", err.Error())
+			l.PushBoolean(false)
+			return 1
+		}
+
+		registryReferences[event][name] = nextListenerRef
+
+		nextListenerRef++
+
+		l.PushBoolean(true)
+		return 1
+
+	})
+	l.SetField(-2, "addHook")
+
+	l.PushGoFunction(func(state *lua.State) int {
+
+		if !l.IsString(1) || !l.IsString(2) {
+			l.PushBoolean(false)
+			return 1
+		}
+
+		name, _ := l.ToString(1)
+		event, _ := l.ToString(2)
+		l.Pop(2)
+
+		if !slices.Contains(vm.HookNames, event) {
+			l.PushBoolean(false)
+			return 1
+		}
+
+		gpVm.RemoveHook(name, vm.VMHook(slices.Index(vm.HookNames, event)))
+
+		l.PushNil()
+		l.RawSetInt(lua.RegistryIndex, registryReferences[event][name])
+		delete(registryReferences[event], name)
+
+		l.PushBoolean(true)
+		return 1
+
+	})
+	l.SetField(-2, "removeHook")
+
+	l.SetField(-2, "hooks")
 
 	l.SetGlobal("Gp")
 

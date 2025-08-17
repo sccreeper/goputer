@@ -82,6 +82,8 @@ end
 Gp.getBuffer = function (buf, val, offset, length)
 end
 
+-- Other
+
 ---Stop the VM. Internally sets `vm.Finished` to true.
 Gp.stop = function ()
 end
@@ -89,4 +91,25 @@ end
 ---@param addr integer
 ---@return string|nil
 Gp.decodeInstructionToString = function (addr)
+end
+
+---@param val string|number
+Gp.log = function (val)
+end
+
+-- Hooks
+
+Gp.hooks = {}
+
+---@param name string
+---@param event string
+---@param func fun()
+---@return boolean success
+Gp.hooks.addHook = function (name, event, func)
+end
+
+---@param name string
+---@param event string
+---@return boolean success
+Gp.hooks.removeHook = function (name, event)
 end

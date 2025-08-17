@@ -22,6 +22,10 @@ local attributeValues = {
     ["expansions"] = {string.byte("goputer.sys\x00\x00\x00", 1, -1)}
 }
 
+Gp.hooks.addHook("vm_finish", "finish", function ()
+    Gp.log("VM Finished")
+end)
+
 ---Is v in a
 ---@param a table
 ---@param v any

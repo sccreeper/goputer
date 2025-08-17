@@ -53,6 +53,8 @@ type VM struct {
 
 	ExpansionModuleExists func(location uint32) bool
 	ExpansionInteraction  func(location uint32, data []byte) []byte
+
+	Hooks map[VMHook]map[string]func()
 }
 
 // Initialize VM and registers, load code into "memory" etc.
@@ -93,6 +95,12 @@ func NewVM(vmProgram []byte, expansionModuleExists func(location uint32) bool, e
 	machine.ExecutionPaused = false
 	machine.ExecutionPauseTime = 0
 
+	machine.Hooks = make(map[VMHook]map[string]func())
+
+	for i := range hookCount {
+		machine.Hooks[VMHook(i)] = make(map[string]func())
+	}
+
 	//Interrupt table
 
 	for _, v := range util.SliceChunks(vmProgram[interruptStartIndex:definitionStartIndex], 6) {
@@ -114,10 +122,12 @@ func NewVM(vmProgram []byte, expansionModuleExists func(location uint32) bool, e
 }
 
 func (m *VM) Cycle() {
+	m.CallHooks(HookCycle)
 
 	// Stop if the program has terminated
 
 	if m.Finished {
+		m.CallHooks(HookFinish)
 		return
 	}
 
@@ -206,6 +216,7 @@ func (m *VM) Cycle() {
 	if m.Opcode == 0 && m.LongArg == 0 {
 
 		m.Finished = true
+		m.CallHooks(HookFinish)
 		return
 
 	}
