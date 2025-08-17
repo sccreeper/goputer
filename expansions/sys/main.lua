@@ -13,16 +13,22 @@ local attributeIds = {
     memory = 3,
 }
 
+local interactionModes = {
+    query = 0,
+    deviceQuery = 1,
+    finish = 2,
+}
+
 --- @type table<table<integer>>
 local attributeValues = {
-    ["name"] = {string.byte("goputer.sys", 1, -1)},
+    ["name"] = { string.byte("goputer.sys", 1, -1) },
     ["display_width"] = Gp.toLittleEndian(320),
     ["display_height"] = Gp.toLittleEndian(240),
     ["memory"] = Gp.toLittleEndian((2 ^ 16) + (320 * 240 * 3)),
-    ["expansions"] = {string.byte("goputer.sys\x00\x00\x00", 1, -1)}
+    ["expansions"] = { string.byte("goputer.sys\x00\x00", 1, -1) }
 }
 
-Gp.hooks.addHook("vm_finish", "finish", function ()
+Gp.hooks.addHook("vm_finish", "finish", function()
     Gp.log("VM Finished")
 end)
 
@@ -31,7 +37,6 @@ end)
 ---@param v any
 ---@return boolean
 local function arrContainsValue(a, v)
-
     for _, value in pairs(a) do
         if value == v then
             return true
@@ -39,33 +44,88 @@ local function arrContainsValue(a, v)
     end
 
     return false
-
 end
 
 ---Main handler for data
 ---@param data table<integer>
 ---@return table<integer>
 function Handler(data)
+    if data[1] == interactionModes.query then
+        if data[2] == attributeIds.name then
+            return attributeValues["name"]
+        elseif data[2] == attributeIds.displayWidth then
+            return attributeValues["display_width"]
+        elseif data[2] == attributeIds.displayHeight then
+            return attributeValues["display_height"]
+        elseif data[2] == attributeIds.memory then
+            return attributeValues["memory"]
+        end
+    elseif data[1] == interactionModes.deviceQuery then
+        local nameBytes = {}
 
-    if data[2] == attributeIds.name then
-        return attributeValues["name"]
-    elseif data[2] == attributeIds.displayWidth then
-        return attributeValues["display_width"]
-    elseif data[2] == attributeIds.displayHeight then
-        return attributeValues["display_height"]
-    elseif data[2] == attributeIds.memory then
-        return attributeValues["memory"]
+        for i = 2, #data, 1 do
+            if not data[i] == 0 then
+                nameBytes[i - 1] = data[i]
+            else
+                break
+            end
+        end
+
+        local deviceName = string.char(table.unpack(nameBytes))
+
+        if deviceName == "goputer.sys" then
+            return {0}
+        end
+
+        -- Parse the device locations field
+
+        --- @type table<integer, table>
+        local devices = {}
+
+        local inDeviceName = true
+        local parsedDeviceName = ""
+        local parsedDeviceLocation = 0
+
+        local i = 0
+        while i <= #attributeValues["expansions"] do
+            if ~inDeviceName then
+                parsedDeviceLocation = attributeValues["expansions"][i]
+
+                devices[#devices + 1] = {
+                    name = parsedDeviceName,
+                    location = parsedDeviceLocation,
+                }
+
+                parsedDeviceName = ""
+                parsedDeviceLocation = 0
+                inDeviceName = true
+            elseif attributeValues["expansions"][i] == 0 then
+                inDeviceName = false
+                i = i + 1
+            else
+                parsedDeviceName = parsedDeviceName .. string.char(attributeValues["devices"][i])
+                i = i + 1
+            end
+        end
+
+        for idx in pairs(devices) do
+            if devices[idx].name == deviceName then
+                return { devices[idx].location }
+            end
+        end
+
+        return { 255 }
+    elseif data[1] == interactionModes.finish then
+        Gp.stop()
     end
 
-    return {0}
-
+    return { 0 }
 end
 
 ---Sets an attribute
 ---@param name string
 ---@param data table<integer>
 function SetAttribute(name, data)
-
     assert(type(name), "string")
 
     if not arrContainsValue(attributeNames, name) then
@@ -74,14 +134,12 @@ function SetAttribute(name, data)
     end
 
     attributeValues[name] = data
-
 end
 
 ---Gets an attribute
 ---@param name string
 ---@return any
 function GetAttribute(name)
-
     assert(type(name), "string")
 
     if not arrContainsValue(attributeNames, name) then
