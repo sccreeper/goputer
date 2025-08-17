@@ -10,7 +10,6 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
-	"runtime"
 	"sccreeper/goputer/pkg/expansions"
 	"sccreeper/goputer/pkg/util"
 	"slices"
@@ -226,12 +225,6 @@ func All(includeList string) {
 			fmt.Printf("Config error with expansion %s:\n", v.Name())
 			fmt.Println(err.Error())
 			continue
-		} else if !slices.Contains(expConfig.Info.SupportedPlatforms, runtime.GOOS) {
-			fmt.Printf("Error cannot build expansion %s (%s) on current platform %s as it only supports platforms %s\n",
-				expConfig.Info.Name,
-				expConfig.Info.ID,
-				runtime.GOOS,
-				strings.Join(expConfig.Info.SupportedPlatforms, ", "))
 		} else if !slices.Contains(strings.Split(includeList, ","), expConfig.Build.Artifact) {
 			fmt.Printf("Skipping artifact %s\n", expConfig.Build.Artifact)
 			os.Chdir(previousDir)

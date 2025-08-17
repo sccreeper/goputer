@@ -5,6 +5,7 @@ import (
 	"embed"
 	"sccreeper/goputer/pkg/compiler"
 	"sccreeper/goputer/pkg/constants"
+	"sccreeper/goputer/pkg/expansions"
 	"sccreeper/goputer/pkg/util"
 	"sccreeper/goputer/pkg/vm"
 	"testing"
@@ -73,7 +74,7 @@ func TestInstructions(t *testing.T) {
 			// Create VM instance
 			// TODO: make this more time and memory efficient.
 
-			test32, _ := vm.NewVM(programBytes, false)
+			test32, _ := vm.NewVM(programBytes, expansions.ModuleExists, expansions.Interaction)
 
 			for {
 				if test32.Finished {
@@ -108,7 +109,7 @@ func BenchmarkInstructions(b *testing.B) {
 	for _, v := range benchmarkDetails.Tests {
 
 		programBytes := compile(v.CodeText)
-		test32, _ := vm.NewVM(programBytes, false)
+		test32, _ := vm.NewVM(programBytes, expansions.ModuleExists, expansions.Interaction)
 
 		initialProgramCounter := test32.Registers[constants.RProgramCounter]
 
@@ -172,7 +173,7 @@ func TestJump(t *testing.T) {
 		panic(err)
 	}
 
-	test32, _ := vm.NewVM(compile(string(programText[:])), false)
+	test32, _ := vm.NewVM(compile(string(programText[:])), expansions.ModuleExists, expansions.Interaction)
 
 	var inJump bool = false
 	var jumpAddr uint32
@@ -209,7 +210,7 @@ func TestCall(t *testing.T) {
 		panic(err)
 	}
 
-	test32, _ := vm.NewVM(compile(string(programText[:])), false)
+	test32, _ := vm.NewVM(compile(string(programText[:])), expansions.ModuleExists, expansions.Interaction)
 
 	var inCall bool = false
 	var callAddr uint32
@@ -250,7 +251,7 @@ func TestConditionalJump(t *testing.T) {
 		panic(err)
 	}
 
-	test32, _ := vm.NewVM(compile(string(programText[:])), false)
+	test32, _ := vm.NewVM(compile(string(programText[:])), expansions.ModuleExists, expansions.Interaction)
 
 	var inJump bool = false
 	var jumpAddr uint32
@@ -287,7 +288,7 @@ func TestConditionalCall(t *testing.T) {
 		panic(err)
 	}
 
-	test32, _ := vm.NewVM(compile(string(programText[:])), false)
+	test32, _ := vm.NewVM(compile(string(programText[:])), expansions.ModuleExists, expansions.Interaction)
 
 	var inCall bool = false
 	var jumpAddr uint32

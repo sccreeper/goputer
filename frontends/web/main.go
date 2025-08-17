@@ -11,6 +11,7 @@ import (
 	"math"
 	"sccreeper/goputer/pkg/compiler"
 	"sccreeper/goputer/pkg/constants"
+	"sccreeper/goputer/pkg/expansions"
 	"sccreeper/goputer/pkg/gpimg"
 	"sccreeper/goputer/pkg/util"
 	"sccreeper/goputer/pkg/vm"
@@ -170,7 +171,8 @@ func initVm() js.Func {
 
 	initFunc := js.FuncOf(func(this js.Value, args []js.Value) any {
 
-		js32, _ = vm.NewVM(programBytes, true)
+		js32, _ = vm.NewVM(programBytes, expansions.ModuleExists, expansions.Interaction)
+		expansions.LoadExpansions(js32)
 
 		return js.ValueOf(nil)
 

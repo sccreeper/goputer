@@ -6,7 +6,6 @@ import (
 	"math"
 	comp "sccreeper/goputer/pkg/compiler"
 	c "sccreeper/goputer/pkg/constants"
-	"sccreeper/goputer/pkg/expansions"
 	"sccreeper/goputer/pkg/util"
 	"time"
 )
@@ -52,11 +51,15 @@ type VM struct {
 	ExecutionPaused    bool
 	ExecutionPauseTime int64
 
-	ExpansionsSupported bool
+	ExpansionModuleExists func(location uint32) bool
+	ExpansionInteraction  func(location uint32, data []byte) []byte
+
+	Hooks      map[VMHook]map[string]func()
+	hasStarted bool
 }
 
 // Initialize VM and registers, load code into "memory" etc.
-func NewVM(vmProgram []byte, expansionsSupported bool) (*VM, error) {
+func NewVM(vmProgram []byte, expansionModuleExists func(location uint32) bool, expansionInteraction func(location uint32, data []byte) []byte) (*VM, error) {
 
 	machine := &VM{}
 
@@ -79,7 +82,6 @@ func NewVM(vmProgram []byte, expansionsSupported bool) (*VM, error) {
 	machine.Finished = false
 	machine.ProgramBounds = comp.MemOffset + uint32(len(vmProgram[:len(vmProgram)-int(comp.PadSize)]))
 	machine.Registers[c.RVideoBrightness] = 255
-	machine.ExpansionsSupported = expansionsSupported
 
 	machine.Registers[c.RCallStackZeroPointer] = comp.MemOffset - comp.CallStackSize
 	machine.Registers[c.RCallStackPointer] = machine.Registers[c.RCallStackZeroPointer]
@@ -93,6 +95,12 @@ func NewVM(vmProgram []byte, expansionsSupported bool) (*VM, error) {
 
 	machine.ExecutionPaused = false
 	machine.ExecutionPauseTime = 0
+
+	machine.Hooks = make(map[VMHook]map[string]func())
+
+	for i := range hookCount {
+		machine.Hooks[VMHook(i)] = make(map[string]func())
+	}
 
 	//Interrupt table
 
@@ -110,21 +118,22 @@ func NewVM(vmProgram []byte, expansionsSupported bool) (*VM, error) {
 	//Copy program into memory
 	copy(machine.MemArray[comp.MemOffset:], vmProgram[:len(vmProgram)-int(comp.PadSize)])
 
-	// Load expansions
-
-	if expansionsSupported {
-		expansions.LoadExpansions()
-	}
-
 	return machine, nil
 
 }
 
 func (m *VM) Cycle() {
+	m.CallHooks(HookCycle)
+
+	if !m.hasStarted {
+		m.hasStarted = true
+		m.CallHooks(HookStart)
+	}
 
 	// Stop if the program has terminated
 
 	if m.Finished {
+		m.CallHooks(HookFinish)
 		return
 	}
 
@@ -199,6 +208,7 @@ func (m *VM) Cycle() {
 
 		// Frontends should do the checking but this is just to be sure.
 		if m.Subscribed(i) {
+			m.CallHooks(HookSubbedInterrupt)
 			m.HandlingInterrupt = true
 
 			m.subbedInterrupt(i)
@@ -213,6 +223,7 @@ func (m *VM) Cycle() {
 	if m.Opcode == 0 && m.LongArg == 0 {
 
 		m.Finished = true
+		m.CallHooks(HookFinish)
 		return
 
 	}
@@ -335,6 +346,7 @@ func (m *VM) Cycle() {
 
 	//Other
 	case c.ICallInterrupt:
+		m.CallHooks(HookCalledInterrupt)
 		m.calledInterrupt()
 	case c.IHalt:
 
@@ -358,8 +370,8 @@ func (m *VM) Cycle() {
 
 		}
 	case c.IExpansionModuleInteract:
-		if expansions.ModuleExists(m.LongArgVal) && m.ExpansionsSupported {
-			data := expansions.Interaction(m.LongArgVal, m.DataBuffer[:])
+		if m.ExpansionModuleExists(m.LongArgVal) {
+			data := m.ExpansionInteraction(m.LongArgVal, m.DataBuffer[:])
 
 			m.Registers[c.RDataLength] = uint32(len(data))
 			m.Registers[c.RDataPointer] = 0

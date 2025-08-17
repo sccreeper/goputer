@@ -103,7 +103,8 @@ func Run(ctx *cli.Context) error {
 		Button: 64,
 	}
 
-	gp32, _ = vm.NewVM(programBytes, true)
+	gp32, _ = vm.NewVM(programBytes, expansions.ModuleExists, expansions.Interaction)
+	expansions.LoadExpansions(gp32)
 
 	var pr *profiler.Profiler
 
@@ -117,7 +118,7 @@ func Run(ctx *cli.Context) error {
 
 	}
 
-	expansions.SetAttribute("goputer.sys", "name", "gp32")
+	expansions.SetAttribute("goputer.sys", "name", []byte("gp32"))
 
 	sound.SoundInit()
 

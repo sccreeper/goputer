@@ -19,5 +19,7 @@
         "--stdin"
     ],
 
-    "python.defaultInterpreterPath": "./.venv/bin/python"
+    "python.defaultInterpreterPath": "./.venv/bin/python",
+
+    "Lua.runtime.version": "Lua 5.2",
 }
