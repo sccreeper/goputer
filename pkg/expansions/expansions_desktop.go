@@ -79,7 +79,7 @@ func init() {
 }
 
 // Desktop method for loading expansions
-func LoadExpansions(vm *vm.VM) {
+func LoadExpansions(gpVm *vm.VM) {
 
 	var brokenPlugins []string = make([]string, 0)
 
@@ -122,7 +122,7 @@ func LoadExpansions(vm *vm.VM) {
 				}
 
 				lua.OpenLibraries(expLoaded.LuaVM)
-				setStubs(expLoaded.LuaVM, vm)
+				setStubs(expLoaded.LuaVM, gpVm)
 
 				err = lua.DoFile(expLoaded.LuaVM, filepath.Join(expansionDir, v.Name(), fmt.Sprintf("%s.lua", expConfig.Info.ID)))
 				if loaderError(err, v.Name()) {
@@ -220,6 +220,8 @@ func LoadExpansions(vm *vm.VM) {
 	for k, v := range busLocations {
 		busLocationBytes = append(busLocationBytes, []byte(fmt.Sprintf("%s\x00%d\x00", v, k))...)
 	}
+
+	gpVm.CallHooks(vm.HookInit)
 
 }
 

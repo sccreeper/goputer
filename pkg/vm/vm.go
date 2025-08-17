@@ -54,7 +54,8 @@ type VM struct {
 	ExpansionModuleExists func(location uint32) bool
 	ExpansionInteraction  func(location uint32, data []byte) []byte
 
-	Hooks map[VMHook]map[string]func()
+	Hooks      map[VMHook]map[string]func()
+	hasStarted bool
 }
 
 // Initialize VM and registers, load code into "memory" etc.
@@ -123,6 +124,11 @@ func NewVM(vmProgram []byte, expansionModuleExists func(location uint32) bool, e
 
 func (m *VM) Cycle() {
 	m.CallHooks(HookCycle)
+
+	if !m.hasStarted {
+		m.hasStarted = true
+		m.CallHooks(HookStart)
+	}
 
 	// Stop if the program has terminated
 
@@ -202,6 +208,7 @@ func (m *VM) Cycle() {
 
 		// Frontends should do the checking but this is just to be sure.
 		if m.Subscribed(i) {
+			m.CallHooks(HookSubbedInterrupt)
 			m.HandlingInterrupt = true
 
 			m.subbedInterrupt(i)
@@ -339,6 +346,7 @@ func (m *VM) Cycle() {
 
 	//Other
 	case c.ICallInterrupt:
+		m.CallHooks(HookCalledInterrupt)
 		m.calledInterrupt()
 	case c.IHalt:
 

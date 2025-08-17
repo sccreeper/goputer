@@ -99,17 +99,25 @@ end
 
 -- Hooks
 
+--- @alias hook
+--- | "cycle"
+--- | "finish"
+--- | "start"
+--- | "called_interrupt"
+--- | "subbed_interrupt"
+--- | "init"
+
 Gp.hooks = {}
 
 ---@param name string
----@param event string
+---@param event hook
 ---@param func fun()
 ---@return boolean success
 Gp.hooks.addHook = function (name, event, func)
 end
 
 ---@param name string
----@param event string
+---@param event hook
 ---@return boolean success
 Gp.hooks.removeHook = function (name, event)
 end

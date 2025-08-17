@@ -7,13 +7,21 @@ import (
 type VMHook int
 
 const (
-	HookCycle  VMHook = 0
-	HookFinish VMHook = 1
+	HookCycle           VMHook = 0
+	HookFinish          VMHook = 1
+	HookStart           VMHook = 2
+	HookCalledInterrupt VMHook = 3
+	HookSubbedInterrupt VMHook = 4
+	HookInit            VMHook = 5
 )
 
 var HookNames []string = []string{
-	"cycle",
-	"finish",
+	"cycle",            // HookCycle
+	"finish",           // HookFinish
+	"start",            // HookStart
+	"called_interrupt", // HookCalledInterrupt
+	"subbed_interrupt", // HookSubbedInterrupt
+	"init",             // HookInit
 }
 
 const hookCount = 2
