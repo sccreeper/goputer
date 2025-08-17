@@ -12,7 +12,6 @@ A computer emulator/virtual machine that intends to demonstrate how basic comput
 - [Features](#features)
   - [Complete](#complete)
   - [Working on](#working-on)
-  - [In the future](#in-the-future)
 - [Documentation \& getting started.](#documentation--getting-started)
 - [Project layout](#project-layout)
 - [Build instructions](#build-instructions)
@@ -22,6 +21,7 @@ A computer emulator/virtual machine that intends to demonstrate how basic comput
 - [Development](#development)
   - [Testing](#testing)
 - [Credits](#credits)
+  - [Core](#core)
   - [GP32 Frontend](#gp32-frontend)
   - [goputerpy Frontend](#goputerpy-frontend)
   - [Web playground/frontend.](#web-playgroundfrontend)
@@ -41,17 +41,12 @@ A computer emulator/virtual machine that intends to demonstrate how basic comput
 - Standalone executables.
 - Frontends to show VM output.
 - A [WASM based runtime](https://goputer.oscarcp.net) that runs in a web browser.
-- Expansion cards/modules.
+- Expansion modules written in Lua.
 
 #### Working on
 
 - IDE for easy development.
-
-#### In the future
-
-- Rewrite of compiler.
 - High level language.
-- Non-native plugins via Lua.
 
 ---
 
@@ -71,6 +66,7 @@ See the [project wiki](https://github.com/sccreeper/goputer/wiki) or try the pla
 - `cmd/goputer` The CLI tool for compiling, running & disassembling code.
 - `cmd/launcher` The GUI for running code.
 - `pkg` Shared code. Includes the compiler, VM runtime and constants for instructions and registers.
+- `expansions` Source code for all of the default expansions.
 
 ---
 
@@ -200,6 +196,11 @@ go test ./tests -v
 
 ### Credits
 
+#### Core
+
+- Lua runtime - [Shopify/go-lua](https://github.com/Shopify/go-lua)
+  - The Lua runtime used by expansions.
+
 #### GP32 Frontend
 
 - Raylib Go Bindings - [gen2brain/raylib-go](https://github.com/gen2brain/raylib-go)
@@ -246,6 +247,8 @@ go test ./tests -v
   - Used for colouring & formatting the terminal output i.e. making it look nice.
 - Termlink - [savioxavier/termlink](https://github.com/savioxavier/termlink)
   - Inserting links into the terminal.
+- Tview - [rivo/tview](https://github.com/rivo/tview)
+  - Used for the profiler UI.
 
 #### GUI launcher
 - Fyne - [fyne-io/fyne](https://github.com/fyne-io/fyne)
