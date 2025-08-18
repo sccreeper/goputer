@@ -2,7 +2,8 @@
     "files.associations": {
         "raylib.h": "c",
         "cstring": "c",
-        "typeinfo": "c"
+        "typeinfo": "c",
+        "time.h": "c"
     },
     "go.lintTool": "golangci-lint",
     "go.lintFlags": [

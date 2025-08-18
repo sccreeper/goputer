@@ -75,6 +75,15 @@ func copyFile(src string, dest string) error {
 // Builds, clears directory beforehand & copies examples
 func All(includeList string) {
 
+	var execExtension string
+	if val, ok := os.LookupEnv("GOOS"); ok {
+		if val == "windows" {
+			execExtension = ".exe"
+		}
+	} else {
+		execExtension = ""
+	}
+
 	if _, err := os.Stat("./build"); !os.IsExist(err) {
 		os.RemoveAll("./build")
 		os.Mkdir("./build", os.ModePerm)
@@ -94,11 +103,14 @@ func All(includeList string) {
 
 	os.Chdir("./cmd/goputer/")
 
-	sh.Run("go", "build", "-ldflags", normalLdFlags, "-o", "goputer")
+	sh.Run("go", "build", "-ldflags", normalLdFlags, "-o", "goputer"+execExtension)
 
 	os.Chdir(previousDir)
 
-	copyFile("./cmd/goputer/goputer", "./build/goputer")
+	copyFile(
+		"./cmd/goputer/goputer"+execExtension,
+		"./build/goputer"+execExtension,
+	)
 
 	ldStripFlags := "-s -w"
 
@@ -111,11 +123,14 @@ func All(includeList string) {
 
 	os.Chdir("./cmd/gplauncher")
 
-	sh.Run("go", "build", "-ldflags", ldStripFlags, "-o", "gplauncher")
+	sh.Run("go", "build", "-ldflags", ldStripFlags, "-o", "gplauncher"+execExtension)
 
 	os.Chdir(previousDir)
 
-	copyFile("./cmd/gplauncher/gplauncher", "./build/gplauncher")
+	copyFile(
+		"./cmd/gplauncher/gplauncher"+execExtension,
+		"./build/gplauncher"+execExtension,
+	)
 
 	//Build IDE
 
@@ -126,11 +141,14 @@ func All(includeList string) {
 
 	os.Chdir("./cmd/ide")
 
-	sh.Run("go", "build", "-ldflags", ldStripFlags, "-o", "ide")
+	sh.Run("go", "build", "-ldflags", ldStripFlags, "-o", "ide"+execExtension)
 
 	os.Chdir(previousDir)
 
-	copyFile("./cmd/ide/ide", "./build/ide")
+	copyFile(
+		"./cmd/ide/ide"+execExtension,
+		"./build/ide"+execExtension,
+	)
 
 	// Build image converter
 	fmt.Println("Building gpimg...")
@@ -140,11 +158,14 @@ func All(includeList string) {
 
 	os.Chdir("./cmd/gpimg")
 
-	sh.Run("go", "build", "-ldflags", ldStripFlags, "-o", "gpimg")
+	sh.Run("go", "build", "-ldflags", ldStripFlags, "-o", "gpimg"+execExtension)
 
 	os.Chdir(previousDir)
 
-	copyFile("./cmd/gpimg/gpimg", "./build/gpimg")
+	copyFile(
+		"./cmd/gpimg/gpimg"+execExtension,
+		"./build/gpimg"+execExtension,
+	)
 
 	//Copy the examples
 

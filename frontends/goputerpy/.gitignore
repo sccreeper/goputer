@@ -1,4 +1,4 @@
 build/*
 __pycache__
 temp
-goputerpy.spec
+goputerpy*.spec

@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"sccreeper/goputer/pkg/compiler"
 	"sccreeper/goputer/pkg/util"
 	"strings"
@@ -86,12 +87,12 @@ func runFrontend(ctx *cli.Context) error {
 		os.Exit(1)
 	}
 
-	execPath, err := os.Executable()
+	cliExecPath, err := os.Executable()
 	if err != nil {
 		return err
 	}
 
-	execPath, err = filepath.EvalSymlinks(execPath)
+	cliExecPath, err = filepath.EvalSymlinks(cliExecPath)
 	if err != nil {
 		return err
 	}
@@ -101,12 +102,18 @@ func runFrontend(ctx *cli.Context) error {
 		return err
 	}
 
+	if runtime.GOOS == "windows" {
+		formattedCommand[0] += ".exe"
+		formattedCommand[0] = strings.ReplaceAll(formattedCommand[0], "/", "\\")
+		formattedCommand[0] = filepath.Join(filepath.Dir(cliExecPath), "frontends", frontendToUse, formattedCommand[0])
+	}
+
 	cmd := exec.Command(formattedCommand[0], formattedCommand[1:]...)
-	cmd.Dir = filepath.Join(filepath.Dir(execPath), "frontends", frontendToUse)
+	cmd.Dir = filepath.Join(filepath.Dir(cliExecPath), "frontends", frontendToUse)
 
 	cmd.Env = append(
 		os.Environ(),
-		fmt.Sprintf("GOPUTER_ROOT=%s", filepath.Dir(execPath)),
+		fmt.Sprintf("GOPUTER_ROOT=%s", filepath.Dir(cliExecPath)),
 		fmt.Sprintf("GOPUTER_CWD=%s", cwd),
 	)
 

@@ -457,8 +457,10 @@ func CorrectedMouseY() int32 {
 
 func main() {
 
-	if _, exists := os.LookupEnv("GOPUTER_ROOT"); !exists {
+	if val, exists := os.LookupEnv("GOPUTER_ROOT"); !exists {
 		log.Fatal("GOPUTER_ROOT not set")
+	} else {
+		log.Printf("GOPUTER_ROOT: %s\n", val)
 	}
 
 	app := &cli.App{

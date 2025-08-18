@@ -5,10 +5,15 @@ rm -rf ./build
 mkdir ./build
 mkdir ./build/goputerpy
 
-go build -buildmode=c-shared -o ./build/bindings.so ./goputerpy/bindings.go
+ext=".so"
+if [ "$GOOS" = "windows" ]; then
+    ext=".dll"
+fi
+
+go build -buildmode=c-shared -o "./build/bindings${ext}" ./goputerpy/bindings.go
 rm ./build/bindings.h
 
-pyinstaller --onefile --name goputerpy \
+pyinstaller --onefile --name "goputerpy$( [ $GOOS = windows ] && echo .exe )" \
     --paths ../../.venv/lib64/python3.13/site-packages \
     --paths ../../.venv/lib/python3.13/site-packages \
     --distpath ./build/ \

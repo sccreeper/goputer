@@ -10,7 +10,6 @@ import (
 	"sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/util"
 	"sccreeper/goputer/pkg/vm"
-	"time"
 )
 
 const magicString string = "GPPR"
@@ -32,7 +31,7 @@ type Profiler struct {
 	Data        map[uint64]*ProfileEntry
 
 	cycleAddress uint32
-	cycleStart   time.Time
+	cycleStart   uint64
 	cycleLength  uint64
 }
 
@@ -193,7 +192,7 @@ func (p *Profiler) Load(r io.ReadSeeker) (int, error) {
 
 func (p *Profiler) StartCycle() {
 
-	p.cycleStart = time.Now()
+	p.cycleStart = profilerGetTime()
 	p.cycleAddress = p.vm.Registers[constants.RProgramCounter]
 
 }
@@ -208,7 +207,7 @@ func (p *Profiler) Cycle() {
 
 func (p *Profiler) EndCycle() {
 
-	p.cycleLength = uint64(time.Since(p.cycleStart).Nanoseconds())
+	p.cycleLength = profilerGetTime() - p.cycleStart
 
 	p.TotalCycles++
 

@@ -19,7 +19,7 @@ local interactionModes = {
     finish = 2,
 }
 
---- @type table<table<integer>>
+--- @type table<string, table<integer>>
 local attributeValues = {
     ["name"] = { string.byte("goputer.sys", 1, -1) },
     ["display_width"] = Gp.toLittleEndian(320),
@@ -64,7 +64,7 @@ function Handler(data)
         local nameBytes = {}
 
         for i = 2, #data, 1 do
-            if not data[i] == 0 then
+            if data[i] ~= 0 then
                 nameBytes[i - 1] = data[i]
             else
                 break
@@ -79,16 +79,16 @@ function Handler(data)
 
         -- Parse the device locations field
 
-        --- @type table<integer, table>
+        --- @type table<integer, {name: string, location: integer}>
         local devices = {}
 
         local inDeviceName = true
         local parsedDeviceName = ""
         local parsedDeviceLocation = 0
 
-        local i = 0
+        local i = 1
         while i <= #attributeValues["expansions"] do
-            if ~inDeviceName then
+            if not inDeviceName then
                 parsedDeviceLocation = attributeValues["expansions"][i]
 
                 devices[#devices + 1] = {
@@ -99,11 +99,12 @@ function Handler(data)
                 parsedDeviceName = ""
                 parsedDeviceLocation = 0
                 inDeviceName = true
+                i = i + 1
             elseif attributeValues["expansions"][i] == 0 then
                 inDeviceName = false
                 i = i + 1
             else
-                parsedDeviceName = parsedDeviceName .. string.char(attributeValues["devices"][i])
+                parsedDeviceName = parsedDeviceName .. string.char(attributeValues["expansions"][i])
                 i = i + 1
             end
         end
@@ -126,7 +127,7 @@ end
 ---@param name string
 ---@param data table<integer>
 function SetAttribute(name, data)
-    assert(type(name), "string")
+    assert(type(name) == "string", "name must be a string")
 
     if not arrContainsValue(attributeNames, name) then
         print(string.format("no attribute called %s", name))
@@ -140,7 +141,7 @@ end
 ---@param name string
 ---@return any
 function GetAttribute(name)
-    assert(type(name), "string")
+    assert(type(name) == "string", "name must be a string")
 
     if not arrContainsValue(attributeNames, name) then
         return {}
