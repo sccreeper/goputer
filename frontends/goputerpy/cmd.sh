@@ -13,7 +13,7 @@ fi
 go build -buildmode=c-shared -o "./build/bindings${ext}" ./goputerpy/bindings.go
 rm ./build/bindings.h
 
-pyinstaller --onefile --name "goputerpy$( [ $GOOS = windows ] && echo .exe )" \
+PYGAME_DETECT_AVX2=1 pyinstaller --onefile --name "goputerpy$( [ $GOOS = windows ] && echo .exe )" \
     --paths ../../.venv/lib64/python3.13/site-packages \
     --paths ../../.venv/lib/python3.13/site-packages \
     --distpath ./build/ \

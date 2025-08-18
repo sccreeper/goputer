@@ -48,7 +48,7 @@ _is_finished.restype = ctypes.c_uint32
 _cycle = _lib.Cycle
 _cycle.restype = ctypes.c_void_p
 
-_free = _lib.free
+_free = _lib.CFree
 _free.argtypes = [ctypes.c_void_p]
 
 _get_arg = _lib.GetArgs

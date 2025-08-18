@@ -197,3 +197,10 @@ func GetExpansionModuleAttribute(id *C.char, attrib *C.char) *C.char {
 	return C.CString(string(expansions.GetAttribute(idStr, attribString)))
 
 }
+
+// For Python on Windows
+
+//export CFree
+func CFree(ptr *C.uint8_t) {
+	C.free(unsafe.Pointer(ptr))
+}
