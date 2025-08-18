@@ -96,6 +96,9 @@ func NewVM(vmProgram []byte, expansionModuleExists func(location uint32) bool, e
 	machine.ExecutionPaused = false
 	machine.ExecutionPauseTime = 0
 
+	machine.ExpansionModuleExists = expansionModuleExists
+	machine.ExpansionInteraction = expansionInteraction
+
 	machine.Hooks = make(map[VMHook]map[string]func())
 
 	for i := range hookCount {
