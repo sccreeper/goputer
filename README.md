@@ -15,11 +15,11 @@ A computer emulator/virtual machine that intends to demonstrate how basic comput
 - [Documentation \& getting started.](#documentation--getting-started)
 - [Project layout](#project-layout)
 - [Build instructions](#build-instructions)
-  - [Docker](#docker)
+  - [Docker (targets Linux)](#docker-targets-linux)
   - [Linux](#linux)
       - [Other](#other)
   - [Windows](#windows)
-  - [Steps](#steps)
+    - [Steps](#steps)
 - [Development](#development)
   - [Testing](#testing)
 - [Credits](#credits)
@@ -74,9 +74,9 @@ See the [project wiki](https://github.com/sccreeper/goputer/wiki) or try the pla
 
 ### Build instructions
 
-Build instructions for Linux, other platforms are not supported at the moment as native plugins do not work at all. See [plugin](https://pkg.go.dev/plugin)
+Build instructions exist for Linux and Windows (amd64). The project should compile for MacOS as well however this hasn't been tested.
 
-#### Docker
+#### Docker (targets Linux)
 
 If you have [Docker](https://www.docker.com/) installed, you can build goputer in Docker without installing additional dependencies by running:
 
@@ -188,8 +188,9 @@ alsa-lib-devel
 - [mingw](https://www.mingw-w64.org/) must be installed, in addition to the prerequisites listed under [Linux](#linux).
 - The gp32 frontend will cross compile however the goputerpy one will not, this is because [pyinstaller](https://pyinstaller.org/en/stable/) does not support cross compilation.
 - [MSYS2](https://www.msys2.org/) is the recommended compilation environment if you are compiling on Windows and targeting Windows.
+- You may not be able to compile the web frontend on Windows.
 
-#### Steps
+##### Steps
 
 1. Install MSYS2.
 2. Once in MSYS2 (mingw64) install the required packages:
@@ -205,19 +206,21 @@ alsa-lib-devel
    *Note:* You may need to set those environment variables again.
 4. Clone the repository:
     ```
-    https://github.com/sccreeper/goputer.git
+    git clone https://github.com/sccreeper/goputer.git
     ```
 5. cd into the repository and install dependencies:
    ```
+   cd goputer
    poetry install
    npm install
    ```
 6. Build:
     ```
-    cd goputer
     sh ./build_win.sh
     ```
-    Optionally run `eval $(poetry env activate)` if building the Python frontend as well.
+    Optionally run `eval $(poetry env activate)` if building the Python frontend as well. This output the location of the virtual environment activation script.
+
+The result typically be in `C:\msys64\home\username\goputer\build`.
 
 ---
 
