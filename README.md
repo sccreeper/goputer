@@ -18,6 +18,8 @@ A computer emulator/virtual machine that intends to demonstrate how basic comput
   - [Docker](#docker)
   - [Linux](#linux)
       - [Other](#other)
+  - [Windows](#windows)
+  - [Steps](#steps)
 - [Development](#development)
   - [Testing](#testing)
 - [Credits](#credits)
@@ -88,6 +90,8 @@ This will build the container and then run `mage dev` inside the container, outp
 
 #### Linux
 
+Partial cross compilation targeting Windows systems can be done on Linux, see [Windows](#windows).
+
 **Perquisites**
 
 - Languages
@@ -128,7 +132,7 @@ gtk3-devel golang golang-tests python3
 alsa-lib-devel
 ```
 
-**Building**
+**Building (For Linux)**
 
 1. Install the prerequisites that are mentioned above.
 2. Check that everything works.
@@ -168,13 +172,52 @@ alsa-lib-devel
    mage build
    ```
 
-    Alternatively you can run `mage dev frontend.gp32,expansion.goputer.sys` to only build the `gp32` frontend
+    Alternatively you can run `mage dev frontend.gp32,expansion.goputer.sys` to only build the `gp32` frontend.
+
 
 6. Go to the build directory and run the `hello_world.gp` example.
    ```
    cd build
    ./goputer run -f gp32 -e ./examples/hello_world.gp
    ```
+
+#### Windows
+
+**TLDR;**
+- Windows executables can be built using cross compilation on Linux (run `build_win.sh`). 
+- [mingw](https://www.mingw-w64.org/) must be installed, in addition to the prerequisites listed under [Linux](#linux).
+- The gp32 frontend will cross compile however the goputerpy one will not, this is because [pyinstaller](https://pyinstaller.org/en/stable/) does not support cross compilation.
+- [MSYS2](https://www.msys2.org/) is the recommended compilation environment if you are compiling on Windows and targeting Windows.
+
+#### Steps
+
+1. Install MSYS2.
+2. Once in MSYS2 (mingw64) install the required packages:
+    ```
+    pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-go mingw-w64-x86_64-nodejs mingw-w64-x86_64-python mingw-w64-x86_64-python-poetry mingw-w64-python-certifi mingw-w64-python-pip mingw-w64-x86_64-pyinstaller git
+    ```
+3. Install mage:
+   ```
+   export GOBIN=$HOME/go/bin
+   export PATH=$GOBIN:$PATH
+   go install github.com/magefile/mage@latest
+   ```
+   *Note:* You may need to set those environment variables again.
+4. Clone the repository:
+    ```
+    https://github.com/sccreeper/goputer.git
+    ```
+5. cd into the repository and install dependencies:
+   ```
+   poetry install
+   npm install
+   ```
+6. Build:
+    ```
+    cd goputer
+    sh ./build_win.sh
+    ```
+    Optionally run `eval $(poetry env activate)` if building the Python frontend as well.
 
 ---
 
