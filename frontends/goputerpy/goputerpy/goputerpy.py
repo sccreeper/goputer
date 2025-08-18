@@ -2,15 +2,18 @@
 import ctypes
 from . import errors, constants
 import os
+import platform
 
 print("Loading SO...")
 
 files = os.listdir(".")
 
+lib_extension = ".dll" if platform.system() == "Windows" else ".so"
+
 if "goputer" in files:
-    _lib = ctypes.cdll.LoadLibrary("./frontends/goputerpy/bindings.so")
+    _lib = ctypes.cdll.LoadLibrary(f"./frontends/goputerpy/bindings{lib_extension}")
 else:
-    _lib = ctypes.cdll.LoadLibrary("./bindings.so")
+    _lib = ctypes.cdll.LoadLibrary(f"./bindings{lib_extension}")
 
 _init = _lib.Init
 _init.argtypes = [ctypes.Array, ctypes.c_int]
