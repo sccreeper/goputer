@@ -7,51 +7,74 @@ import (
 
 func (m *VM) move() {
 
+	var moveLength byte
+
+	if m.Registers[c.RDataLength] > 4 || m.Registers[c.RDataLength] == 0 {
+		moveLength = 4
+	} else {
+		moveLength = byte(m.Registers[c.RDataLength])
+	}
+
 	if m.IsImmediate {
-		
-		if m.RightArg == uint16(c.RVideoText) {
-				binary.LittleEndian.PutUint32(m.TextBuffer[:4], m.LeftArgVal)
-		} else if m.RightArg == uint16(c.RData) {
-				binary.LittleEndian.PutUint32(m.DataBuffer[:4], m.LeftArgVal)
+
+		if m.RightArg == uint16(c.RVideoText) || m.RightArg == uint16(c.RData) {
+
+			var val [4]byte
+
+			binary.LittleEndian.PutUint32(val[:], m.LeftArgVal)
+
+			if m.RightArg == uint16(c.RVideoText) {
+
+				for i := 0; i < int(moveLength); i++ {
+					m.TextBuffer[i] = val[i]
+				}
+
+			} else if m.RightArg == uint16(c.RData) {
+
+				for i := 0; i < int(moveLength); i++ {
+					m.DataBuffer[i] = val[i]
+				}
+			}
+
 		} else {
 			m.Registers[m.RightArg] = m.LeftArgVal
 		}
 
 	} else {
 
-		//Copying from buffer -> buffer
-
-		if m.LeftArg == uint16(c.RData) && m.RightArg == uint16(c.RVideoText) && !m.IsImmediate {
+		if m.LeftArg == uint16(c.RData) && m.RightArg == uint16(c.RVideoText) {
 
 			copy(m.TextBuffer[:m.Registers[c.RDataLength]], m.DataBuffer[:m.Registers[c.RDataLength]])
 
-		} else if m.LeftArg == uint16(c.RVideoText) && m.RightArg == uint16(c.RData) && !m.IsImmediate {
+		} else if m.LeftArg == uint16(c.RVideoText) && m.RightArg == uint16(c.RData) {
 
 			copy(m.DataBuffer[:m.Registers[c.RDataLength]], m.TextBuffer[:m.Registers[c.RDataLength]])
 
-			//Copying from buffer -> register
-		} else if m.LeftArg == uint16(c.RData) || m.LeftArg == uint16(c.RVideoText) {
-			switch m.LeftArg {
-			case uint16(c.RData):
+		} else if m.LeftArg == uint16(c.RData) || m.LeftArg == uint16(c.RVideoText) { // buffer -> register
+
+			if m.LeftArg == uint16(c.RData) {
 				m.Registers[m.RightArg] = binary.LittleEndian.Uint32(m.DataBuffer[:4])
-			case uint16(c.RVideoText):
+			} else {
 				m.Registers[m.RightArg] = binary.LittleEndian.Uint32(m.TextBuffer[:4])
 			}
-			//Copying from register -> buffer
-		} else if m.RightArg == uint16(c.RData) || m.RightArg == uint16(c.RVideoText) {
-			switch m.RightArg {
-			case uint16(c.RData):
-				binary.LittleEndian.PutUint32(m.DataBuffer[:4], m.Registers[m.LeftArg])
-			case uint16(c.RVideoText):
-				binary.LittleEndian.PutUint32(m.TextBuffer[:4], m.Registers[m.LeftArg])
+
+		} else if m.RightArg == uint16(c.RData) || m.RightArg == uint16(c.RVideoText) { // register -> buffer
+
+			var val [4]byte
+			binary.LittleEndian.PutUint32(val[:], m.Registers[m.LeftArg])
+
+			if m.RightArg == uint16(c.RData) {
+				for i := 0; i < int(moveLength); i++ {
+					m.DataBuffer[i] = val[i]
+				}
+			} else {
+				for i := 0; i < int(moveLength); i++ {
+					m.TextBuffer[i] = val[i]
+				}
 			}
 
-		} else {
-			if m.RightArg > MaxRegister || m.LeftArg > MaxRegister {
-				return
-			} else {
-				m.Registers[m.RightArg] = m.Registers[m.LeftArg]
-			}
+		} else if m.LeftArg < MaxRegister && m.RightArg < MaxRegister {
+			m.Registers[m.RightArg] = m.Registers[m.LeftArg]
 		}
 	}
 }
