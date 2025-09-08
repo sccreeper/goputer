@@ -3,6 +3,7 @@ export default {
 
     codeHasBeenCompiled: false,
     vmIsAlive: false,
+    keyboardLocked: false,
     vmInited: false,
     runInterval: null,
     FPS: 512,

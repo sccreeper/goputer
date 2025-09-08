@@ -158,6 +158,9 @@ export function Run(e) {
         goputer.initVm();
 
         globals.vmIsAlive = true;
+        
+        SetKeyboardLocking(true)
+        
         globals.runInterval = setInterval(Cycle, Math.round(1000 / globals.FPS));
         globals.vmInited = true;
 
@@ -186,7 +189,7 @@ export function handleMouseMove(e) {
  */
 export function handleKeyDown(e) {
     
-    if (globals.vmIsAlive) {
+    if (globals.keyboardLocked) {
         e.preventDefault()
         globals.keysDown.push(goputer.mappedKey(e.code))
     }
@@ -199,11 +202,32 @@ export function handleKeyDown(e) {
  */
 export function handleKeyUp(e) {
     
-    if (globals.vmIsAlive) {
+    if (globals.keyboardLocked) {
         e.preventDefault()
         globals.keysUp.push(goputer.mappedKey(e.code)) // I am aware this is depreceated however, this is the most practical way to get integer keycodes.
     }
 
+}
+
+/**
+ * 
+ * @param {boolean} locked 
+ */
+export function SetKeyboardLocking(locked) {
+
+    if (locked) {
+        globals.keyboardLocked = true
+
+        document.getElementById("kbd-locked-message").querySelector("span").innerText = " Keyboard locked"
+        document.getElementById("kbd-locked-message").querySelector("i").classList.remove("bi-unlock")
+        document.getElementById("kbd-locked-message").querySelector("i").classList.add("bi-lock")
+    } else {
+        globals.keyboardLocked = false
+
+        document.getElementById("kbd-locked-message").querySelector("span").innerText = " Keyboard unlocked"
+        document.getElementById("kbd-locked-message").querySelector("i").classList.add("bi-unlock")
+        document.getElementById("kbd-locked-message").querySelector("i").classList.remove("bi-lock")
+    }
 }
 
 //Performs one cycle of the VM & Updates UI
@@ -219,6 +243,7 @@ export function Cycle() {
         
         clearInterval(globals.runInterval);
         canvas.setAttribute("running", "false");
+        SetKeyboardLocking(false);
         return;
 
     }

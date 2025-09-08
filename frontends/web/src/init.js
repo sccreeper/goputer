@@ -1,4 +1,4 @@
-import { Compile, handleKeyDown, handleKeyUp, handleMouseMove, PeekRegister, Run, SaveVideo } from "./app";
+import { Compile, handleKeyDown, handleKeyUp, handleMouseMove, PeekRegister, Run, SaveVideo, SetKeyboardLocking } from "./app";
 import globals from "./globals";
 import { DownloadProgram, DownloadAll, UploadBinary } from "./sharing";
 import { ExamplesInit } from "./examples";
@@ -90,6 +90,10 @@ const canvas = document.getElementById("render-canvas")
 const gl = canvas.getContext("webgl2", {preserveDrawingBuffer: true}) ?? alert("Your browser does not support WebGL. goputer will not work.");
 glInit(gl);
 
+canvas.addEventListener("dblclick", () => {
+    SetKeyboardLocking(!globals.keyboardLocked)
+})
+
 //Init audio
 
 globals.audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -111,6 +115,7 @@ document.getElementById("download-all-button").addEventListener("click", Downloa
 document.getElementById("upload-binary-button").addEventListener("click", UploadBinary)
 document.getElementById("save-video-button").addEventListener("click", SaveVideo)
 document.getElementById("record-video-button").addEventListener("click", ToggleRecording)
+document.getElementById("kbd-locked-message").addEventListener("click", SetKeyboardLocking)
 
 document.getElementById("stop-code-button").addEventListener("click", function (e) {  
     clearInterval(globals.runInterval);
@@ -135,6 +140,8 @@ document.getElementById("stop-code-button").addEventListener("click", function (
 
     globals.vmIsAlive = false;
     globals.videoText = "";
+
+    SetKeyboardLocking(false);
 
     // Clear canvas
 
