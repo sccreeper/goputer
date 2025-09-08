@@ -52,10 +52,26 @@ func (m *VM) move() {
 
 		} else if m.LeftArg == uint16(c.RData) || m.LeftArg == uint16(c.RVideoText) { // buffer -> register
 
-			if m.LeftArg == uint16(c.RData) {
-				m.Registers[m.RightArg] = binary.LittleEndian.Uint32(m.DataBuffer[:4])
+			var bytesToMove [4]byte = [4]byte{}
+
+			if moveLength < 4 {
+				if m.LeftArg == uint16(c.RData) {
+					copy(bytesToMove[:moveLength], m.DataBuffer[:moveLength])
+				} else {
+					copy(bytesToMove[:moveLength], m.TextBuffer[:moveLength])
+				}
 			} else {
-				m.Registers[m.RightArg] = binary.LittleEndian.Uint32(m.TextBuffer[:4])
+				if m.LeftArg == uint16(c.RData) {
+					copy(bytesToMove[:], m.DataBuffer[:4])
+				} else {
+					copy(bytesToMove[:], m.TextBuffer[:4])
+				}
+			}
+
+			if m.LeftArg == uint16(c.RData) {
+				m.Registers[m.RightArg] = binary.LittleEndian.Uint32(bytesToMove[:])
+			} else {
+				m.Registers[m.RightArg] = binary.LittleEndian.Uint32(bytesToMove[:])
 			}
 
 		} else if m.RightArg == uint16(c.RData) || m.RightArg == uint16(c.RVideoText) { // register -> buffer

@@ -1,0 +1,48 @@
+
+#def nums_string "1240567"
+#def length 7
+
+#label convert
+
+// r00 = string length
+// r01 = string address
+
+pop r00
+pop r01
+
+#label convert_loop
+decr r00
+
+lda r01 $1
+mov $1 dl
+incr r01
+
+mov d0 r03
+
+sub r03 $48
+mov a0 r03
+
+pow $10 r00
+mul a0 r03
+mov a0 r03
+
+add r03 r04
+mov a0 r04
+
+neq r00 $0
+cndjmp @convert_loop
+
+push r04
+ret
+
+#label start
+
+lda @nums_string
+
+push dp
+push $d:length
+clr d0
+
+call @convert
+
+pop r00
