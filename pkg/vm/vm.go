@@ -80,8 +80,12 @@ func NewVM(vmProgram []byte, expansionModuleExists func(location uint32) bool, e
 	machine.Registers[c.RProgramCounter] = instructionEntryPoint + comp.MemOffset
 	machine.CurrentInstruction = vmProgram[instructionEntryPoint : instructionEntryPoint+comp.InstructionLength]
 	machine.Finished = false
-	machine.ProgramBounds = comp.MemOffset + uint32(len(vmProgram[:len(vmProgram)-int(comp.PadSize)]))
+	machine.ProgramBounds = comp.MemOffset + uint32(len(vmProgram))
 	machine.Registers[c.RVideoBrightness] = 255
+
+	// Set data length and data pointer as if program was loaded using lda instruction.
+	machine.Registers[c.RDataLength] = uint32(len(vmProgram))
+	machine.Registers[c.RDataPointer] = uint32(comp.MemOffset)
 
 	machine.Registers[c.RCallStackZeroPointer] = comp.MemOffset - comp.CallStackSize
 	machine.Registers[c.RCallStackPointer] = machine.Registers[c.RCallStackZeroPointer]
