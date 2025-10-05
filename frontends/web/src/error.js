@@ -9,7 +9,7 @@ export var ErrorTypes = {
 
 }
 
-function generate_error_html(error_type, data) {
+function generateErrorHtml(error_type, data) {
 
     if (error_type == ErrorTypes.Success) {
 
@@ -42,7 +42,7 @@ export function ShowError(type, text) {
     switch (type) {
         case ErrorTypes.Success:
 
-            error_html = generate_error_html(ErrorTypes.Success, { Header: "Success", Body: text })
+            error_html = generateErrorHtml(ErrorTypes.Success, { Header: "Success", Body: text })
 
             break;
         case ErrorTypes.Error:
@@ -51,7 +51,7 @@ export function ShowError(type, text) {
                 globals.compileFailed = true;
             }
 
-            error_html = generate_error_html(ErrorTypes.Error, { Header: "Error", Body: text })
+            error_html = generateErrorHtml(ErrorTypes.Error, { Header: "Error", Body: text })
 
             break;
         default:

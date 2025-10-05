@@ -148,7 +148,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 			log.Printf("Parsing statement %d", index)
 		}
 
-		line = strings.TrimRight(line, " ")
+		line = strings.Trim(line, " ")
 
 		// Skip conditions
 
@@ -180,14 +180,14 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 			case "def":
 
 				if nameValueRegex.FindStringSubmatch(statementValue) == nil {
-					p.parsingError(ErrSyntax, "syntax error")
+					p.parsingError(ErrSyntax, "malformed definition")
 					return ProgramStructure{}, nil
 				}
 
 				defName := nameValueRegex.FindStringSubmatch(statementValue)[1]
 				defStringValue := nameValueRegex.FindStringSubmatch(statementValue)[2]
 
-				if errMessage, collison := p.nameCollision(defName); collison {
+				if errMessage, collision := p.nameCollision(defName); collision {
 					p.parsingError(ErrSymbol, ErrorMessage(errMessage))
 				} else {
 					p.AllNames = append(p.AllNames, defName)
@@ -285,7 +285,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 							defType = c.BytesType
 
 						} else {
-							p.parsingError(ErrSyntax, ErrorMessage(fmt.Sprintf("unrecognised special definition type '%s'", specialType)))
+							p.parsingError(ErrSyntax, ErrorMessage(fmt.Sprintf("unknown special definition type '%s'", specialType)))
 						}
 
 					} else {
@@ -303,7 +303,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 			case "import":
 
 				if !doubleQuoteStringValueRegex.MatchString(statementValue) {
-					p.parsingError(ErrSyntax, "value should be string")
+					p.parsingError(ErrSyntax, "malformed string")
 				}
 
 				//Read other file
@@ -327,7 +327,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 					FileName:     fName,
 					Imported:     true,
 					ImportedFrom: p.FileName,
-					Verbose:      false,
+					Verbose:      p.Verbose,
 					ErrorHandler: p.ErrorHandler,
 					FileReader:   p.FileReader,
 				}
@@ -360,7 +360,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 				}
 
 				if !slices.Contains(p.ProgramStructure.LabelNames, interruptLabel) {
-					p.parsingError(ErrSymbol, ErrorMessage(fmt.Sprintf("unrecognized label '%s'", interruptLabel)))
+					p.parsingError(ErrSymbol, ErrorMessage(fmt.Sprintf("unknown label '%s'", interruptLabel)))
 				}
 
 				p.ProgramStructure.InterruptSubscriptions[interruptType] = InterruptSubscription{
@@ -381,31 +381,24 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 				p.parsingError(ErrDoesNotExist, InstructionDoesNotExist)
 			}
 
-			var argCount []int = c.InstructionArgumentCounts[c.Instruction(c.InstructionInts[lineSplit[0]])]
+			var correctArgCounts []int = c.InstructionArgumentCounts[c.Instruction(c.InstructionInts[lineSplit[0]])]
 
-			if !slices.Contains(argCount, len(lineSplit)-1) {
+			if !slices.Contains(correctArgCounts, len(lineSplit)-1) {
 
-				if len(argCount) > 1 {
-
-					var argList string
-
-					for _, v := range argCount {
-						argList += strconv.Itoa(v)
-						argList += " "
-					}
+				if len(correctArgCounts) > 1 {
 
 					p.parsingError(
-						ErrWrongNumArgs,
+						ErrIncorrectNumArgs,
 						ErrorMessage(
-							fmt.Sprintf("instruction '%s' expects %s arguments got %d", lineSplit[0], argList, len(lineSplit)-1),
+							fmt.Sprintf("instruction '%s' expects %d-%d arguments but got %d", lineSplit[0], slices.Min(correctArgCounts), slices.Max(correctArgCounts), len(lineSplit)-1),
 						),
 					)
 
 				} else {
 					p.parsingError(
-						ErrWrongNumArgs,
+						ErrIncorrectNumArgs,
 						ErrorMessage(
-							fmt.Sprintf("too many arguments in call to '%s' - was expecting %d got %d", lineSplit[0], argCount[0], len(lineSplit)-1),
+							fmt.Sprintf("incorrect number of arguments in call to '%s' - was expecting %d but got %d", lineSplit[0], correctArgCounts[0], len(lineSplit)-1),
 						),
 					)
 				}
@@ -431,12 +424,12 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 						} else if hasImmediate {
 							p.parsingError(ErrInvalidArgument, ErrorMessage(fmt.Sprintf("multiple immediates in call to %s", lineSplit[0])))
 						} else {
-							// Make sure value is valid integer and not above limit (2^26)
+							// Make sure value is valid integer and not above limit (2^26)-1
 
 							str, num := p.parseImmediate(arg[1:])
 
-							if num > int(math.Pow(2, 26)) {
-								p.parsingError(ErrValue, ErrorMessage("value too large to be immediate (> 2^26)"))
+							if num > int(math.Pow(2, 26))-1 {
+								p.parsingError(ErrValue, ErrorMessage("value too large to be immediate (> 2^26 - 1)"))
 							}
 
 							lineSplit[argIndex+1] = fmt.Sprintf("$%s", str)
@@ -484,7 +477,15 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 
 					if _, exists := c.RegisterInts[arg]; !exists && arg[0] != '$' {
 
-						p.parsingError(ErrDoesNotExist, ErrorMessage(fmt.Sprintf("unknown register '%s'", arg)))
+						var errMessage string
+
+						if lineSplit[0] == "cndjmp" || lineSplit[0] == "cndcall" || lineSplit[0] == "call" || lineSplit[0] == "jmp" || lineSplit[0] == "lda" || lineSplit[0] == "sta" {
+							errMessage = fmt.Sprintf("unknown register '%s'. perhaps you meant '%s @%s'", arg, lineSplit[0], arg)
+						} else {
+							errMessage = fmt.Sprintf("unknown register '%s'", arg)
+						}
+
+						p.parsingError(ErrDoesNotExist, ErrorMessage(errMessage))
 
 					}
 
@@ -511,7 +512,7 @@ func (p *Parser) Parse() (ProgramStructure, error) {
 	}
 
 	if _, exists := p.ProgramStructure.ProgramLabels["start"]; !exists && !p.Imported {
-		p.parsingError(ErrSyntax, "no entrypoint found")
+		p.parsingError(ErrGeneral, "no entrypoint found")
 	}
 
 	return p.ProgramStructure, nil

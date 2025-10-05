@@ -32,13 +32,16 @@ var ErrSymbol error = errors.New("symbol error")
 var ErrDoesNotExist error = errors.New("does not exist error")
 var ErrInvalidArgument error = errors.New("invalid argument")
 var ErrImport error = errors.New("import error")
-var ErrWrongNumArgs error = errors.New("wrong number of arguments")
+var ErrIncorrectNumArgs error = errors.New("incorrect number of arguments")
 var ErrFile = errors.New("error whilst reading file")
+var ErrGeneral = errors.New("error")
 
 var RedError color.Color = *color.New(color.FgHiRed, color.Bold)
 var ItalicCode color.Color = *color.New(color.Italic)
 
 // Handles a parsing error
+// The first argument should be a error type describing the type of error (effectively a constant). Several of these are provided by the `compiler` package.
+// The second argument should detail the specifics of the error and should vary from error to error.
 func (p *Parser) parsingError(e error, errorType ErrorMessage) {
 
 	var errorText string
@@ -64,7 +67,7 @@ func (p *Parser) parsingError(e error, errorType ErrorMessage) {
 		errorText += fmt.Sprintf("%s %s\n", RedError.Sprint("Invalid argument:"), errorType)
 	case ErrImport:
 		errorText += fmt.Sprintf("%s %s\n", RedError.Sprint("Import error:"), errorType)
-	case ErrWrongNumArgs:
+	case ErrIncorrectNumArgs:
 		errorText += fmt.Sprintf("%s %s\n", RedError.Sprint("Wrong number of arguments:"), errorType)
 	default:
 		errorText += string(errorType)

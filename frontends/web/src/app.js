@@ -143,6 +143,8 @@ export function Compile(e) {
 
         ShowError(ErrorTypes.Success, "Code compiled successfully!");
 
+    } else {
+        globals.codeHasBeenCompiled = false;
     }
 
 }
