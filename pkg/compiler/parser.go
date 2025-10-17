@@ -624,7 +624,7 @@ func (p *Parser) nameCollision(s string) (errMessage string, isCollision bool) {
 	return errMessage, isCollision
 }
 
-const integers string = "-1234567890_"
+const integers string = "1234567890_"
 const operators string = "+-*/"
 const alpha string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_:"
 
@@ -738,7 +738,7 @@ func (p *Parser) parseImmediate(imm string) (stringResult string, intResult int)
 		case Integer:
 
 			if !intValueRegex.Match([]byte(t.Data)) {
-				p.parsingError(ErrValue, InvalidValue)
+				p.parsingError(ErrValue, ErrorMessage(fmt.Sprintf("value '%s' cannot be parsed as integer", t.Data)))
 				return
 			}
 
