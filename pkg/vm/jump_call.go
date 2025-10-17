@@ -1,39 +1,13 @@
 package vm
 
 import (
-	"encoding/binary"
 	"sccreeper/goputer/pkg/compiler"
 	c "sccreeper/goputer/pkg/constants"
 )
 
-
-func (m *VM) call() {
-
-	var addressVal uint32
-
-	if m.IsImmediate {
-		addressVal = m.LongArgVal
-	} else if uint16(m.LongArg) < MaxRegister {
-		addressVal = m.Registers[m.LongArg]
-	} else {
-		addressVal = m.LongArg
-	}
-
-	var increment uint32
-
-	if m.Opcode != c.ICall {
-		increment = 0
-	} else {
-		increment = compiler.InstructionLength
-	}
-
-	m.Registers[c.RCallStackPointer] += 4
-
-	binary.LittleEndian.PutUint32(
-		m.MemArray[m.Registers[c.RCallStackPointer]:m.Registers[c.RCallStackPointer]+4],
-		m.Registers[c.RProgramCounter]+increment)
-
-	m.Registers[c.RProgramCounter] = addressVal
+func (m *VM) call(addr uint32, dest uint32) {
+	m.pushCall(addr)
+	m.Registers[c.RProgramCounter] = dest
 }
 
 func (m *VM) conditionalCall() bool {
@@ -50,11 +24,7 @@ func (m *VM) conditionalCall() bool {
 			addressVal = m.LongArg
 		}
 
-		m.Registers[c.RCallStackPointer] += 4
-
-		binary.LittleEndian.PutUint32(
-			m.MemArray[m.Registers[c.RCallStackPointer]:m.Registers[c.RCallStackPointer]+4],
-			m.Registers[c.RProgramCounter]+compiler.InstructionLength)
+		m.pushCall(m.Registers[c.RProgramCounter] + compiler.InstructionLength)
 		m.Registers[c.RProgramCounter] = addressVal
 
 		return true
@@ -76,8 +46,6 @@ func (m *VM) jump() {
 		addressVal = m.LongArg
 	}
 
-	m.HandlingInterrupt = false
-
 	m.Registers[c.RProgramCounter] = addressVal
 }
 
@@ -94,7 +62,6 @@ func (m *VM) conditionalJump() bool {
 			addressVal = m.LongArg
 		}
 
-		m.HandlingInterrupt = false
 		m.Registers[c.RProgramCounter] = addressVal
 		return true
 	} else {

@@ -219,7 +219,7 @@ func (m *VM) Cycle() {
 			m.HandlingInterrupt = true
 
 			m.subbedInterrupt(i)
-			m.call()
+			m.call(m.Registers[c.RProgramCounter], m.LongArg)
 			return
 		}
 
@@ -250,7 +250,7 @@ func (m *VM) Cycle() {
 	// Control flow
 
 	case c.ICall:
-		m.call()
+		m.call(m.Registers[c.RProgramCounter]+comp.InstructionLength, m.LongArgVal)
 		return
 
 	case c.IConditionalCall:
