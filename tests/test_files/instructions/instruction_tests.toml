@@ -17,7 +17,7 @@ lda @x
 mov d0 r01
 """,check_reg="r00", check_value=1},
 
-{name="push_pop",is_file=false, check_reg="r01", check_value=1,text="""
+{name="push_pop_immediate",is_file=false, check_reg="r01", check_value=1,text="""
 #label start
 
 push $1
@@ -177,6 +177,17 @@ mod r00 r01
 #label start
 
 mov $64 r00
+
+"""},
+{name="push_pop_register", is_file=false, check_reg="r00", check_value=64, text="""
+
+#label start
+
+mov $64 r00
+
+push r00
+clr r00
+pop r00
 
 """}
 ]
