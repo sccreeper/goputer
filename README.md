@@ -195,7 +195,7 @@ alsa-lib-devel
 1. Install MSYS2.
 2. Once in MSYS2 (mingw64) install the required packages:
     ```
-    pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-go mingw-w64-x86_64-nodejs mingw-w64-x86_64-python mingw-w64-x86_64-python-poetry mingw-w64-python-certifi mingw-w64-python-pip mingw-w64-x86_64-pyinstaller git
+    pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-go mingw-w64-x86_64-nodejs mingw-w64-x86_64-python mingw-w64-x86_64-python-poetry mingw-w64-x86_64-python-certifi mingw-w64-x86_64-python-pip mingw-w64-x86_64-pyinstaller git
     ```
 3. Install mage:
    ```
