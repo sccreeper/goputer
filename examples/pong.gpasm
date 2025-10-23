@@ -1,0 +1,398 @@
+#def midpoint_x 160
+#def white 0xFFFFFFFF
+#def black 0x000000FF
+#def red 0xFF0000FF
+
+#def paddle_offset 5
+#def paddle_width 5
+#def paddle_height 25
+#def paddle_speed 10
+
+#def left_paddle_pos 120
+#def right_paddle_pos 120
+
+#def ball_x 160
+#def ball_y 120
+
+#def player_zero_score 0
+#def player_one_score 0
+
+#def ball_size 5
+
+// 0=left, >1=right
+#def ball_direction_x 0
+// 0=down, >1=up
+#def ball_direction_y 0
+
+#def d0_store region:128
+
+// Inputs
+
+#label keyup
+
+// Preserve state on stack
+
+push r01
+push dp
+push dl
+push a0
+sta @d0_store
+
+// left up & down
+neq kc $23
+cndjmp @m_lp_down
+lda @left_paddle_pos
+mov d0 r01
+eq r01 $0
+cndjmp @move_end
+sub r01 $d:paddle_speed
+mov a0 d0
+sta @left_paddle_pos
+jmp @move_end
+
+#label m_lp_down
+neq kc $19
+cndjmp @m_rp_up
+lda @left_paddle_pos
+mov d0 r01
+eq r01 $240-d:paddle_height
+cndjmp @move_end
+add r01 $d:paddle_speed
+mov a0 d0
+sta @left_paddle_pos
+jmp @move_end
+
+// right up & down
+#label m_rp_up
+neq kc $72
+cndjmp @m_rp_down
+lda @right_paddle_pos
+mov d0 r01
+eq r01 $0
+cndjmp @move_end
+sub r01 $d:paddle_speed
+mov a0 d0
+sta @right_paddle_pos
+jmp @move_end
+
+#label m_rp_down
+neq kc $74
+cndjmp @move_end
+lda @right_paddle_pos
+mov d0 r01
+eq r01 $240-d:paddle_height
+cndjmp @move_end
+add r01 $d:paddle_speed
+mov a0 d0
+sta @right_paddle_pos
+
+#label move_end
+lda @d0_store
+pop a0
+pop dl
+pop dp
+pop r01
+iret
+
+#intsub kd keyup
+
+// Drawing
+
+#label draw_mid_line
+
+mov $d:midpoint_x vx0
+mov $d:midpoint_x vx1
+
+clr vy0
+mov $240 vy1
+
+lda @white
+mov d0 vc
+int vl
+
+ret
+
+#label draw_paddles
+
+lda @white
+mov d0 vc
+
+lda @left_paddle_pos
+mov d0 vy0
+add vy0 $d:paddle_height
+mov a0 vy1
+
+mov $d:paddle_offset vx0
+mov $d:paddle_offset+d:paddle_width vx1
+
+int va
+
+lda @right_paddle_pos
+mov d0 vy0
+add vy0 $d:paddle_height
+mov a0 vy1
+
+mov $320-d:paddle_offset-d:paddle_width vx0
+mov $320-d:paddle_offset vx1
+
+int va
+
+ret
+
+#label draw_ball
+
+lda @white
+mov d0 vc
+
+lda @ball_x
+mov d0 vx0
+add vx0 $10
+mov a0 vx1
+
+lda @ball_y
+mov d0 vy0
+add vy0 $10
+mov a0 vy1
+
+int va
+
+ret
+
+#label draw_individual_score
+
+clr vt
+lda @white
+mov d0 vc
+
+// r00 = Draw position
+// r01 = Score
+
+pop vx0
+pop r01
+
+mov $3 vy0
+
+eq r01 $0
+cndjmp @draw_zero
+
+#label convert_number
+mod r01 $10
+add a0 $48
+mov $1 dl
+mov a0 vt
+sr vt $1
+div r01 $10
+mov a0 r01
+
+neq r01 $0
+cndjmp @convert_number
+
+sl vt $1
+int vt
+ret
+
+#label draw_zero
+mov $48 vt
+int vt
+ret
+
+#label draw_score
+
+lda @player_zero_score
+mov d0 r00
+push r00
+push $160-15
+call @draw_individual_score
+
+lda @player_one_score
+mov d0 r00
+push r00
+push $160+15
+call @draw_individual_score
+
+ret
+
+#label draw
+
+lda @black
+mov d0 vc
+int vc
+
+call @draw_mid_line
+call @draw_paddles
+call @draw_ball
+call @draw_score
+
+int vf
+
+ret
+
+#label move_ball
+
+lda @ball_x
+mov d0 r00
+lda @ball_y
+mov d0 r01
+
+lda @ball_direction_x
+mov d0 r02
+
+lda @ball_direction_y
+mov d0 r03
+
+lda @left_paddle_pos
+mov d0 r04
+
+lda @right_paddle_pos
+mov d0 r05
+
+// Bounds
+
+// Bounds right
+neq r00 $320-d:ball_size
+cndjmp @bbc_left
+mov $0 r02
+push $0
+call @increase_score
+jmp @check_paddles
+// Bounds left
+#label bbc_left
+neq r00 $0
+cndjmp @check_paddles
+mov $1 r02
+push $1
+call @increase_score
+
+#label check_paddles
+
+// Paddle bounds right
+eq r00 $320-d:ball_size-d:paddle_width-d:paddle_offset
+mov a0 r15
+gt r01 r05
+mov a0 r14
+add r05 $d:paddle_height
+lt r01 a0
+mov a0 r13
+and r15 r14
+and a0 r13
+inv a0
+cndjmp @check_left_paddle
+mov $0 r02
+jmp @bbc_bottom
+
+// Paddle bounds left
+#label check_left_paddle
+eq r00 $d:paddle_width+d:paddle_offset
+mov a0 r15
+gt r01 r04
+mov a0 r14
+add r04 $d:paddle_height
+lt r01 a0
+mov a0 r13
+and r15 r14
+and a0 r13
+inv a0
+cndjmp @bbc_bottom
+mov $1 r02
+
+// Bounds bottom
+#label bbc_bottom
+neq r01 $240-d:ball_size
+cndjmp @bbc_top
+mov $1 r03
+jmp @change_ball_pos
+// Bounds top
+#label bbc_top
+neq r01 $0
+cndjmp @change_ball_pos
+mov $0 r03
+
+#label change_ball_pos
+
+gt r02 $0
+cndjmp @move_ball_right
+sub r00 $5
+mov a0 r00
+jmp @handle_y_movement
+#label move_ball_right
+add r00 $5
+mov a0 r00
+
+#label handle_y_movement
+gt r03 $0
+cndjmp @move_ball_up
+add r01 $5
+mov a0 r01
+jmp @move_ball_cleanup
+#label move_ball_up
+sub r01 $5
+mov a0 r01
+
+#label move_ball_cleanup
+
+mov r00 d0
+sta @ball_x
+
+mov r01 d0
+sta @ball_y
+
+mov r02 d0
+sta @ball_direction_x
+
+mov r03 d0
+sta @ball_direction_y
+
+ret
+
+#label increase_score
+pop r15
+
+eq r15 $0
+cndjmp @inc_left_player
+
+lda @player_one_score
+mov d0 r14
+add r14 $1
+mov a0 d0
+sta @player_one_score
+jmp @reset_ball
+
+#label inc_left_player
+
+lda @player_zero_score
+mov d0 r14
+add r14 $1
+mov a0 d0
+sta @player_zero_score
+
+#label reset_ball
+mov $160 r00
+
+// Try and use mouse position for randomness ig
+
+mov my r01
+
+div r01 $5
+mul a0 $5
+mov a0 r01
+
+lt r01 $80
+cndjmp @clamp_lower
+gt r01 $160
+cndjmp @clamp_higher
+
+#label clamp_lower
+mov $80 r01
+ret
+#label clamp_higher
+mov $160 r01
+ret
+
+// Main
+
+#label start
+
+call @draw
+call @move_ball
+
+jmp @start
