@@ -338,6 +338,19 @@ func (m *VM) Cycle() {
 			m.Registers[c.RAccumulator] = 0
 		}
 
+	case c.ILessThanOrEqual:
+		if m.LeftArgVal <= m.RightArgVal {
+			m.Registers[c.RAccumulator] = math.MaxUint32
+		} else {
+			m.Registers[c.RAccumulator] = 0
+		}
+	case c.IGreaterThanOrEqual:
+		if m.LeftArgVal >= m.RightArgVal {
+			m.Registers[c.RAccumulator] = math.MaxUint32
+		} else {
+			m.Registers[c.RAccumulator] = 0
+		}
+
 	//Bitwise operators
 
 	case c.IAnd:
