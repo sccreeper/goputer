@@ -30,7 +30,8 @@ func (m *VM) pushStack() {
 
 		m.Registers[c.RStackPointer] += 4
 	} else {
-		panic("data stack overflow")
+		m.Registers[c.RControl] |= c.StackOverflowMask | c.FatalErrorMask
+		m.SubscribedInterruptQueue = append([]c.Interrupt{c.IntFatalError}, m.SubscribedInterruptQueue...)
 	}
 
 }

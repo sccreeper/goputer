@@ -22,6 +22,8 @@ func (m *VM) Subscribed(i c.Interrupt) bool {
 
 func (m *VM) calledInterrupt() {
 
+	m.CallHooks(HookCalledInterrupt)
+
 	switch c.Interrupt(m.LeftArg) {
 	case c.IntVideoArea:
 		m.drawArea()

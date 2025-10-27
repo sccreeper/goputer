@@ -25,7 +25,9 @@ func (m *VM) popCall() {
 func (m *VM) pushCall(addr uint32) {
 
 	if m.Registers[c.RCallStackPointer]+4 > compiler.DataStackSize+compiler.CallStackSize+VideoBufferSize {
-		panic("call stack overflow")
+		m.Registers[c.RControl] |= c.CallStackOverflowMask | c.FatalErrorMask
+		m.SubscribedInterruptQueue = append([]c.Interrupt{c.IntFatalError}, m.SubscribedInterruptQueue...)
+		return
 	}
 
 	binary.LittleEndian.PutUint32(

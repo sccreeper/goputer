@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"math"
+	"math/rand"
 	comp "sccreeper/goputer/pkg/compiler"
 	c "sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/util"
@@ -14,9 +15,9 @@ import (
 
 const (
 	MemSize          uint32 = VideoBufferSize + 65536 // 2 ^ 16
-	MaxRegister      uint16 = 55
+	MaxRegister      uint16 = 56
 	InstructionCount uint16 = 34
-	InterruptCount   uint16 = 24
+	InterruptCount   uint16 = 25
 )
 
 type VM struct {
@@ -207,7 +208,7 @@ func (m *VM) Cycle() {
 
 	//Interrupts
 
-	if len(m.SubscribedInterruptQueue) > 0 && !m.HandlingInterrupt {
+	if len(m.SubscribedInterruptQueue) > 0 && !(m.Registers[c.RControl]&c.InterruptsDisabledMask != 0) {
 
 		// Pop from queue
 		var i c.Interrupt
@@ -216,7 +217,7 @@ func (m *VM) Cycle() {
 		// Frontends should do the checking but this is just to be sure.
 		if m.Subscribed(i) {
 			m.CallHooks(HookSubbedInterrupt)
-			m.HandlingInterrupt = true
+			m.Registers[c.RControl] &= ^c.InterruptsDisabledMask
 
 			m.subbedInterrupt(i)
 			m.call(m.Registers[c.RProgramCounter], m.LongArg)
@@ -268,7 +269,7 @@ func (m *VM) Cycle() {
 		}
 
 	case c.IInterruptCallReturn:
-		m.HandlingInterrupt = false
+		m.Registers[c.RControl] |= c.InterruptsDisabledMask
 		m.popCall()
 		return
 	case c.ICallReturn:
@@ -291,7 +292,12 @@ func (m *VM) Cycle() {
 	case c.ISubtract:
 		m.Registers[c.RAccumulator] = m.LeftArgVal - m.RightArgVal
 	case c.IDivide:
-		m.Registers[c.RAccumulator] = m.LeftArgVal / m.RightArgVal
+		if m.RightArgVal != 0 {
+			m.Registers[c.RAccumulator] = m.LeftArgVal / m.RightArgVal
+		} else {
+			m.Registers[c.RControl] |= c.DivideByZeroMask | c.FatalErrorMask
+			m.SubscribedInterruptQueue = append([]c.Interrupt{c.IntFatalError}, m.SubscribedInterruptQueue...)
+		}
 	case c.ISquareRoot:
 		m.Registers[c.RAccumulator] = uint32(math.Sqrt(float64(m.LeftArgVal)))
 	case c.IIncrement:
@@ -332,6 +338,19 @@ func (m *VM) Cycle() {
 		}
 	case c.INotEquals:
 		if m.LeftArgVal != m.RightArgVal {
+			m.Registers[c.RAccumulator] = math.MaxUint32
+		} else {
+			m.Registers[c.RAccumulator] = 0
+		}
+
+	case c.ILessThanOrEqual:
+		if m.LeftArgVal <= m.RightArgVal {
+			m.Registers[c.RAccumulator] = math.MaxUint32
+		} else {
+			m.Registers[c.RAccumulator] = 0
+		}
+	case c.IGreaterThanOrEqual:
+		if m.LeftArgVal >= m.RightArgVal {
 			m.Registers[c.RAccumulator] = math.MaxUint32
 		} else {
 			m.Registers[c.RAccumulator] = 0
@@ -384,6 +403,15 @@ func (m *VM) Cycle() {
 			m.Registers[c.RDataPointer] = 0
 			copy(m.DataBuffer[:], data)
 		}
+	case c.IRandomInteger:
+		if m.LeftArgVal < m.RightArgVal {
+			m.Registers[c.RAccumulator] = uint32(rand.Int31n(int32(m.RightArgVal)-int32(m.LeftArgVal)) + int32(m.LeftArgVal))
+		}
+	case c.IPreventInterrupts:
+		m.Registers[c.RControl] |= c.InterruptsDisabledMask
+	case c.IEnableInterrupts:
+		m.Registers[c.RControl] &= ^c.InterruptsDisabledMask
+
 	}
 
 	m.Registers[c.RProgramCounter] += comp.InstructionLength
