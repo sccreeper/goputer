@@ -63,6 +63,7 @@ var InterruptInts = map[string]Interrupt{
 	"io15": 21,
 	"ku":   22, //Key up
 	"kd":   23, //Key down
+	"err":  24,
 }
 
 var SubscribableInterrupts = map[string]Interrupt{
@@ -79,6 +80,7 @@ var SubscribableInterrupts = map[string]Interrupt{
 	"io15": 21,
 	"ku":   22, //Key up
 	"kd":   23, //Key down
+	"err":  24,
 }
 
 // Array with keys in same order as map
@@ -96,6 +98,7 @@ var SubscribableInterruptsKeys []string = []string{
 	"io15",
 	"ku",
 	"kd",
+	"err",
 }
 
 var InstructionInts = map[string]uint32{
@@ -271,6 +274,8 @@ const (
 
 	IntKeyboardUp   Interrupt = 22
 	IntKeyboardDown Interrupt = 23
+
+	IntFatalError Interrupt = 24
 )
 
 const (

@@ -1,0 +1,17 @@
+#def red 0xFF0000FF
+#def message "Fatal Error!"
+
+#label handle_error
+lda @red
+mov d0 vc
+lda @message
+mov d0 vt
+int vt
+int vf
+
+iret
+
+#intsub err handle_error
+
+#label start
+div r00 r01

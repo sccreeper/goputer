@@ -17,7 +17,7 @@ const (
 	MemSize          uint32 = VideoBufferSize + 65536 // 2 ^ 16
 	MaxRegister      uint16 = 56
 	InstructionCount uint16 = 34
-	InterruptCount   uint16 = 24
+	InterruptCount   uint16 = 25
 )
 
 type VM struct {
@@ -292,7 +292,12 @@ func (m *VM) Cycle() {
 	case c.ISubtract:
 		m.Registers[c.RAccumulator] = m.LeftArgVal - m.RightArgVal
 	case c.IDivide:
-		m.Registers[c.RAccumulator] = m.LeftArgVal / m.RightArgVal
+		if m.RightArgVal != 0 {
+			m.Registers[c.RAccumulator] = m.LeftArgVal / m.RightArgVal
+		} else {
+			m.Registers[c.RControl] |= c.DivideByZeroMask | c.FatalErrorMask
+			m.SubscribedInterruptQueue = append([]c.Interrupt{c.IntFatalError}, m.SubscribedInterruptQueue...)
+		}
 	case c.ISquareRoot:
 		m.Registers[c.RAccumulator] = uint32(math.Sqrt(float64(m.LeftArgVal)))
 	case c.IIncrement:
