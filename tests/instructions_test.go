@@ -24,11 +24,11 @@ type TestArray struct {
 }
 
 type TestDetails struct {
-	Name          string `toml:"name"`
-	IsFile        bool   `toml:"is_file"`
-	CheckValue    uint32 `toml:"check_value"`
-	CheckRegister string `toml:"check_reg"`
-	CodeText      string `toml:"text"`
+	Name          string   `toml:"name"`
+	IsFile        bool     `toml:"is_file"`
+	CheckValue    []uint32 `toml:"check_value"`
+	CheckRegister string   `toml:"check_reg"`
+	CodeText      string   `toml:"text"`
 }
 
 func compile(text string) []byte {
@@ -84,8 +84,14 @@ func TestInstructions(t *testing.T) {
 				test32.Cycle()
 			}
 
-			if test32.Registers[constants.RegisterInts[v.CheckRegister]] != uint32(v.CheckValue) {
-				t.Errorf("Failed instruction test %s. Value should be %d but got %d\n", v.Name, v.CheckValue, test32.Registers[constants.RegisterInts[v.CheckRegister]])
+			if len(v.CheckValue) == 1 {
+				if test32.Registers[constants.RegisterInts[v.CheckRegister]] != uint32(v.CheckValue[0]) {
+					t.Errorf("Failed instruction test %s. Value should be %d but got %d\n", v.Name, v.CheckValue[0], test32.Registers[constants.RegisterInts[v.CheckRegister]])
+				}
+			} else if len(v.CheckValue) == 2 {
+				if !(test32.Registers[constants.RegisterInts[v.CheckRegister]] <= v.CheckValue[1] && test32.Registers[constants.RegisterInts[v.CheckRegister]] >= v.CheckValue[0]) {
+					t.Errorf("Failed instruction test %s. Value should be between %d and %d (inclusive) but got %d\n", v.Name, v.CheckValue[0], v.CheckValue[1], test32.Registers[constants.RegisterInts[v.CheckRegister]])
+				}
 			}
 		})
 

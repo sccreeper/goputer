@@ -153,6 +153,8 @@ var InstructionInts = map[string]uint32{
 
 	"ret":  32, // Return for normal call
 	"iret": 33, // Return for interrupt call
+
+	"rand": 34,
 }
 
 var RegisterInts = map[string]uint32{
@@ -320,6 +322,8 @@ const (
 
 	ICallReturn          Instruction = 32
 	IInterruptCallReturn Instruction = 33
+
+	IRandomInteger Instruction = 34
 )
 
 const (
@@ -364,6 +368,8 @@ var InstructionArgumentCounts map[Instruction][]int = map[Instruction][]int{
 
 	ICallReturn:          {0},
 	IInterruptCallReturn: {0},
+
+	IRandomInteger: {2},
 }
 
 // Determines which arguments in an instruction can have immediate values, if any.
@@ -406,6 +412,8 @@ var InstructionImmediates map[Instruction][][]bool = map[Instruction][][]bool{
 
 	ICallReturn:          {{false}},
 	IInterruptCallReturn: {{false}},
+
+	IRandomInteger: {{true, true}},
 }
 
 const (

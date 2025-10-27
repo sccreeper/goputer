@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"math"
+	"math/rand"
 	comp "sccreeper/goputer/pkg/compiler"
 	c "sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/util"
@@ -384,6 +385,12 @@ func (m *VM) Cycle() {
 			m.Registers[c.RDataPointer] = 0
 			copy(m.DataBuffer[:], data)
 		}
+	case c.IRandomInteger:
+
+		if m.LeftArgVal < m.RightArgVal {
+			m.Registers[c.RAccumulator] = uint32(rand.Int31n(int32(m.RightArgVal)-int32(m.LeftArgVal)) + int32(m.LeftArgVal))
+		}
+
 	}
 
 	m.Registers[c.RProgramCounter] += comp.InstructionLength
