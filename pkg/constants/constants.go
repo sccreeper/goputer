@@ -158,6 +158,9 @@ var InstructionInts = map[string]uint32{
 
 	"lteq": 35,
 	"gteq": 36,
+
+	"pri": 37, // Prevent interrupts
+	"eni": 38, // Enable interrupts
 }
 
 var RegisterInts = map[string]uint32{
@@ -230,6 +233,8 @@ var RegisterInts = map[string]uint32{
 	"dp": 54,
 
 	"sw": 55, //Sound wave type
+
+	"ctrl": 56, // Control register
 
 }
 
@@ -330,10 +335,13 @@ const (
 
 	ILessThanOrEqual    Instruction = 35
 	IGreaterThanOrEqual Instruction = 36
+
+	IPreventInterrupts Instruction = 37
+	IEnableInterrupts  Instruction = 38
 )
 
 const (
-	HighestInstruction uint32 = uint32(IInterruptCallReturn)
+	HighestInstruction uint32 = uint32(IEnableInterrupts)
 )
 
 var InstructionArgumentCounts map[Instruction][]int = map[Instruction][]int{
@@ -379,6 +387,9 @@ var InstructionArgumentCounts map[Instruction][]int = map[Instruction][]int{
 
 	ILessThanOrEqual:    {2},
 	IGreaterThanOrEqual: {2},
+
+	IPreventInterrupts: {0},
+	IEnableInterrupts:  {0},
 }
 
 // Determines which arguments in an instruction can have immediate values, if any.
@@ -426,6 +437,9 @@ var InstructionImmediates map[Instruction][][]bool = map[Instruction][][]bool{
 
 	ILessThanOrEqual:    {{true, true}},
 	IGreaterThanOrEqual: {{true, true}},
+
+	IPreventInterrupts: {{false}},
+	IEnableInterrupts:  {{false}},
 }
 
 const (
@@ -497,6 +511,8 @@ const (
 	RDataPointer Register = 54
 
 	RSoundWave Register = 55
+
+	RControl Register = 56
 )
 
 const (
@@ -521,4 +537,14 @@ const (
 	FlagMask                    byte   = ^InstructionMask
 	InstructionArgImmediateMask uint32 = 0b000000_11_11111111_11111111_11111111
 	InstructionArgRegisterMask  uint32 = ^InstructionArgImmediateMask
+)
+
+// Control register masks
+
+const (
+	InterruptsDisabledMask uint32 = 0b10000000_00000000_00000000_00000000
+	DivideByZeroMask       uint32 = 0b01000000_00000000_00000000_00000000
+	StackOverflowMask      uint32 = 0b00100000_00000000_00000000_00000000
+	CallStackOverflowMask  uint32 = 0b00010000_00000000_00000000_00000000
+	FatalErrorMask         uint32 = 0b00001000_00000000_00000000_00000000
 )

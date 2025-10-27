@@ -218,10 +218,14 @@ lda @black
 mov d0 vc
 int vc
 
+pri
+
 call @draw_mid_line
 call @draw_paddles
 call @draw_ball
 call @draw_score
+
+eni
 
 int vf
 
@@ -330,6 +334,8 @@ mov a0 r01
 
 #label move_ball_cleanup
 
+pri
+
 mov r00 d0
 sta @ball_x
 
@@ -341,6 +347,8 @@ sta @ball_direction_x
 
 mov r03 d0
 sta @ball_direction_y
+
+eni
 
 ret
 
