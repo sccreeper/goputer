@@ -16,7 +16,7 @@ import (
 const (
 	MemSize          uint32 = VideoBufferSize + 65536 // 2 ^ 16
 	MaxRegister      uint16 = 56
-	InstructionCount uint16 = 34
+	InstructionCount uint16 = 39
 	InterruptCount   uint16 = 25
 )
 
