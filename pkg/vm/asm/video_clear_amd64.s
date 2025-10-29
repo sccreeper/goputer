@@ -3,21 +3,32 @@
 #include "textflag.h"
 
 // func VideoClearAsm(array *byte, red uint8, green uint8, blue uint8)
+// Requires: AVX, AVX2, SSE2
 TEXT ·VideoClearAsm(SB), NOSPLIT, $0-11
-	MOVQ array+0(FP), AX
-	MOVB red+8(FP), CL
-	MOVB green+9(FP), DL
-	MOVB blue+10(FP), BL
-	MOVQ AX, SI
-	ADDQ $0x00038400, SI
+	// Load params
+	MOVQ    array+0(FP), AX
+	MOVBLZX red+8(FP), CX
+	MOVBLZX green+9(FP), DX
+	MOVBLZX blue+10(FP), BX
+	MOVQ    AX, SI
+	ADDQ    $0x00038400, SI
 
+	// Generate colour
+	MOVL         $0x00000000, DI
+	MOVL         CX, DI
+	SHLL         $0x08, DI
+	ORL          DX, DI
+	SHLL         $0x08, DI
+	ORL          BX, DI
+	SHLL         $0x08, DI
+	ORL          CX, DI
+	MOVD         DI, X0
+	VBROADCASTSS X0, Y0
+
+	// Fill colour
 loop:
-	MOVB CL, (AX)
-	INCQ AX
-	MOVB DL, (AX)
-	INCQ AX
-	MOVB BL, (AX)
-	INCQ AX
-	CMPQ AX, SI
-	JBE  loop
+	VMOVDQU Y0, (AX)
+	ADDQ    $0x20, AX
+	CMPQ    AX, SI
+	JBE     loop
 	RET
