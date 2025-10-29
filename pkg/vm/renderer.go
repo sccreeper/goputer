@@ -251,7 +251,7 @@ func (m *VM) drawPolygon() {
 			if inShape {
 				m.putPixel(x, y, colour)
 			}
-			
+
 			if slices.Contains(edges[y], x) && !slices.Contains(edges[y], x-1) {
 				inShape = !inShape
 
@@ -259,9 +259,9 @@ func (m *VM) drawPolygon() {
 					m.putPixel(x, y, colour)
 				}
 			}
-		
+
 		}
-	
+
 	}
 
 }
@@ -323,23 +323,33 @@ func (m *VM) drawImage() {
 
 func (m *VM) clearVideo() {
 
-	if m.Registers[c.RVideoColour] == 0 {
-		
-		for i := 0; i < int(VideoBufferSize); i++ {
-			m.MemArray[i] = 0
+	var colour [4]byte = m.getVideoColour()
+
+	for i := 0; i < int(VideoBufferWidth)*3; i += 3 {
+
+		m.MemArray[i] = colour[0]
+		m.MemArray[i+1] = colour[1]
+		m.MemArray[i+2] = colour[2]
+
+	}
+
+	// Copy succeeding rows
+
+	var bytesToCopy int = int(VideoBufferWidth) * 3
+
+	for bytesCopied := bytesToCopy; bytesCopied < int(VideoBufferSize); bytesCopied *= 2 {
+
+		bytesToCopy = bytesCopied
+		remaining := int(VideoBufferSize) - bytesCopied
+
+		if bytesToCopy > remaining {
+			bytesToCopy = remaining
 		}
 
-	} else {
-
-		var colour [4]byte = m.getVideoColour()
-
-		for i := 0; i < int(VideoBufferSize); i+=3 {
-			
-			m.MemArray[i] = colour[0]
-			m.MemArray[i+1] = colour[1]
-			m.MemArray[i+2] = colour[2]
-
-		}
+		copy(
+			m.MemArray[bytesCopied:bytesCopied+bytesToCopy],
+			m.MemArray[:bytesToCopy],
+		)
 
 	}
 
