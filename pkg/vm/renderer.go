@@ -404,6 +404,40 @@ func blendPixel(src [4]byte, dest [3]byte) [3]byte {
 
 func Bresenham(a [2]int, b [2]int) iter.Seq[[2]int] {
 
+	if a[0] == b[0] || a[1] == b[1] {
+
+		var x int = a[0]
+		var y int = a[1]
+
+		return func(yield func([2]int) bool) {
+
+			for {
+				if !yield([2]int{x, y}) {
+					return
+				}
+
+				if a[0] == b[0] {
+					if y == b[1] {
+						break
+					}
+				} else {
+					if x == b[0] {
+						break
+					}
+				}
+
+				if a[0] == b[0] {
+					y++
+				} else {
+					x++
+				}
+
+			}
+
+		}
+
+	}
+
 	var x int = a[0]
 	var y int = a[1]
 
