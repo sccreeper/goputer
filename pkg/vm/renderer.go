@@ -9,6 +9,7 @@ import (
 	"sccreeper/goputer/pkg/gpimg"
 	"sccreeper/goputer/pkg/util"
 	"slices"
+	"unsafe"
 )
 
 //go:embed assets/font.bin
@@ -324,6 +325,11 @@ func (m *VM) drawImage() {
 func (m *VM) clearVideo() {
 
 	var colour [4]byte = m.getVideoColour()
+
+	if haveArchVideoClear {
+		archVideoClear((*byte)(unsafe.Pointer(&m.MemArray[0])), colour[0], colour[1], colour[2])
+		return
+	}
 
 	for i := 0; i < int(VideoBufferWidth)*3; i += 3 {
 
