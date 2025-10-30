@@ -3,32 +3,45 @@
 #include "textflag.h"
 
 // func VideoClearAsm(array *byte, red uint8, green uint8, blue uint8)
-// Requires: AVX, AVX2, SSE2
+// Requires: AVX, SSE2
 TEXT ·VideoClearAsm(SB), NOSPLIT, $0-11
 	// Load params
-	MOVQ    array+0(FP), AX
-	MOVBLZX red+8(FP), CX
-	MOVBLZX green+9(FP), DX
-	MOVBLZX blue+10(FP), BX
-	MOVQ    AX, SI
-	ADDQ    $0x00038400, SI
+	MOVQ array+0(FP), AX
+	MOVB red+8(FP), CL
+	MOVB green+9(FP), DL
+	MOVB blue+10(FP), BL
+	MOVQ AX, SI
+	ADDQ $0x00038400, SI
 
 	// Generate colour
-	MOVL         $0x00000000, DI
-	MOVL         CX, DI
-	SHLL         $0x08, DI
-	ORL          DX, DI
-	SHLL         $0x08, DI
-	ORL          BX, DI
-	SHLL         $0x08, DI
-	ORL          CX, DI
-	MOVD         DI, X0
-	VBROADCASTSS X0, Y0
+	MOVL $0x00000000, DI
+	MOVB BL, DI
+	SHLL $0x08, DI
+	ORB  DL, DI
+	SHLL $0x08, DI
+	ORB  CL, DI
+
+	// Shuffle XMM
+	MOVD    DI, X0
+	VPSHUFB first_mask<>+0(SB), X0, X0
+	VPSHUFB second_mask<>+0(SB), X0, X1
+	VPSHUFB third_mask<>+0(SB), X0, X2
 
 	// Fill colour
 loop:
-	VMOVDQU Y0, (AX)
-	ADDQ    $0x20, AX
+	VMOVDQU X0, (AX)
+	VMOVDQU X1, 16(AX)
+	VMOVDQU X2, 32(AX)
+	ADDQ    $0x30, AX
 	CMPQ    AX, SI
 	JBE     loop
 	RET
+
+DATA first_mask<>+0(SB)/16, $"\x00\x01\x02\x00\x01\x02\x00\x01\x02\x00\x01\x02\x00\x01\x02\x00"
+GLOBL first_mask<>(SB), RODATA|NOPTR, $16
+
+DATA second_mask<>+0(SB)/16, $"\x01\x02\x00\x01\x02\x00\x01\x02\x00\x01\x02\x00\x01\x02\x00\x01"
+GLOBL second_mask<>(SB), RODATA|NOPTR, $16
+
+DATA third_mask<>+0(SB)/16, $"\x02\x00\x01\x02\x00\x01\x02\x00\x01\x02\x00\x01\x02\x00\x01\x02"
+GLOBL third_mask<>(SB), RODATA|NOPTR, $16

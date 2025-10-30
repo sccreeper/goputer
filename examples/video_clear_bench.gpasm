@@ -1,0 +1,28 @@
+#def red 0xFF0000FF
+#def green 0x00FF00FF
+#def blue 0x0000FFFF
+
+#label start
+
+lda @red
+mov d0 vc
+int vc
+int vf
+
+hlt $500
+
+lda @green
+mov d0 vc
+int vc
+int vf
+
+hlt $500
+
+lda @blue
+mov d0 vc
+int vc
+int vf
+
+hlt $500
+
+jmp @start
