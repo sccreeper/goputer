@@ -1,0 +1,183 @@
+//Kind of just a massive test file for the entire language
+#def pos 32
+#def size 5
+
+#def white 0xFFFFFFFF
+#def red 0xFF000080
+#def blue 0x0000FF80
+#def green 0x00FF00FF
+
+#def full_red 0xFF0000FF
+#def full_blue 0x0000FFFF
+
+#def gray 0x484848FF
+
+#def logo_rle file:"logo_rle.bin"
+#def logo_default file:"logo_default.bin"
+
+#label start
+
+// Clear screen
+
+lda @gray
+mov d0 vc
+int vc
+
+// Draw squares
+
+lda @white
+mov d0 vc
+
+lda @pos
+mov d0 r00
+lda @size
+mov d0 r01
+
+mul r00 r01
+mov a0 vx1
+mov a0 vy1
+
+mov r00 vx0
+mov r00 vy0
+
+int va
+int vf
+
+lda @red
+mov d0 vc
+
+add r00 r00
+mov a0 vx1
+mov a0 vy1
+
+int va
+int vf
+
+lda @blue
+mov d0 vc
+
+add r00 a0
+mov a0 vx1
+mov a0 vy1
+
+int va
+int vf
+
+// Try setting an individual pixel
+
+#def pixel_start 4500
+
+lda @pixel_start
+mov d0 r00
+
+lda @full_red
+incr r02
+sub dl r02
+mov a0 r01
+
+// <address> <length>
+
+sta r00 r01
+int vf
+
+jmp @future_label
+
+#label future_label
+
+// Line testing
+
+#def pos_y 240
+#def pos_x 320
+
+lda @pos_x
+mov d0 vx1
+
+lda @pos_y
+mov d0 vy1
+
+lda @green
+mov d0 vc
+
+clr vx0
+clr vy0
+
+int vl
+
+clr r00
+
+lda @size
+mov d0 r01
+
+#label line_loop
+
+sub vy1 r01
+mov a0 vy1
+
+int vl
+int vf
+
+neq vy1 r00
+cndjmp @line_loop
+
+// Text test
+
+#def some_string "Hello World!"
+
+lda @full_red
+mov d0 vc
+
+clr vx0
+clr vy0
+
+lda @some_string
+mov d0 vt
+
+int vt
+
+lda @pos
+mov d0 r00
+
+#label text_loop
+
+incr vx0
+incr vy0
+
+inv vc
+mov a0 vc
+int vt
+int vf
+
+neq r00 vx0
+cndjmp @text_loop
+
+lda @full_blue
+mov d0 vc
+
+// Polygon
+
+//               s x y x y x y 
+#def poly_data 0x03000080004040
+
+lda @poly_data
+
+int vp
+
+// Image
+
+lda @logo_rle
+mov dp d0
+
+int vi
+int vf
+
+lda @pos
+mov d0 r00
+add r00 r00
+mov a0 vx0
+mov a0 vy0
+
+lda @logo_default
+mov dp d0
+
+int vi
+int vf
