@@ -10,7 +10,7 @@ import (
 
 func main() {
 
-	TEXT("VideoAreaAsm", NOSPLIT, "func(array *byte, red uint8, green uint8, blue uint8, alpha uint8, x uint32, y uint32, x1 uint32, y1 uint32)")
+	TEXT("VideoAreaAsm", NOSPLIT, "func(array *byte, red uint8, green uint8, blue uint8, x uint32, y uint32, x1 uint32, y1 uint32)")
 
 	shuffle_mask_low := GLOBL("shuffle_mask_low", RODATA|NOPTR)
 	DATA(0, String([]byte{
@@ -28,7 +28,6 @@ func main() {
 	red := Load(Param("red"), GP8())
 	green := Load(Param("green"), GP8())
 	blue := Load(Param("blue"), GP8())
-	alpha := Load(Param("alpha"), GP8())
 
 	x := Load(Param("x"), GP32())
 	y := Load(Param("y"), GP32())
@@ -70,9 +69,6 @@ func main() {
 
 	MOVL(x1, width)
 	SUBL(x, width)
-
-	CMPB(alpha, Imm(255))
-	JNE(LabelRef("alpha"))
 
 	Comment("Construct colour")
 
@@ -143,10 +139,6 @@ func main() {
 	INCL(counter_y)
 	CMPL(counter_y, rows)
 	JB(LabelRef("na_loop"))
-
-	RET()
-
-	Label("alpha")
 
 	RET()
 

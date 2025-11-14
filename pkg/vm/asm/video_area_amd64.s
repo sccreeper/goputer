@@ -2,7 +2,7 @@
 
 #include "textflag.h"
 
-// func VideoAreaAsm(array *byte, red uint8, green uint8, blue uint8, alpha uint8, x uint32, y uint32, x1 uint32, y1 uint32)
+// func VideoAreaAsm(array *byte, red uint8, green uint8, blue uint8, x uint32, y uint32, x1 uint32, y1 uint32)
 // Requires: AVX, SSE2
 TEXT ·VideoAreaAsm(SB), NOSPLIT, $0-28
 	// Load parameters
@@ -10,64 +10,61 @@ TEXT ·VideoAreaAsm(SB), NOSPLIT, $0-28
 	MOVB red+8(FP), CL
 	MOVB green+9(FP), DL
 	MOVB blue+10(FP), BL
-	MOVB alpha+11(FP), SI
-	MOVL x+12(FP), R8
-	MOVL y+16(FP), R9
-	MOVL x1+20(FP), R10
-	MOVL y1+24(FP), R11
+	MOVL x+12(FP), SI
+	MOVL y+16(FP), R8
+	MOVL x1+20(FP), R9
+	MOVL y1+24(FP), R10
 
 	// Offset pointer by x and y
-	MOVL  R9, R12
+	MOVL  R8, R12
 	MOVQ  $0x00000000000003c0, R13
 	IMULQ R13, R12
 	ADDQ  R12, AX
-	MOVL  R8, R12
+	MOVL  SI, R12
 	MOVQ  $0x0000000000000003, R13
 	IMULQ R13, R12
 	ADDQ  R12, AX
 
 	// Bounds
-	SUBL R9, R11
-	MOVL R10, R9
-	SUBL R8, R9
-	CMPB SI, $0xff
-	JNE  alpha
+	SUBL R8, R10
+	MOVL R9, R8
+	SUBL SI, R8
 
 	// Construct colour
-	MOVB    BL, SI
-	SHLL    $0x08, SI
-	MOVB    DL, SI
-	SHLL    $0x08, SI
-	MOVB    CL, SI
-	MOVD    SI, X0
+	MOVB    BL, R11
+	SHLL    $0x08, R11
+	MOVB    DL, R11
+	SHLL    $0x08, R11
+	MOVB    CL, R11
+	MOVD    R11, X0
 	VPSHUFB shuffle_mask_low<>+0(SB), X0, X0
-	MOVD    SI, X1
+	MOVD    R11, X1
 	VPSHUFB shuffle_mask_high<>+0(SB), X1, X1
 
 	// Insert data into each of the lanes in YMM
 	VINSERTF128 $0x00, X0, Y2, Y2
 	VINSERTF128 $0x01, X1, Y2, Y2
 	XORL        SI, SI
-	XORL        R8, R8
+	XORL        R9, R9
 
 	// Loop to fill for no alpha
 na_loop:
-	CMPL R9, $0x0a
+	CMPL R8, $0x0a
 	JB   na_blit_remaining
 	MOVQ AX, DI
 
 na_loop_x:
 	// Check if less than 10 pixels to blit
-	MOVL SI, R10
-	ADDL $0x0a, R10
-	CMPL R10, R9
+	MOVL SI, R11
+	ADDL $0x0a, R11
+	CMPL R11, R8
 	JA   na_blit_remaining
 
 	// Otherwise blit 10 pixels at a time
 	VMOVDQU Y2, (DI)
 	ADDQ    $0x1e, DI
 	ADDL    $0x0a, SI
-	CMPL    SI, R9
+	CMPL    SI, R8
 	JBE     na_loop_x
 	JA      na_loop_end
 
@@ -77,19 +74,16 @@ na_blit_remaining:
 	MOVB BL, 2(DI)
 	ADDQ $0x03, DI
 	INCL SI
-	CMPL SI, R9
+	CMPL SI, R8
 	JB   na_blit_remaining
 
 na_loop_end:
 	// Cleanup
 	XORL SI, SI
 	ADDQ $0x000003c0, AX
-	INCL R8
-	CMPL R8, R11
+	INCL R9
+	CMPL R9, R10
 	JB   na_loop
-	RET
-
-alpha:
 	RET
 
 DATA shuffle_mask_low<>+0(SB)/16, $"\x00\x01\x02\x00\x01\x02\x00\x01\x02\x00\x01\x02\x00\x01\x02\x00"

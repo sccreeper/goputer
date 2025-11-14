@@ -55,10 +55,7 @@ func init() {
 
 func (m *VM) drawArea() {
 
-	// Do the first line
-
 	if m.Registers[c.RVideoX0] > m.Registers[c.RVideoX1] || m.Registers[c.RVideoY0] > m.Registers[c.RVideoY1] {
-		// TODO add some sort of panic
 		return
 	}
 
@@ -68,16 +65,26 @@ func (m *VM) drawArea() {
 	var posY1 uint32 = util.Clamp(m.Registers[c.RVideoY1], 0, VideoBufferHeight)
 
 	var colour = m.getVideoColour()
-
-	if haveArchVideoArea {
-		archVideoArea((*byte)(unsafe.Pointer(&m.MemArray[0])), colour[0], colour[1], colour[2], colour[3], posX, posY, posX1, posY1)
-		return
-	}
-
 	var areaStart = (uint32(posX) * VideoBytesPerPixel) + (uint32(posY) * VideoBufferWidth * VideoBytesPerPixel)
 
-	if colour[3] == 255 {
+	// TODO: archVideoArea with alpha
+	if haveArchVideoArea && colour[3] == 255 {
+		archVideoAreaNoAlpha((*byte)(unsafe.Pointer(&m.MemArray[0])), colour[0], colour[1], colour[2], posX, posY, posX1, posY1)
+		return
+	} else if colour[3] != 255 {
+		for y := 0; y < int(posY1-posY); y++ {
+			for x := 0; x < int(posX1-posX); x++ {
 
+				var pixelAddr int = int(areaStart) + (x * int(VideoBytesPerPixel)) + (y * int(VideoBufferWidth) * int(VideoBytesPerPixel))
+
+				var blendedColour [3]byte = blendPixel(colour, [3]byte(m.MemArray[pixelAddr:pixelAddr+3]))
+				m.MemArray[pixelAddr] = blendedColour[0]
+				m.MemArray[pixelAddr+1] = blendedColour[1]
+				m.MemArray[pixelAddr+2] = blendedColour[2]
+
+			}
+		}
+	} else {
 		// Do the first row
 
 		for x := 0; x < int(posX1-posX); x++ {
@@ -98,22 +105,6 @@ func (m *VM) drawArea() {
 				m.MemArray[areaStart:areaStart+((uint32(posX1)-uint32(posX))*VideoBytesPerPixel)],
 			)
 		}
-
-	} else {
-
-		for y := 0; y < int(posY1-posY); y++ {
-			for x := 0; x < int(posX1-posX); x++ {
-
-				var pixelAddr int = int(areaStart) + (x * int(VideoBytesPerPixel)) + (y * int(VideoBufferWidth) * int(VideoBytesPerPixel))
-
-				var blendedColour [3]byte = blendPixel(colour, [3]byte(m.MemArray[pixelAddr:pixelAddr+3]))
-				m.MemArray[pixelAddr] = blendedColour[0]
-				m.MemArray[pixelAddr+1] = blendedColour[1]
-				m.MemArray[pixelAddr+2] = blendedColour[2]
-
-			}
-		}
-
 	}
 
 }

@@ -2,4 +2,4 @@
 
 package asm
 
-func VideoAreaAsm(array *byte, red uint8, green uint8, blue uint8, alpha uint8, x uint32, y uint32, x1 uint32, y1 uint32)
+func VideoAreaAsm(array *byte, red uint8, green uint8, blue uint8, x uint32, y uint32, x1 uint32, y1 uint32)
