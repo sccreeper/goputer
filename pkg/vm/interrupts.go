@@ -2,6 +2,7 @@ package vm
 
 import (
 	c "sccreeper/goputer/pkg/constants"
+	"slices"
 )
 
 type InterruptInfo struct {
@@ -37,17 +38,20 @@ func (m *VM) calledInterrupt() {
 		m.drawImage()
 	case c.IntVideoClear:
 		m.clearVideo()
-	default:
-		if c.Interrupt(m.LeftArg) == c.IntIOClear {
-
-			//Set all IO registers to zero
-
-			for i := c.RIO08; i == c.RIO15; i++ {
-				m.Registers[i] = 0
-			}
-
+	case c.IntIOClear:
+		//Set all IO registers to zero
+		for i := c.RIO08; i == c.RIO15; i++ {
+			m.Registers[i] = 0
 		}
+		fallthrough
+	case c.IntVideoFlush:
+		for slices.Contains(m.InterruptQueue, c.IntVideoFlush) {
+			vfIndex := slices.Index(m.InterruptQueue, c.IntVideoFlush)
 
+			m.InterruptQueue = slices.Delete(m.InterruptQueue, vfIndex, vfIndex+1)
+		}
+		fallthrough
+	default:
 		m.InterruptQueue = append(m.InterruptQueue, c.Interrupt(m.LeftArg))
 	}
 
