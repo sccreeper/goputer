@@ -16,55 +16,54 @@ TEXT ·VideoAreaAsm(SB), NOSPLIT, $0-28
 	MOVL y1+24(FP), R10
 
 	// Offset pointer by x and y
-	MOVL  R8, R12
-	MOVQ  $0x00000000000003c0, R13
-	IMULQ R13, R12
-	ADDQ  R12, AX
-	MOVL  SI, R12
-	MOVQ  $0x0000000000000003, R13
-	IMULQ R13, R12
-	ADDQ  R12, AX
+	MOVL  R8, R11
+	MOVQ  $0x00000000000003c0, R12
+	IMULQ R12, R11
+	ADDQ  R11, AX
+	MOVL  SI, R11
+	MOVQ  $0x0000000000000003, R12
+	IMULQ R12, R11
+	ADDQ  R11, AX
 
 	// Bounds
 	SUBL R8, R10
-	MOVL R9, R8
-	SUBL SI, R8
+	SUBL SI, R9
 
 	// Construct colour
-	MOVB    BL, R11
-	SHLL    $0x08, R11
-	MOVB    DL, R11
-	SHLL    $0x08, R11
-	MOVB    CL, R11
-	MOVD    R11, X0
+	MOVB    BL, DI
+	SHLL    $0x08, DI
+	MOVB    DL, DI
+	SHLL    $0x08, DI
+	MOVB    CL, DI
+	MOVD    DI, X0
 	VPSHUFB shuffle_mask_low<>+0(SB), X0, X0
-	MOVD    R11, X1
+	MOVD    DI, X1
 	VPSHUFB shuffle_mask_high<>+0(SB), X1, X1
 
 	// Insert data into each of the lanes in YMM
 	VINSERTF128 $0x00, X0, Y2, Y2
 	VINSERTF128 $0x01, X1, Y2, Y2
 	XORL        SI, SI
-	XORL        R9, R9
+	XORL        R8, R8
 
 	// Loop to fill for no alpha
 na_loop:
-	CMPL R8, $0x0a
-	JB   na_blit_remaining
 	MOVQ AX, DI
+	CMPL R9, $0x0a
+	JB   na_blit_remaining
 
 na_loop_x:
 	// Check if less than 10 pixels to blit
 	MOVL SI, R11
 	ADDL $0x0a, R11
-	CMPL R11, R8
+	CMPL R11, R9
 	JA   na_blit_remaining
 
 	// Otherwise blit 10 pixels at a time
 	VMOVDQU Y2, (DI)
 	ADDQ    $0x1e, DI
 	ADDL    $0x0a, SI
-	CMPL    SI, R8
+	CMPL    SI, R9
 	JBE     na_loop_x
 	JA      na_loop_end
 
@@ -74,15 +73,15 @@ na_blit_remaining:
 	MOVB BL, 2(DI)
 	ADDQ $0x03, DI
 	INCL SI
-	CMPL SI, R8
+	CMPL SI, R9
 	JB   na_blit_remaining
 
 na_loop_end:
 	// Cleanup
 	XORL SI, SI
 	ADDQ $0x000003c0, AX
-	INCL R9
-	CMPL R9, R10
+	INCL R8
+	CMPL R8, R10
 	JB   na_loop
 	RET
 

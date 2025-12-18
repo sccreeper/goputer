@@ -93,10 +93,10 @@ func main() {
 	Comment("Loop to fill for no alpha")
 	Label("na_loop")
 
+	MOVQ(ptr, RDI)
+
 	CMPL(width, Imm(10))
 	JB(LabelRef("na_blit_remaining"))
-
-	MOVQ(ptr, RDI)
 
 	Label("na_loop_x")
 
