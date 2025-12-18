@@ -45,11 +45,17 @@ func (m *VM) calledInterrupt() {
 		}
 		fallthrough
 	case c.IntVideoFlush:
+		m.Mutex.Lock()
 		for slices.Contains(m.InterruptQueue, c.IntVideoFlush) {
-			vfIndex := slices.Index(m.InterruptQueue, c.IntVideoFlush)
+			if len(m.InterruptQueue) == 1 {
+				m.InterruptQueue = []c.Interrupt{}
+			} else {
+				vfIndex := slices.Index(m.InterruptQueue, c.IntVideoFlush)
 
-			m.InterruptQueue = slices.Delete(m.InterruptQueue, vfIndex, vfIndex+1)
+				m.InterruptQueue = slices.Delete(m.InterruptQueue, vfIndex, vfIndex+1)
+			}
 		}
+		m.Mutex.Unlock()
 		fallthrough
 	default:
 		m.InterruptQueue = append(m.InterruptQueue, c.Interrupt(m.LeftArg))

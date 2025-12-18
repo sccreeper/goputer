@@ -19,6 +19,8 @@
 
 #def ball_size 5
 
+#def ball_speed 5
+
 // 0=left, >1=right
 #def ball_direction_x 0
 // 0=down, >1=up
@@ -315,21 +317,21 @@ mov $0 r03
 
 gt r02 $0
 cndjmp @move_ball_right
-sub r00 $5
+sub r00 $d:ball_speed
 mov a0 r00
 jmp @handle_y_movement
 #label move_ball_right
-add r00 $5
+add r00 $d:ball_speed
 mov a0 r00
 
 #label handle_y_movement
 gt r03 $0
 cndjmp @move_ball_up
-add r01 $5
+add r01 $d:ball_speed
 mov a0 r01
 jmp @move_ball_cleanup
 #label move_ball_up
-sub r01 $5
+sub r01 $d:ball_speed
 mov a0 r01
 
 #label move_ball_cleanup
@@ -402,5 +404,7 @@ ret
 
 call @draw
 call @move_ball
+
+hlt $50
 
 jmp @start

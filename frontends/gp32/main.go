@@ -123,11 +123,13 @@ func Run(ctx *cli.Context) error {
 	sound.SoundInit()
 
 	var startTime int64 = time.Now().UnixMilli()
-	var cyclesCompleted int = 0
-	var shouldCycle bool = true
+	var framesCompleted int = 0
+	var shouldCycle bool = false
 
 	toggleManualButton := rendering.NewButton("Toggle step", 560, 0, 80, 24, func() {
+		gp32.Mutex.Lock()
 		shouldCycle = !shouldCycle
+		gp32.Mutex.Unlock()
 	})
 
 	cycleButton := rendering.NewButton("Cycle", 560, 24, 80, 24, func() {
@@ -136,16 +138,30 @@ func Run(ctx *cli.Context) error {
 		}
 	})
 
+	// Start running
+
+	go func() {
+
+		for {
+			if shouldCycle {
+				if useProfiler {
+					pr.Cycle()
+				} else {
+					gp32.Cycle()
+				}
+			}
+		}
+
+	}()
+
 	//Start rendering
 
 	for !rl.WindowShouldClose() {
 
-		if shouldCycle {
-			if useProfiler {
-				pr.Cycle()
-			} else {
-				gp32.Cycle()
-			}
+		if framesCompleted == 0 {
+			gp32.Mutex.Lock()
+			shouldCycle = true
+			gp32.Mutex.Unlock()
 		}
 
 		//Render IO
@@ -160,26 +176,25 @@ func Run(ctx *cli.Context) error {
 		cycleButton.Draw()
 		rl.EndTextureMode()
 
-		//Check if finished and then exit program loop
-
-		if gp32.Finished {
-			break
-		}
-
 		//Handle interrupts
 
 		for len(gp32.InterruptQueue) > 0 {
 
+			gp32.Mutex.Lock()
 			var x c.Interrupt
 			x, gp32.InterruptQueue = gp32.InterruptQueue[0], gp32.InterruptQueue[1:]
+			gp32.Mutex.Unlock()
 
 			switch x {
 			// Sound interrupts
 			case c.IntSoundFlush:
+				gp32.Mutex.Lock()
 				sound.PlaySound(gp32.Registers[c.RSoundWave], gp32.Registers[c.RSoundTone], gp32.Registers[c.RSoundVolume])
+				gp32.Mutex.Unlock()
 			case c.IntSoundStop:
 				speaker.Clear()
 			case c.IntIOFlush:
+				gp32.Mutex.Lock()
 				for i := 0; i < 8; i++ {
 
 					if gp32.Registers[i+int(c.RIO00)] != 0 {
@@ -189,9 +204,11 @@ func Run(ctx *cli.Context) error {
 					}
 
 				}
+				gp32.Mutex.Unlock()
 			case c.IntVideoFlush:
 				// Update video texture
 
+				gp32.Mutex.Lock()
 				for i := 0; i < int(vm.VideoBufferSize/3); i++ {
 
 					VideoIntermediate[i].R = gp32.MemArray[i*3]
@@ -199,6 +216,7 @@ func Run(ctx *cli.Context) error {
 					VideoIntermediate[i].B = gp32.MemArray[(i*3)+2]
 
 				}
+				gp32.Mutex.Unlock()
 
 				rl.UpdateTexture(
 					VideoRenderTexture.Texture,
@@ -216,11 +234,13 @@ func Run(ctx *cli.Context) error {
 
 		var b float64
 
+		gp32.Mutex.Lock()
 		if gp32.Registers[c.RVideoBrightness] == 0 {
 			b = 0xFF
 		} else {
 			b = (1 - math.Pow(math.Pow(float64(gp32.Registers[c.RVideoBrightness]), -1)*255.0, -1)) * 255
 		}
+		gp32.Mutex.Unlock()
 
 		rl.DrawRectangle(
 			0,
@@ -302,13 +322,20 @@ func Run(ctx *cli.Context) error {
 
 				if rl.IsKeyDown(key) {
 
+					gp32.Mutex.Lock()
+
 					gp32.Registers[c.RKeyboardCurrent] = uint32(keyboard.MapKey(key))
 					gp32.Registers[c.RKeyboardPressed] = 1
 
 					if gp32.Subscribed(c.IntKeyboardDown) {
 						gp32.SubscribedInterruptQueue = append(gp32.SubscribedInterruptQueue, c.IntKeyboardDown)
 					}
+
+					gp32.Mutex.Unlock()
+
 				} else if rl.IsKeyUp(key) {
+
+					gp32.Mutex.Lock()
 
 					gp32.Registers[c.RKeyboardCurrent] = uint32(keyboard.MapKey(key))
 					gp32.Registers[c.RKeyboardPressed] = 0
@@ -316,7 +343,12 @@ func Run(ctx *cli.Context) error {
 					if gp32.Subscribed(c.IntKeyboardUp) {
 						gp32.SubscribedInterruptQueue = append(gp32.SubscribedInterruptQueue, c.IntKeyboardUp)
 					}
+
+					gp32.Mutex.Unlock()
+
 				} else {
+
+					gp32.Mutex.Lock()
 
 					gp32.Registers[c.RKeyboardCurrent] = uint32(keyboard.MapKey(key))
 					gp32.Registers[c.RKeyboardPressed] = 0
@@ -328,6 +360,8 @@ func Run(ctx *cli.Context) error {
 					if gp32.Subscribed(c.IntKeyboardUp) {
 						gp32.SubscribedInterruptQueue = append(gp32.SubscribedInterruptQueue, c.IntKeyboardUp)
 					}
+
+					gp32.Mutex.Unlock()
 
 				}
 			} else {
@@ -340,14 +374,18 @@ func Run(ctx *cli.Context) error {
 
 		if uint32(rl.GetMouseX()) != previousMouse.MouseX && uint32(CorrectedMouseY()) != previousMouse.MouseY {
 
+			gp32.Mutex.Lock()
 			gp32.Registers[c.RMouseX] = uint32(rl.GetMouseX()) / 2
 			gp32.Registers[c.RMouseY] = uint32(CorrectedMouseY())
+			gp32.Mutex.Unlock()
 
 			previousMouse.MouseX = uint32(rl.GetMouseX()) / 2
 			previousMouse.MouseY = uint32(CorrectedMouseY())
 
 			if gp32.Subscribed(c.IntMouseMove) {
+				gp32.Mutex.Lock()
 				gp32.SubscribedInterruptQueue = append(gp32.SubscribedInterruptQueue, c.IntMouseMove)
+				gp32.Mutex.Unlock()
 			}
 
 		}
@@ -357,22 +395,31 @@ func Run(ctx *cli.Context) error {
 
 			if rl.IsMouseButtonDown(rl.MouseButton(i)) && i != int(previousMouse.Button) {
 
+				gp32.Mutex.Lock()
 				gp32.Registers[c.RMouseButton] = uint32(i)
+				gp32.Mutex.Unlock()
 				previousMouse.Button = uint32(i)
 
 				if gp32.Subscribed(c.IntMouseDown) {
 					log.Println("Interrupt: Mouse down")
 
+					gp32.Mutex.Lock()
 					gp32.SubscribedInterruptQueue = append(gp32.SubscribedInterruptQueue, c.IntMouseDown)
+					gp32.Mutex.Unlock()
+
 				}
 
 			} else if rl.IsMouseButtonReleased(rl.MouseButton(i)) && i != int(previousMouse.Button) {
+				gp32.Mutex.Lock()
 				gp32.Registers[c.RMouseButton] = uint32(i)
+				gp32.Mutex.Unlock()
 
 				if gp32.Subscribed(c.IntMouseUp) {
 					log.Println("Interrupt: Mouse up")
 
+					gp32.Mutex.Lock()
 					gp32.SubscribedInterruptQueue = append(gp32.SubscribedInterruptQueue, c.IntMouseUp)
+					gp32.Mutex.Unlock()
 				}
 
 			}
@@ -397,7 +444,9 @@ func Run(ctx *cli.Context) error {
 					}
 
 					if gp32.Subscribed(c.Interrupt(int(c.IntIO08) + index)) {
+						gp32.Mutex.Lock()
 						gp32.SubscribedInterruptQueue = append(gp32.SubscribedInterruptQueue, c.Interrupt(int(c.IntIO08)+index))
+						gp32.Mutex.Unlock()
 					}
 
 				}
@@ -418,13 +467,22 @@ func Run(ctx *cli.Context) error {
 
 		rl.EndDrawing()
 
-		cyclesCompleted++
+		framesCompleted++
+
+		//Check if finished and then exit program loop
+
+		if gp32.Finished {
+			gp32.Mutex.Lock()
+			shouldCycle = false
+			gp32.Mutex.Unlock()
+			break
+		}
 
 	}
 
-	fmt.Printf("Cycles completed: %d\n", cyclesCompleted)
+	fmt.Printf("Frames completed: %d\n", framesCompleted)
 	fmt.Printf("Time elapsed: %dms\n", time.Now().UnixMilli()-startTime)
-	fmt.Printf("Mean time per cycle: %fms\n", float64(time.Now().UnixMilli()-startTime)/float64(cyclesCompleted))
+	fmt.Printf("Mean time per frame: %fms\n", float64(time.Now().UnixMilli()-startTime)/float64(framesCompleted))
 
 	for !rl.WindowShouldClose() {
 		rl.BeginDrawing()

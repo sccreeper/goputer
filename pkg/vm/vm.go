@@ -8,6 +8,7 @@ import (
 	comp "sccreeper/goputer/pkg/compiler"
 	c "sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/util"
+	"sync"
 	"time"
 )
 
@@ -57,6 +58,8 @@ type VM struct {
 
 	Hooks      map[VMHook]map[string]func()
 	hasStarted bool
+
+	Mutex sync.Mutex
 }
 
 // Initialize VM and registers, load code into "memory" etc.
