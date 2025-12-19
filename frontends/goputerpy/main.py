@@ -77,12 +77,20 @@ clock = pg.time.Clock()
 
 while True:
 
+    if not gppy.shouldRun:
+        gppy.shouldRun = True
+        gppy.Run()
+
     #Handle called interrupts
 
     match gppy.GetInterrupt():
         case c.Interrupt.IntVideoFlush:
             gppy.UpdateVideoBuffer()
+            
+            gppy.mutex.acquire()
             video_surface = pg.image.frombuffer(gppy.video_buffer, (320, 240), "RGB")
+            gppy.mutex.release()
+        
         case c.Interrupt.IntSoundFlush:
             sound_manager.play(
                 gppy.GetRegister(c.Register.RSoundTone),
@@ -99,7 +107,11 @@ while True:
 
     for event in pg.event.get():
         match event.type:
-            case pg.QUIT: 
+            case pg.QUIT:
+                gppy.mutex.acquire()
+                gppy.shouldRun = False
+                gppy.mutex.release()
+
                 sys.exit()
         
             case pg.MOUSEMOTION:
@@ -202,12 +214,14 @@ while True:
     
     pg.display.flip()
 
-    gppy.Cycle()
-
     clock.tick()
 
 #Hang once finished executing code
 while True:
     for event in pg.event.get():
-        if event.type == pg.QUIT: 
+        if event.type == pg.QUIT:
+            gppy.mutex.acquire()
+            gppy.shouldRun = False
+            gppy.mutex.release()
+
             sys.exit()
