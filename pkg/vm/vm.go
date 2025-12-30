@@ -211,7 +211,7 @@ func (m *VM) Cycle() {
 
 	//Interrupts
 
-	if len(m.SubscribedInterruptQueue) > 0 && !(m.Registers[c.RControl]&c.InterruptsDisabledMask != 0) {
+	if len(m.SubscribedInterruptQueue) > 0 && !((m.Registers[c.RControl] & c.InterruptsDisabledMask) != 0) {
 
 		// Pop from queue
 		var i c.Interrupt
@@ -220,7 +220,7 @@ func (m *VM) Cycle() {
 		// Frontends should do the checking but this is just to be sure.
 		if m.Subscribed(i) {
 			m.CallHooks(HookSubbedInterrupt)
-			m.Registers[c.RControl] &= ^c.InterruptsDisabledMask
+			m.Registers[c.RControl] |= c.InterruptsDisabledMask
 
 			m.subbedInterrupt(i)
 			m.call(m.Registers[c.RProgramCounter], m.LongArg)
@@ -272,7 +272,7 @@ func (m *VM) Cycle() {
 		}
 
 	case c.IInterruptCallReturn:
-		m.Registers[c.RControl] |= c.InterruptsDisabledMask
+		m.Registers[c.RControl] &= ^c.InterruptsDisabledMask
 		m.popCall()
 		return
 	case c.ICallReturn:
