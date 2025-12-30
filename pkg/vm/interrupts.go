@@ -39,11 +39,13 @@ func (m *VM) calledInterrupt() {
 	case c.IntVideoClear:
 		m.clearVideo()
 	case c.IntIOClear:
+		m.Mutex.Lock()
 		//Set all IO registers to zero
 		for i := c.RIO08; i == c.RIO15; i++ {
 			m.Registers[i] = 0
 		}
-		fallthrough
+		m.InterruptQueue = append(m.InterruptQueue, c.Interrupt(m.LeftArg))
+		m.Mutex.Unlock()
 	case c.IntVideoFlush:
 		m.Mutex.Lock()
 		for slices.Contains(m.InterruptQueue, c.IntVideoFlush) {
@@ -55,10 +57,12 @@ func (m *VM) calledInterrupt() {
 				m.InterruptQueue = slices.Delete(m.InterruptQueue, vfIndex, vfIndex+1)
 			}
 		}
-		m.Mutex.Unlock()
-		fallthrough
-	default:
 		m.InterruptQueue = append(m.InterruptQueue, c.Interrupt(m.LeftArg))
+		m.Mutex.Unlock()
+	default:
+		m.Mutex.Lock()
+		m.InterruptQueue = append(m.InterruptQueue, c.Interrupt(m.LeftArg))
+		m.Mutex.Unlock()
 	}
 
 }
