@@ -411,6 +411,17 @@ func Bresenham(a [2]int, b [2]int) iter.Seq[[2]int] {
 		var x int = a[0]
 		var y int = a[1]
 
+		var dx int = 1
+		var dy int = 1
+
+		if b[0] <= a[0] {
+			dx = -1
+		}
+
+		if b[1] <= a[1] {
+			dy = -1
+		}
+
 		return func(yield func([2]int) bool) {
 
 			for {
@@ -429,9 +440,9 @@ func Bresenham(a [2]int, b [2]int) iter.Seq[[2]int] {
 				}
 
 				if a[0] == b[0] {
-					y++
+					y += dy
 				} else {
-					x++
+					x += dx
 				}
 
 			}
