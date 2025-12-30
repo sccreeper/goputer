@@ -16,6 +16,7 @@ date >> ./static/ver
 
 cp ./run.sh ./build/
 cp ./pages_deploy.sh ./build/
+cp ./serve.py ./build/
 
 echo Building JS...
 

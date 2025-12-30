@@ -1,4 +1,3 @@
-import { db, fileTableName } from "./db";
 import { CodeTabElement } from "./editor/code_tab"
 import globals from "./globals"
 import { goputer } from "./goputer"
@@ -69,9 +68,9 @@ imageDisplayTrueSize.addEventListener("change",
 
 binDisplayInput.addEventListener("input", 
     /** @param {Event} e  */
-    (e) => {
+    async (e) => {
 
-        const realOffset = clamp(binDisplayInput.value, 0, goputer.files.size(globals.focusedFile)-1)
+        const realOffset = clamp(binDisplayInput.value, 0, await goputer.files.size(globals.focusedFile)-1)
         const elementOffset = Math.floor(
             realOffset / rowLength
         )
@@ -102,12 +101,12 @@ binDisplayInput.addEventListener("input",
     }
 )
 
-codeArea.addEventListener("input", (e) => {
+codeArea.addEventListener("input", async (e) => {
 
     let encoder = new TextEncoder();
     let encoded = encoder.encode(codeArea.value);
 
-    goputer.files.update(globals.focusedFile, encoded, encoded.length, "text");
+    await goputer.files.update(globals.focusedFile, encoded, encoded.length, "text");
 })
 
 codeEditorDiv.addEventListener("drop", 
@@ -124,7 +123,7 @@ codeEditorDiv.addEventListener("drop",
                 return
             }
 
-            if (f.size > goputer.usableMemorySize) {
+            if (f.size > await goputer.usableMemorySize) {
                 if (!confirm(
                     `This file is ${f.size} bytes in size which is larger than goputer's usable memory size of ${goputer.usableMemorySize} bytes. Press OK if you know what you are doing.`
                 )) {
@@ -134,7 +133,7 @@ codeEditorDiv.addEventListener("drop",
 
             let fileName = ""
 
-            if (goputer.files.exists(f.name)) {
+            if (await goputer.files.exists(f.name)) {
                 fileName = `dup_${f.name}`
             } else {
                 fileName = f.name
@@ -162,7 +161,7 @@ codeEditorDiv.addEventListener("drop",
                     break;
             }
 
-            goputer.files.update(fileName, await f.bytes(), f.size, fileType, true)
+            await goputer.files.update(fileName, await f.bytes(), f.size, fileType, true)
 
             if (fileType != "image") {
                 SwitchFocus(fileName)                
@@ -178,17 +177,16 @@ codeEditorDiv.addEventListener("dragover", (e) => {
 /**
  * Deletes all files and performs required cleanup.
  */
-export function RemoveAll() {
-    goputer.files.fileNames.forEach(fileName => {
-
-        if (goputer.files.type(fileName) == "image") {
+export async function RemoveAll() {
+    for (const fileName of await goputer.files.fileNames) {
+        if (await goputer.files.type(fileName) == "image") {
             window.URL.revokeObjectURL(imageMap.get(fileName).objectUrl)
         }
 
-        goputer.files.remove(fileName)
+        await goputer.files.remove(fileName)
 
         document.querySelector(`code-tab[filename="${fileName}"]`).remove()
-    });
+    }
 
     imageMap.clear()
 }
@@ -293,19 +291,19 @@ export function DeleteFile(fileName) {
  * 
  * @param {string} fileName 
  */
-export function SwitchFocus(fileName) {
+export async function SwitchFocus(fileName) {
 
-    const fileBytes = new Uint8Array(goputer.files.size(fileName))
-    goputer.files.get(fileName, fileBytes)
+    const fileBytes = new Uint8Array(new SharedArrayBuffer(await goputer.files.size(fileName)))
+    await goputer.files.get(fileName, fileBytes)
 
-    switch (goputer.files.type(fileName)) {
+    switch (await goputer.files.type(fileName)) {
         case "text":
             binDisplay.style.display = "none";
             imageDisplay.style.display = "none";
             codeArea.style.display = "block";
 
             let textDecoder = new TextDecoder()
-            let decodedText = textDecoder.decode(fileBytes)
+            let decodedText = textDecoder.decode(fileBytes.slice())
             codeArea.value = decodedText
 
             break;

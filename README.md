@@ -284,6 +284,8 @@ go test ./tests -v
   - Used to create and load ZIP archives
 - Dexie.js - [dexie/Dexie.js](https://github.com/dexie/Dexie.js)
   - Used for interacting with IndexedDB.
+- Comlink - [GoogleChromeLabs/comlink](https://github.com/GoogleChromeLabs/comlink)
+  - Used to provide a easier interface between the worker/runtime and UI threads.
 
 #### CLI tool
 

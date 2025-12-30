@@ -1,6 +1,6 @@
 // Display disassembled code in UI.
 
-import { goputer } from "../goputer";
+import { goputer, instructionArray, interruptArray } from "../goputer";
 import { instructionsContainer, definitionsContainer, interruptTableContainer } from "./main";
 import shared from "./shared";
 
@@ -54,7 +54,7 @@ function GenerateInstructionHTML(instructionObj, offset) {
 
 }
 
-export function DisplayDisassembledCode(codeObject) {
+export async function DisplayDisassembledCode(codeObject) {
 
     shared.file_json = JSON.stringify(codeObject, null, 3);
 
@@ -71,7 +71,7 @@ export function DisplayDisassembledCode(codeObject) {
             instructionsContainer.appendChild(
                 GenerateInstructionHTML(
                     element,
-                    (i*5) + memOffset + codeObject.start_indexes[2], 
+                    (i*5) + (await goputer.memOffset) + codeObject.start_indexes[2], 
                 )
             );
         }
@@ -95,7 +95,7 @@ export function DisplayDisassembledCode(codeObject) {
 
         let interruptAddress = document.createElement("td")
         interruptAddress.classList.add("font-fira")
-        interruptAddress.textContent = goputer.util.convertHex(value, false)
+        interruptAddress.textContent = (await goputer.util.convertHex(value, false))
         interruptRow.appendChild(interruptAddress)
 
         interruptTable.appendChild(interruptRow)
@@ -118,7 +118,7 @@ export function DisplayDisassembledCode(codeObject) {
         for (let i = 0; i < codeObject.program_definitions.length; i++) {
             const element = codeObject.program_definitions[i];
 
-            let definitionAddress = "0x" + (memOffset + codeObject.start_indexes[1] + totalDefinitionLength).toString(16).padStart(8, "0").toUpperCase();
+            let definitionAddress = "0x" + ((await goputer.memOffset) + codeObject.start_indexes[1] + totalDefinitionLength).toString(16).padStart(8, "0").toUpperCase();
             totalDefinitionLength += atob(element).length + 4;
 
             let definitionContainer = document.createElement("div")

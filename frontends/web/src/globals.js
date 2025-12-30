@@ -1,4 +1,3 @@
-import { ShowError } from "./error"
 export default {
 
     codeHasBeenCompiled: false,
@@ -6,7 +5,7 @@ export default {
     keyboardLocked: false,
     vmInited: false,
     runInterval: null,
-    FPS: 512,
+    UPS: 30,
     /**
      * @type {AudioContext}
      */
@@ -41,5 +40,4 @@ export default {
     focusedFile: "main.gpasm",
 }
 
-window.textureData = new Uint8Array(320*240*3)
-window.showError = ShowError
+window.textureData = new Uint8Array(new SharedArrayBuffer(320*240*3))

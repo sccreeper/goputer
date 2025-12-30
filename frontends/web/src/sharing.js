@@ -27,6 +27,8 @@ export async function OpenSharedArchive(fileBlob) {
             const fileWriter = new Uint8ArrayWriter();
             await ent.getData(fileWriter)
             const fileData = await fileWriter.getData()
+            const fileDataShared = Uint8Array(new SharedArrayBuffer(fileData.length))
+            fileDataShared.set(fileData)
 
             /** @type {import("./editor/code_tab").FileType} */
             let fileType;
@@ -48,10 +50,10 @@ export async function OpenSharedArchive(fileBlob) {
                     break;
             }
 
-            goputer.files.update(
+            await goputer.files.update(
                 ent.filename, 
-                fileData,
-                fileData.length,
+                fileDataShared,
+                fileDataShared.length,
                 fileType,
                 true
             )
@@ -70,7 +72,7 @@ export async function DownloadAll(e) {
     const zipFileWriter = new BlobWriter();
     const zipWriter = new ZipWriter(zipFileWriter);
 
-    for (const fileName of goputer.files.fileNames) {
+    for (const fileName of await goputer.files.fileNames) {
         
         /** @type {Uint8Array} */
         let fileBytes;
@@ -81,8 +83,8 @@ export async function DownloadAll(e) {
 
         } else {
 
-            fileBytes = new Uint8Array(goputer.files.size(fileName))
-            goputer.files.get(fileName, fileBytes)
+            fileBytes = new Uint8Array(new SharedArrayBuffer(await goputer.files.size(fileName)))
+            await goputer.files.get(fileName, fileBytes)
 
         }
 

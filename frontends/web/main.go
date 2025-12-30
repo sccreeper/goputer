@@ -276,9 +276,10 @@ func isFinished(this js.Value, args []js.Value) any {
 
 func updateFrameBuffer(this js.Value, args []js.Value) any {
 
-	js.CopyBytesToJS(js.Global().Get("textureData"), js32.MemArray[:vm.VideoBufferSize])
+	bytesWritten := js.CopyBytesToJS(js.Global().Get("wasmFramebuffer"), js32.MemArray[:vm.VideoBufferSize])
+	args[0].Call("set", js.Global().Get("wasmFramebuffer"))
 
-	return js.ValueOf(nil)
+	return js.ValueOf(bytesWritten)
 
 }
 
@@ -426,6 +427,7 @@ func main() {
 	js.Global().Set("disassembleCode", js.FuncOf(disassemble))
 
 	js.Global().Set("updateFramebuffer", js.FuncOf(updateFrameBuffer))
+	js.Global().Set("wasmFramebuffer", js.Global().Get("Uint8Array").New(vm.VideoBufferSize))
 
 	js.Global().Set("getMappedKey", js.FuncOf(mapKeycode))
 
@@ -480,7 +482,7 @@ func main() {
 	js.Global().Set("instructionArray", js.ValueOf(instructionsArray))
 	js.Global().Set("interruptArray", js.ValueOf(interruptArray))
 
-	js.Global().Set("memOffset", js.ValueOf(int(compiler.StackSize)))
+	js.Global().Set("memOffset", js.ValueOf(int(compiler.StackSize)+int(vm.VideoBufferSize)))
 	js.Global().Set("memSize", js.ValueOf(int(vm.MemSize-vm.VideoBufferSize))) // usable memory size
 
 	js.Global().Set("convertColour", js.FuncOf(convertColour))

@@ -1,310 +1,194 @@
-// Wrapper around all goputer functions in global scope, with the addition of JSDoc typing
+import * as Comlink from "comlink";
+import { ShowError } from "./error";
 
-import { databaseVersion, db, fileTableName } from "./db"
+// Wrapper for worker, also contains types that can be cached, the interrupt and register maps.
 
-/**
- * @typedef {"r00" | "r01" | "r02" | "r03" | "r04" | "r05" | "r06" | "r07" |
- *           "r08" | "r09" | "r10" | "r11" | "r12" | "r13" | "r14" | "r15" |
- *           "vx0" | "vy0" | "vx1" | "vy1" |
- *           "vc" | "vb" | "vt" |
- *           "kc" | "kp" |
- *           "mx" | "my" | "mb" |
- *           "st" | "sv" |
- *           "a0" | "d0" |
- *           "stk" | "stz" |
- *           "io00" | "io01" | "io02" | "io03" | "io04" | "io05" | "io06" | "io07" |
- *           "io08" | "io09" | "io10" | "io11" | "io12" | "io13" | "io14" | "io15" |
- *           "prc" |
- *           "cstk" | "cstz" |
- *           "dl" | "dp" |
- *           "sw"} Register
- * 
- */
+/** @type {import("./goputer.worker").Goputer} */
+const goputer = Comlink.wrap(new Worker(
+  new URL("goputer.worker.js", import.meta.url),
+  {type: "module"}
+));
 
-export const goputer = {
-    compileCode() {compileCode()},
-    initVm() {initVM()},
+goputer.onerror = Comlink.proxy(ShowError)
 
-    /**
-     * Set register value
-     * @param {number} register 
-     * @param {number} value 
-     */
-    setRegister(register, value) { setRegister(register, value) },
-    
-    /**
-     * Get a register value
-     * @param {number} register 
-     * @returns {number}
-     */
-    getRegister(register) { return getRegister(register) },
+const interruptInts = {
+    "ss":  0,  //Stop sound
+	"sf":  1,  //Flush sound registers
+	"va":  2,  //Render area
+	"vp":  3,  //Render polygon
+	"vt":  4,  //Flush video text
+	"vc":  5,  //Clear video
+	"vi":  6,  //Draw image
+	"vl":  7,  //Draw a line from vx0,vy0 -> vx1,vy1
+	"iof": 8,  //Flush IO registers to IO
+	"ioc": 9,  //Set all IO to 0x0
+	"vf":  10, // Video flush
 
-    /**
-     * Length of dest should be 4 or 128
-     * @param {number} register 
-     * @param {Uint8Array} dest
-     */
-    getRegisterBytes(register, dest) { getRegisterBytes(register, dest) },
+	//Subscribable interrupts
 
-    /**
-     * Gets either video or text buffer
-     * @param {"text"|"data"} bufferName 
-     * @param {Uint8Array} dest 
-     */
-    getBuffer(bufferName, dest) { getBuffer(bufferName, dest) },
-
-    /**
-     * Pops interrupt from queue
-     * @returns {number|null} 
-     */
-    getInterrupt() {return getInterrupt()},
-
-    /**
-     * 
-     * @param {number} interrupt 
-     */
-    sendInterrupt(interrupt) { sendInterrupt(interrupt) },
-    
-    /**
-     * Used for checking wether or not to add interrupt to queue using `sendInterrupt`.
-     * @param {number} interrupt 
-     * @returns 
-     */
-    isSubscribed(interrupt) { return isSubscribed(interrupt) },
-
-    /** @type {string} */
-    get currentItn() {
-        return currentItn()
-    },
-
-    cycleVm() {
-        cycleVM()
-    },
-
-    /** @type {boolean} */
-    get isFinished() {
-        return isFinished()
-    },
-
-    files: {
-        /**
-         * Overwrite the contents of a specific file. Key doesn't have to be preexisting and as such this method can be used to create new files.
-         * @param {string} key typically the name of the file
-         * @param {Uint8Array} data 
-         * @param {number} size length of the data
-         * @param {import("./editor/code_tab").FileType} type 1 of 3 specified types
-         * @param {boolean} [isNew=false] defaults to false
-         * @param {boolean} [writeToDb=true] defaults to true
-         */
-        update(key, data, size, type, isNew = false, writeToDb = true) {
-
-            if (writeToDb) {
-                if (isNew) {
-                    db.table(fileTableName).put(
-                        {
-                            name: key,
-                            data: data,
-                            type: type,
-                        }
-                    )
-                } else {
-                    db.table(fileTableName).update(
-                        key,
-                        {
-                            name: key,
-                            data: data,
-                            type: type,
-                        },
-                    )
-                }   
-            }
-
-            updateFile(key, data, size, type, isNew)
-        },
-
-        /**
-         * 
-         * @param {string} key 
-         * @param {string} newKey 
-         */
-        rename(key, newKey) {
-            let fileSize = this.size(key)
-            let fileType = this.type(key)
-            let fileData = new Uint8Array(fileSize)
-            
-            this.get(key, fileData)
-            this.remove(key)
-    
-            if (fileType == "image") {
-                let imageMapData = imageMap.get(key)
-                imageMap.delete(key)
-                imageMap.set(newKey, imageMapData)   
-            }
-            
-            /** @type {import("dexie").Table} */
-            (db.files).put({
-                name: newKey,
-                data: fileData,
-                type: fileType
-            })
-       
-            updateFile(newKey, fileData, fileSize, fileType, false)
-        },
-        
-        /**
-         * Delete file based on key. Panics if no such file exists.
-         * @param {string} key 
-         */
-        remove(key) {
-            db.table(fileTableName).delete(key)
-
-            removeFile(key)
-        },
-
-        /**
-         * Return file data based on key. Panics if no such file exists.
-         * @param {string} key
-         * @param {Uint8Array} dest
-         */
-        get(key, dest) {
-            getFile(key, dest)
-        },
-
-        /**
-         * Get the size of a file in bytes. Useful for allocating `Uint8Array`.
-         * @param {string} key 
-         * @returns {number}
-         */
-        size(key) {
-            return getFileSize(key)
-        },
-
-        /**
-         * Does this file exist in the map
-         * @param {string} key
-         * @returns {boolean} 
-         */
-        exists(key) {
-            return doesFileExist(key)
-        },
-
-        /**
-         * Get the type of a specific file, image, binary, or text.
-         * @param {string} key 
-         * @returns {import("./editor/code_tab").FileType}
-         */
-        type(key) {
-            return getFileType(key)
-        },
-
-        /** @type {number} */
-        get numFiles() {
-            return numFiles()
-        },
-
-        /** @type {string[]} */
-        get fileNames() {
-            return getFiles()
-        },
-    },
-
-    /**
-     * Returns the current program. Can be empty if no program has been set.
-     * @param {Uint8Array} dest  
-     */
-    getProgramBytes(dest) {
-        getProgramBytes(dest)
-    },
-
-    /**
-     * 
-     * @returns {number}
-     */
-    getProgramLength() {
-        return getProgramLength()
-    },
-
-    /**
-     * 
-     * @param {Uint8Array} data 
-     * @param {number} size 
-     */
-    setProgramBytes(data, size) {
-        setProgramBytes(data, size)
-    },
-
-    /**
-     * Requires a Uint8Array called `textureData` of the correct size (320x240x3) to be in global scope.
-     */
-    updateFramebuffer() {
-        updateFramebuffer()
-    },
-
-    /**
-     * Maps a JS event.code to goputer's internal keycodes
-     * @param {string} key
-     * @returns {number} 
-     */
-    mappedKey(key) {
-        return getMappedKey(key)
-    },
-
-    /**
-     * @param {any[]} bin
-     * @returns {any}
-     */
-    disassembleCode(bin) {
-        return JSON.parse(disassembleCode(bin))
-    },
-
-    // Constants
-
-    /** @type {Object} */
-    get interruptInts() {
-        return interruptInts
-    },
-    /** @type {Object} */
-    get instructionInts() {
-        return instructionInts
-    },
-    /** @type {Object} */
-    get registerInts() {
-        return registerInts
-    },
-
-    /** @type {string[]} */
-    get instructionArray() {
-        return instructionArray
-    },
-
-    /** @type {number} */
-    get memOffset() {
-        return memOffset
-    },
-
-    util: {
-        /**
-         * Converts a uint32 (RGBA8) colour to a rgba(r, g, b, a) string.
-         * @param {number} colour
-         * @returns {string} 
-         */
-        convertColour(colour) {
-            return convertColour(colour)
-        },
-
-        /**
-         * Convert a number (typically an address) to a hexadecimal string.
-         * @param {number} num 
-         * @param {boolean} useOffset 
-         */
-        convertHex(num, isOffset) {
-            return convertHex(num, isOffset)
-        }
-    },
-
-    /** @type {number} */
-    get usableMemorySize() {
-        return memSize
-    }
-
+	"mm":   11, //Mouse move
+	"mu":   12, //Mouse up
+	"md":   13, //Mouse down
+	"io08": 14, //IO on/off 8-15
+	"io09": 15,
+	"io10": 16,
+	"io11": 17,
+	"io12": 18,
+	"io13": 19,
+	"io14": 20,
+	"io15": 21,
+	"ku":   22, //Key up
+	"kd":   23, //Key down
+	"err":  24,
 }
+
+const registerInts = {
+    "r00": 0, //General purpose registers
+	"r01": 1,
+	"r02": 2,
+	"r03": 3,
+	"r04": 4,
+	"r05": 5,
+	"r06": 6,
+	"r07": 7,
+	"r08": 8,
+	"r09": 9,
+	"r10": 10,
+	"r11": 11,
+	"r12": 12,
+	"r13": 13,
+	"r14": 14,
+	"r15": 15,
+
+	"vx0": 16, //Video X and Y registers
+	"vy0": 17,
+	"vx1": 18,
+	"vy1": 19,
+
+	"vc": 20, //Video colour
+	"vb": 21, //Video brightness
+	"vt": 22, //Video text (Special register, technically a buffer)
+
+	"kc": 23, //Current key being pressed
+	"kp": 24, //Is a key being pressed?
+
+	"mx": 25, //Mouse x and y
+	"my": 26,
+	"mb": 27, //Current mouse button being pressed.
+
+	"st": 28, //Sound tone
+	"sv": 29, //Volume
+
+	"a0": 30, //Accumulator
+	"d0": 31, //Data register (returns from interrupts and lda sta)
+
+	"stk": 32, //Current stack pointer
+	"stz": 33, //Stack "zero" point in memory
+
+	"io00": 34, //IO registers
+	"io01": 35,
+	"io02": 36,
+	"io03": 37,
+	"io04": 38,
+	"io05": 39,
+	"io06": 40,
+	"io07": 41,
+	"io08": 42,
+	"io09": 43,
+	"io10": 44,
+	"io11": 45,
+	"io12": 46,
+	"io13": 47,
+	"io14": 48,
+	"io15": 49,
+
+	"prc": 50, //Program counter /
+
+	"cstk": 51, //Call stack
+	"cstz": 52, //Call stack zero
+
+	"dl": 53, //Data length
+	"dp": 54,
+
+	"sw": 55, //Sound wave type
+
+	"ctrl": 56, // Control register
+}
+
+const instructionInts = {
+    	"mov": 0, //Move
+	"jmp": 1, //Jump
+
+	"add": 2, //Basic arethmetic operations
+	"mul": 3,
+	"div": 4, //Will floor decimal.
+	"sub": 5,
+
+	"cndjmp": 6, //Conditional jump.
+
+	"gt": 7, //Greater than and less than
+	"lt": 8,
+
+	"or":  9, //Bitwise logic
+	"xor": 10,
+	"and": 11,
+
+	"inv": 12, //Invert a number bitewise (flip all bits)
+
+	"eq":  13, //Equals and not equals
+	"neq": 14,
+
+	"sl": 15, //Shift left and right
+	"sr": 16,
+
+	"int": 17, //Syscall interrupt
+
+	"lda": 18, //Load and store from d0 register
+	"sta": 19,
+
+	"push": 20, //Push and pop from stack
+	"pop":  21,
+
+	"incr": 22, //Increment register and keep value in register
+	"decr": 23,
+
+	"hlt": 24, // Halt the CPU for X milliseconds
+
+	"sqrt": 25, //Square root, will floor decimal.
+
+	"call":    26,
+	"cndcall": 27,
+
+	"pow": 28,
+
+	"clr": 29,
+
+	"mod": 30, //Mod instruction
+
+	"emi": 31, //Expansion module interact, not an interrupt because it is handled by the core, not frontends.
+
+	"ret":  32, // Return for normal call
+	"iret": 33, // Return for interrupt call
+
+	"rand": 34,
+
+	"lteq": 35,
+	"gteq": 36,
+
+	"pri": 37, // Prevent interrupts
+	"eni": 38, // Enable interrupts
+}
+
+const instructionArray = {}
+
+for (const itn in instructionInts) {
+    instructionArray[instructionInts[itn]] = itn
+}
+
+const interruptArray = {}
+
+for (const ipt in interruptInts) {
+    interruptArray[interruptInts[ipt]] = ipt
+}
+
+export {goputer, registerInts, interruptInts, instructionInts, instructionArray, interruptArray}

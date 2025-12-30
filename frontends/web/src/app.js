@@ -2,8 +2,9 @@ import { glContext, canvas, currentInstructionHTML, programCounterHTML, peekRegH
 import globals from "./globals.js"
 import { ShowError, ErrorTypes } from "./error";
 import { drawSceneSimple } from "./gl/index.js";
-import { goputer } from "./goputer.js";
+import { goputer, registerInts, interruptInts } from "./goputer.js";
 import { checkVisible } from "./util.js";
+import * as Comlink from "comlink";
 
 var previousMousePos = {
     X: 0,
@@ -15,16 +16,16 @@ var currentMousePos = {
 }
 
 var executionStartTime = 0
-var cyclesCompleted = 0
+var uiUpdatesCompleted = 0
 
-export function PeekRegister() {
+export async function PeekRegister() {
     if (peekRegInput.value == "" || !globals.vmInited) {
         return;
     } else {
         if (registerInts[peekRegInput.value] != undefined) {
             
             globals.registerPeekValue = peekRegInput.value;
-            peekRegHTML.textContent = GetRegisterText(
+            peekRegHTML.textContent = await GetRegisterText(
                 registerInts[globals.registerPeekValue], 
                 document.getElementById("peek-format-select").value
             ) 
@@ -44,24 +45,24 @@ export function PeekRegister() {
  * @param {"hex"|"binary"|"text"|"decimal"} format 
  * @returns {string}
  */
-export function GetRegisterText(regInt, format) {
+export async function GetRegisterText(regInt, format) {
     
 
-    let bytes = new Uint8Array(
+    let bytes = new Uint8Array(new SharedArrayBuffer(
         regInt == registerInts["d0"] || regInt == registerInts["vt"] ? 128 : 4
-    );
+    ));
 
     if (regInt == registerInts["d0"] || regInt == registerInts["vt"]) {
         
         if (regInt == registerInts["d0"]) {
-            goputer.getBuffer("data", bytes)
+            await goputer.getBuffer("data", Comlink.transfer(bytes, bytes.data))
         } else {
-            goputer.getBuffer("text", bytes)
+            await goputer.getBuffer("text", Comlink.transfer(bytes, bytes.data))
         }
 
     } else {
 
-        goputer.getRegisterBytes(regInt, bytes)
+        await goputer.getRegisterBytes(regInt, Comlink.transfer(bytes, bytes.data))
     
     }
 
@@ -116,7 +117,7 @@ export function GetRegisterText(regInt, format) {
 
             } else {
 
-                return getRegister(regInt).toString()
+                return (await goputer.getRegister(regInt)).toString()
 
             }
 
@@ -128,12 +129,12 @@ export function GetRegisterText(regInt, format) {
 
 // Main app logic
 
-export function Compile(e) {
+export async function Compile(e) {
 
     globals.errorDiv.replaceChildren();
 
     globals.compileFailed = false;
-    goputer.compileCode()
+    await goputer.compileCode()
     globals.codeHasBeenCompiled = true;
 
     if(!globals.compileFailed) {
@@ -149,7 +150,25 @@ export function Compile(e) {
 
 }
 
-export function Run(e) { 
+let lastUpdateTime = 0;
+const targetFrameTime = Math.round(1000 / globals.UPS);
+
+function scheduleNextUpdate() {
+    if (!globals.vmIsAlive) return;
+
+    requestAnimationFrame(async (timestamp) => {
+        const elapsed = timestamp - lastUpdateTime;
+
+        if (elapsed >= targetFrameTime) {
+            lastUpdateTime = timestamp;
+            await UiUpdate();
+        }
+
+        scheduleNextUpdate();
+    })
+}
+
+export async function Run(e) { 
 
     if (!globals.codeHasBeenCompiled) {
 
@@ -157,18 +176,22 @@ export function Run(e) {
 
     } else {
 
-        goputer.initVm();
+        await goputer.initVm();
 
         globals.vmIsAlive = true;
         
         SetKeyboardLocking(true)
-        
-        globals.runInterval = setInterval(Cycle, Math.round(1000 / globals.FPS));
+    
         globals.vmInited = true;
+
+        goputer.run();
 
         executionStartTime = Date.now()
 
         canvas.setAttribute("running", "true");
+
+        lastUpdateTime = performance.now()
+        scheduleNextUpdate()
         
     }
 
@@ -189,11 +212,13 @@ export function handleMouseMove(e) {
  * 
  * @param {KeyboardEvent} e 
  */
-export function handleKeyDown(e) {
+export async function handleKeyDown(e) {
+
+    console.log("help")
     
     if (globals.keyboardLocked) {
         e.preventDefault()
-        globals.keysDown.push(goputer.mappedKey(e.code))
+        globals.keysDown.push(await goputer.mappedKey(e.code))
     }
 
 }
@@ -202,11 +227,11 @@ export function handleKeyDown(e) {
  * 
  * @param {KeyboardEvent} e 
  */
-export function handleKeyUp(e) {
+export async function handleKeyUp(e) {
     
     if (globals.keyboardLocked) {
         e.preventDefault()
-        globals.keysUp.push(goputer.mappedKey(e.code)) // I am aware this is depreceated however, this is the most practical way to get integer keycodes.
+        globals.keysUp.push(await goputer.mappedKey(e.code)) // I am aware this is depreceated however, this is the most practical way to get integer keycodes.
     }
 
 }
@@ -232,23 +257,7 @@ export function SetKeyboardLocking(locked) {
     }
 }
 
-//Performs one cycle of the VM & Updates UI
-export function Cycle() {
-    
-    if (goputer.isFinished) {
-
-        console.log(`Time elapsed: ${Date.now()-executionStartTime}ms`)
-        console.log(`Average time per cycle: ${(Date.now()-executionStartTime)/cyclesCompleted}ms`)
-
-        executionStartTime = 0
-        cyclesCompleted = 0
-        
-        clearInterval(globals.runInterval);
-        canvas.setAttribute("running", "false");
-        SetKeyboardLocking(false);
-        return;
-
-    }
+export async function UiUpdate() {
 
     if (!globals.vmIsAlive) {
         
@@ -258,7 +267,7 @@ export function Cycle() {
 
         //Handle called interrupts.
 
-        var x = goputer.getInterrupt()
+        var x = await goputer.getInterrupt()
 
         switch (x) {
             case interruptInts["ss"]:
@@ -266,9 +275,9 @@ export function Cycle() {
                 globals.audioVolume.gain.value = 0;
                 break;
             case interruptInts["sf"]:
-                globals.oscillator.type = (getRegister(registerInts["sw"]) == 0) ? "square" : "sine";
-                globals.oscillator.frequency.value = getRegister(registerInts["st"])
-                globals.audioVolume.gain.value = getRegister(registerInts["sv"]) / 255;
+                globals.oscillator.type = (await goputer.getRegister(registerInts["sw"]) == 0) ? "square" : "sine";
+                globals.oscillator.frequency.value = await goputer.getRegister(registerInts["st"])
+                globals.audioVolume.gain.value = await goputer.getRegister(registerInts["sv"]) / 255;
                 if (!globals.soundStarted) {
                     globals.oscillator.start()
                     globals.soundStarted = true;
@@ -280,17 +289,19 @@ export function Cycle() {
                 //Set IO states for IO bulbs.
 
                 for (let i = 0; i < globals.ioBulbNames.length; i++) {
+
+                    console.log(`${i}: ${(await goputer.getRegister(registerInts[globals.ioBulbNames[i]]) > 0)}`)
                     
                     globals.ioBulbs[globals.ioBulbNames[i]].setAttribute(
                         "enabled",
-                        (getRegister(registerInts[globals.ioBulbNames[i]]) > 0) ? "true" : "false"
+                        (await goputer.getRegister(registerInts[globals.ioBulbNames[i]]) > 0) ? "true" : "false"
                     )
 
                 }
                 break;
             case interruptInts["vf"]:
 
-                goputer.updateFramebuffer();
+                await goputer.updateFramebuffer(Comlink.transfer(window.textureData, window.textureData.data));
                 
                 break;
 
@@ -309,10 +320,10 @@ export function Cycle() {
         let col = 0.0;
 
         // Avoid divide by zero error.
-        if (getRegister(registerInts["vb"]) == 0) {
+        if (await goputer.getRegister(registerInts["vb"]) == 0) {
             col = 1.0;
         } else {
-            col = 1 - Math.pow((Math.pow(getRegister(registerInts["vb"]), -1)) * 255, -1);
+            col = 1 - Math.pow((Math.pow(await goputer.getRegister(registerInts["vb"]), -1)) * 255, -1);
         }
 
         glContext.clearColor(0.0, 0.0, 0.0, col);
@@ -323,15 +334,15 @@ export function Cycle() {
 
         if ((previousMousePos.X != currentMousePos.X) || (previousMousePos.Y != currentMousePos.Y)) {
             
-            goputer.setRegister(registerInts["mx"], Math.floor(previousMousePos.X / 2));
-            goputer.setRegister(registerInts["my"], Math.floor(previousMousePos.Y / 2));
+            await goputer.setRegister(registerInts["mx"], Math.floor(previousMousePos.X / 2));
+            await goputer.setRegister(registerInts["my"], Math.floor(previousMousePos.Y / 2));
 
             previousMousePos.X = currentMousePos.X;
             previousMousePos.Y = currentMousePos.Y
         
-            if (goputer.isSubscribed(interruptInts["mm"])) {
+            if (await goputer.isSubscribed(interruptInts["mm"])) {
 
-                goputer.sendInterrupt(interruptInts["mm"]);
+                await goputer.sendInterrupt(interruptInts["mm"]);
             }
 
         }
@@ -340,64 +351,79 @@ export function Cycle() {
 
         while (globals.keysDown.length > 0) {
             
-            goputer.setRegister(registerInts["kc"], globals.keysDown.pop())
-            goputer.setRegister(registerInts["kp"], 1)
+            await goputer.setRegister(registerInts["kc"], globals.keysDown.pop())
+            await goputer.setRegister(registerInts["kp"], 1)
 
-            if (goputer.isSubscribed(interruptInts["kd"])) {
-                goputer.sendInterrupt(interruptInts["kd"])
+            if (await goputer.isSubscribed(interruptInts["kd"])) {
+                await goputer.sendInterrupt(interruptInts["kd"])
             }
 
         }
 
         while (globals.keysUp.length > 0) {
             
-            goputer.setRegister(registerInts["kc"], globals.keysUp.pop())
-            goputer.setRegister(registerInts["kp"], 0)
+            await goputer.setRegister(registerInts["kc"], globals.keysUp.pop())
+            await goputer.setRegister(registerInts["kp"], 0)
 
-            if (goputer.isSubscribed(interruptInts["ku"])) {
-                goputer.sendInterrupt(interruptInts["ku"])
+            if (await goputer.isSubscribed(interruptInts["ku"])) {
+                await goputer.sendInterrupt(interruptInts["ku"])
             }
 
         }
 
         //IO Switches
 
-        globals.switchQueue.forEach(element => {
+        const switchQueueCopy = [...globals.switchQueue]
 
-            console.log(element)
+        for (const element of switchQueueCopy) {
         
-            goputer.setRegister(registerInts[element.register], (element.enabled) ? 1 : 0)
+            await goputer.setRegister(registerInts[element.register], (element.enabled) ? 1 : 0)
+            console.log(element.register)
 
-            if (goputer.isSubscribed(interruptInts[element.register])) {
-                goputer.sendInterrupt(interruptInts[element.register])
+            if (await goputer.isSubscribed(interruptInts[element.register])) {
+                console.log("subbed")
+                await goputer.sendInterrupt(interruptInts[element.register])
             }
 
-        });
+        };
 
         globals.switchQueue = [];
 
         //Update hardware info
 
         if (checkVisible(currentInstructionHTML)) {
-            currentInstructionHTML.textContent = String(goputer.currentItn);   
+            currentInstructionHTML.textContent = String(await goputer.currentItn);   
         }
 
         if (checkVisible(programCounterHTML)) {
-            programCounterHTML.textContent = GetRegisterText(registerInts["prc"], "hex")   
+            programCounterHTML.textContent = await GetRegisterText(registerInts["prc"], "hex")   
         }
 
-        if (globals.registerPeekValue != null && GetRegisterText(registerInts[globals.registerPeekValue], document.getElementById("peek-format-select").value) != globals.prevRegPeekValue) {
+        if (globals.registerPeekValue != null && await GetRegisterText(registerInts[globals.registerPeekValue], document.getElementById("peek-format-select").value) != globals.prevRegPeekValue) {
 
-            globals.currentRegPeekValue = GetRegisterText(registerInts[globals.registerPeekValue], document.getElementById("peek-format-select").value)
+            globals.currentRegPeekValue = await GetRegisterText(registerInts[globals.registerPeekValue], document.getElementById("peek-format-select").value)
             peekRegHTML.textContent = globals.currentRegPeekValue
             globals.prevRegPeekValue = globals.currentRegPeekValue
 
         }
 
         //Finally cycle VM & update graphics.
+        uiUpdatesCompleted++
 
-        goputer.cycleVm();
-        cyclesCompleted++
+    }
+
+    if ((await goputer.isFinished()) && uiUpdatesCompleted != 0) {
+
+        console.log(`Time elapsed: ${Date.now()-executionStartTime}ms`)
+        console.log(`Average time per UI update: ${(Date.now()-executionStartTime)/uiUpdatesCompleted}ms`)
+
+        executionStartTime = 0
+        uiUpdatesCompleted = 0
+        
+        globals.vmIsAlive = false;
+        canvas.setAttribute("running", "false");
+        SetKeyboardLocking(false);
+        return;
 
     }
 

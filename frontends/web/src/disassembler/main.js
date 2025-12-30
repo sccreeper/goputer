@@ -7,10 +7,7 @@ var fileUploaded = false
 var file_disassembled = false
 var fileName = ""
 
-const go = new Go();
-await WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
-    go.run(result.instance);
-});
+goputer.workerInit();
 
 fetch("/ver")
 .then((response) => response.text())
@@ -60,14 +57,14 @@ ButtonUpload.addEventListener("click", (e) => {
     FileForm.click()
 })
 
-ButtonDisassemble.addEventListener("click", (e) => {
+ButtonDisassemble.addEventListener("click", async (e) => {
 
     if (String.fromCharCode(...uploadedBytes.slice(0, 4)) != "GPTR") {
         alert("Invalid file!")
         return
     }
 
-    let code = goputer.disassembleCode(uploadedBytes)
+    let code = await goputer.disassembleCode(uploadedBytes)
     
     DisplayDisassembledCode(code)
 

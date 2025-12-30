@@ -6,34 +6,29 @@ import { glInit } from "./gl/index";
 import { ToggleRecording } from "./recording";
 import { codeArea, InitImage, NewFile, NewFileUI, SwitchFocus, tabsContainer } from "./imports";
 import { db, fileTableName } from "./db";
-import { goputer } from "./goputer";
+import { goputer, registerInts } from "./goputer.js";
 import "./ui/io.js";
 import { clamp } from "./util.js";
 
-//Init Go WASM before anything else
-const go = new Go();
-await WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
-    go.run(result.instance);
-});
+await goputer.workerInit();
 
 // Editor init
 
 let files = await db.table(fileTableName).toArray()
 
 if (files.length != 0) {
-    files.forEach(element => {
-
+    
+    for (const element of files) {
         NewFile(element.name, false)
 
         if (element.type == "image") {
 
-            
             const imgBlob = new Blob([element.data])
             InitImage(imgBlob, element.name)
 
         }
         
-        goputer.files.update(
+        await goputer.files.update(
             element.name,
             element.data,
             element.data.length,
@@ -41,8 +36,7 @@ if (files.length != 0) {
             true,
             false,
         )
-
-    });
+    }
 
     // Make sure main.gpasm is at beginning
 
@@ -53,9 +47,6 @@ if (files.length != 0) {
 } else {
     NewFile("main.gpasm");
 }
-
-//Cycles per second
-export const CPS = 240;
 
 //Set the version
 
