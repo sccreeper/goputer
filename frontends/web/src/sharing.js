@@ -143,29 +143,30 @@ export async function DownloadProgram(_) {
 
 }
 
-export function UploadBinary(e) {
+export async function UploadBinary(e) {
 
-    let uploadForm = document.createElement("input")
+    const uploadForm = document.createElement("input")
     uploadForm.type = "file"
     uploadForm.accept = ".gp"
     uploadForm.multiple = false
 
     uploadForm.addEventListener("change", async (e) => {
 
-        let file = uploadForm.files[0]
+        const file = uploadForm.files[0]
 
-        const fileBytes = await file.bytes()
+        const fileBytes = await file.arrayBuffer()
 
         if (new TextDecoder().decode(fileBytes.slice(0, 4)) != "GPTR") {
             alert("Invalid file.")
             return
         }
 
-        fileBytes.slice(0, 4)
+        console.log(`Read file with ${fileBytes.byteLength} byte(s)`)
 
-        console.log(`Read file with ${fileBytes.length} byte(s)`)
+        const fileBytesShared = new Uint8Array(new SharedArrayBuffer(fileBytes.byteLength))
+        fileBytesShared.set(new Uint8Array(fileBytes))
 
-        goputer.setProgramBytes(fileBytes, fileBytes.length)
+        await goputer.setProgramBytes(fileBytesShared, fileBytesShared.length)
 
         document.getElementById("run-code-button").disabled = false
         document.getElementById("download-code-button").disabled = false

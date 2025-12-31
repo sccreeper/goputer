@@ -9,9 +9,10 @@
                 "echo": true,
                 "reveal": "always",
                 "focus": false,
-                "panel": "shared",
+                "panel": "dedicated",
                 "showReuseMessage": false,
-                "clear": false
+                "clear": false,
+                "close": true
             },
             "group": "build"
         },
