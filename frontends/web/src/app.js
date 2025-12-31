@@ -1,7 +1,6 @@
-import { glContext, canvas, currentInstructionHTML, programCounterHTML, peekRegHTML, peekRegInput } from "./init";
+import { canvas, currentInstructionHTML, programCounterHTML, peekRegHTML, peekRegInput } from "./init";
 import globals from "./globals.js"
 import { ShowError, ErrorTypes } from "./error";
-import { drawSceneSimple } from "./gl/index.js";
 import { goputer, registerInts, interruptInts } from "./goputer.js";
 import { checkVisible } from "./util.js";
 import * as Comlink from "comlink";
@@ -299,34 +298,11 @@ export async function UiUpdate() {
 
                 }
                 break;
-            case interruptInts["vf"]:
-
-                await goputer.updateFramebuffer(Comlink.transfer(window.textureData, window.textureData.data));
-                
-                break;
-
             default:
                 break;
         }
 
-        // Video
-        drawSceneSimple(glContext)
-
-        // Video brightness
-
-        /**
-         * @type {number}
-         */
-        let col = 0.0;
-
-        // Avoid divide by zero error.
-        if (await goputer.getRegister(registerInts["vb"]) == 0) {
-            col = 1.0;
-        } else {
-            col = 1 - Math.pow((Math.pow(await goputer.getRegister(registerInts["vb"]), -1)) * 255, -1);
-        }
-
-        glContext.clearColor(0.0, 0.0, 0.0, col);
+        await goputer.drawing.drawScene();
 
         // Handle subscribed interrupts
 

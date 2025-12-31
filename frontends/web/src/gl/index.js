@@ -1,11 +1,9 @@
-import { mat4 } from "gl-matrix";
 import { initShaderProgram } from "./shaders"
-import { setPositionAttribute, setColourAttribute } from "./util";
+import { setPositionAttribute } from "./util";
 import { initBuffers } from "./buffers";
 import { createTexture } from "./textures";
 import vertexSource from "./shaders/vs.vert"
 import fragmentSource from "./shaders/fs.frag"
-import globals from "../globals";
 
 /**
  * @type {WebGLTexture}
@@ -42,8 +40,7 @@ function glInit(gl) {
     gl.clear(gl.COLOR_BUFFER_BIT)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
 
-    window.textureData.fill(0)
-    drawTexture = createTexture(gl, window.textureData, 320, 240, gl.RGB)
+    drawTexture = createTexture(gl, self.textureData, 320, 240, gl.RGB)
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
     
     // Load shaders
@@ -94,7 +91,7 @@ function drawScene(gl, programInfo, buffers, texture) {
         0,
         gl.RGB,
         gl.UNSIGNED_BYTE,
-        window.textureData
+        self.textureData
     )
 
     gl.activeTexture(gl.TEXTURE0)

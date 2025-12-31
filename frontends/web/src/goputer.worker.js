@@ -1,4 +1,5 @@
 import { db, fileTableName } from "./db.js"
+import { glInit, drawSceneSimple } from "./gl/index.js";
 import * as Comlink from "comlink";
 import("../static/wasm_exec.js");
 
@@ -23,12 +24,18 @@ import("../static/wasm_exec.js");
 
 
 self.showError = null;
+self.canvas = null;
+
+self.textureData = new Uint8Array(320 * 240 * 3);
+
+/** @type {WebGL2RenderingContext} */
+let glContext = null;
 
 const goputer = {
     /** @returns {Promise<void>} */
-    compileCode() {return compileCode()},
+    compileCode() { return compileCode() },
     /** @returns {Promise<void>} */
-    initVm() {return initVM()},
+    initVm() { return initVM() },
 
     async workerInit() {
 
@@ -47,7 +54,7 @@ const goputer = {
      * @returns {Promise<void>}
      */
     setRegister(register, value) { return setRegister(register, value) },
-    
+
     /**
      * Get a register value
      * @param {number} register 
@@ -76,8 +83,13 @@ const goputer = {
      */
     getInterrupt() {
         let x = getInterrupt()
-        return x
-    
+
+        if (x == this.interruptInts["vf"]) {
+            updateFramebuffer(self.textureData);
+        } else {
+            return x
+        }
+
     },
 
     /**
@@ -85,7 +97,7 @@ const goputer = {
      * @param {Promise<number>} interrupt 
      */
     sendInterrupt(interrupt) { return sendInterrupt(interrupt) },
-    
+
     /**
      * Used for checking wether or not to add interrupt to queue using `sendInterrupt`.
      * @param {number} interrupt 
@@ -146,7 +158,7 @@ const goputer = {
                             type: type,
                         },
                     )
-                }   
+                }
             }
 
             updateFile(key, data, size, type, isNew)
@@ -161,26 +173,26 @@ const goputer = {
             let fileSize = this.size(key)
             let fileType = this.type(key)
             let fileData = new Uint8Array(fileSize)
-            
+
             this.get(key, fileData)
             this.remove(key)
-    
+
             if (fileType == "image") {
                 let imageMapData = imageMap.get(key)
                 imageMap.delete(key)
-                imageMap.set(newKey, imageMapData)   
+                imageMap.set(newKey, imageMapData)
             }
-            
+
             /** @type {import("dexie").Table} */
             (db.files).put({
                 name: newKey,
                 data: fileData,
                 type: fileType
             })
-       
+
             updateFile(newKey, fileData, fileSize, fileType, false)
         },
-        
+
         /**
          * Delete file based on key. Panics if no such file exists.
          * @param {string} key 
@@ -344,9 +356,51 @@ const goputer = {
     set onerror(val) {
         self.showError = val
     },
-    
+
     get onerror() {
-        return self.showError 
+        return self.showError
+    },
+
+    // Canvas methods
+
+    drawing: {
+        /** @returns {Promise{void}} */
+        setupCanvas(canvas) {
+            /** @type {WebGL2RenderingContext} */
+            glContext = canvas.getContext("webgl2", { preserveDrawingBuffer: true }) ?? alert("Your browser does not support WebGL. goputer will not work.");
+            glInit(glContext);
+
+            self.canvas = canvas;
+        },
+
+        /** @returns {Promise<void>} */
+        drawScene() {
+            // Draw framebuffer
+
+            drawSceneSimple(glContext)
+
+            // Video brightness
+
+            /**
+             * @type {number}
+             */
+            let col = 0.0;
+
+            // Avoid divide by zero error.
+            if (getRegister(registerInts["vb"]) == 0) {
+                col = 1.0;
+            } else {
+                col = 1 - Math.pow((Math.pow(getRegister(registerInts["vb"]), -1)) * 255, -1);
+            }
+
+            glContext.clearColor(0.0, 0.0, 0.0, col);
+        },
+
+        /**  @returns {Promise<void>} */
+        clearCanvas() {
+            glContext.clearColor(0.0, 0.0, 0.0, 1.0);
+            glContext.clear(glContext.COLOR_BUFFER_BIT);
+        }
     }
 
 }

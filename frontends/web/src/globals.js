@@ -4,7 +4,6 @@ export default {
     vmIsAlive: false,
     keyboardLocked: false,
     vmInited: false,
-    runInterval: null,
     UPS: 30,
     /**
      * @type {AudioContext}

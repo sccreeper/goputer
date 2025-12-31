@@ -2,13 +2,13 @@ import { Compile, handleKeyDown, handleKeyUp, handleMouseMove, PeekRegister, Run
 import globals from "./globals";
 import { DownloadProgram, DownloadAll, UploadBinary } from "./sharing";
 import { ExamplesInit } from "./examples";
-import { glInit } from "./gl/index";
 import { ToggleRecording } from "./recording";
 import { codeArea, InitImage, NewFile, NewFileUI, SwitchFocus, tabsContainer } from "./imports";
 import { db, fileTableName } from "./db";
 import { goputer, registerInts } from "./goputer.js";
 import "./ui/io.js";
 import { clamp } from "./util.js";
+import * as Comlink from "comlink";
 
 await goputer.workerInit();
 
@@ -78,8 +78,8 @@ const currentInstructionHTML = document.getElementById("current-instruction");
  * @type {HTMLCanvasElement}
  */
 const canvas = document.getElementById("render-canvas")
-const gl = canvas.getContext("webgl2", {preserveDrawingBuffer: true}) ?? alert("Your browser does not support WebGL. goputer will not work.");
-glInit(gl);
+const offscreenCanvas = canvas.transferControlToOffscreen()
+await goputer.drawing.setupCanvas(Comlink.transfer(offscreenCanvas, [offscreenCanvas]));
 
 canvas.addEventListener("dblclick", () => {
     SetKeyboardLocking(!globals.keyboardLocked)
@@ -109,7 +109,6 @@ document.getElementById("record-video-button").addEventListener("click", ToggleR
 document.getElementById("kbd-locked-message").addEventListener("click", SetKeyboardLocking)
 
 document.getElementById("stop-code-button").addEventListener("click", function (e) {  
-    clearInterval(globals.runInterval);
 
     // Clear sound
 
@@ -136,8 +135,7 @@ document.getElementById("stop-code-button").addEventListener("click", function (
 
     // Clear canvas
 
-    gl.clearColor(0.0, 0.0, 0.0, 1.0)
-    gl.clear(gl.COLOR_BUFFER_BIT)
+    goputer.drawing.clearCanvas();
 
     canvas.setAttribute("running", "false");
 
@@ -286,4 +284,4 @@ document.addEventListener("keydown", (e) => {
     }
 })
 
-export {canvas, gl as glContext, programCounterHTML, currentInstructionHTML, peekRegHTML, peekRegInput}
+export {canvas, programCounterHTML, currentInstructionHTML, peekRegHTML, peekRegInput}
