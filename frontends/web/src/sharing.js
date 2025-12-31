@@ -23,7 +23,7 @@ export async function OpenSharedArchive(fileBlob) {
 
     for (const ent of await zipReader.getEntries()) {
         if (!ent.directory && ent.filename.split("/").length == 1) {
-            
+
             const fileWriter = new Uint8ArrayWriter();
             await ent.getData(fileWriter)
             const fileData = await fileWriter.getData()
@@ -51,7 +51,7 @@ export async function OpenSharedArchive(fileBlob) {
             }
 
             await goputer.files.update(
-                ent.filename, 
+                ent.filename,
                 fileDataShared,
                 fileDataShared.length,
                 fileType,
@@ -73,7 +73,7 @@ export async function DownloadAll(e) {
     const zipWriter = new ZipWriter(zipFileWriter);
 
     for (const fileName of await goputer.files.fileNames) {
-        
+
         /** @type {Uint8Array} */
         let fileBytes;
 
@@ -83,7 +83,9 @@ export async function DownloadAll(e) {
 
         } else {
 
-            fileBytes = new Uint8Array(new SharedArrayBuffer(await goputer.files.size(fileName)))
+            fileBytes = new Uint8Array(
+                new SharedArrayBuffer(await goputer.files.size(fileName))
+            )
             await goputer.files.get(fileName, fileBytes)
 
         }
@@ -112,24 +114,27 @@ export async function DownloadAll(e) {
 }
 
 // Download program bytes.
-export function DownloadProgram(e) {
+export async function DownloadProgram(_) {
 
     // Convert method return value to bytes first.
 
-    let programBytes = new Uint8Array(goputer.getProgramLength())
-    goputer.getProgramBytes(programBytes)
+    const programBytesSharedBuffer = new Uint8Array(new SharedArrayBuffer(await goputer.getProgramLength()))
+    await goputer.getProgramBytes(programBytesSharedBuffer)
 
-    let date = new Date()
+    const date = new Date()
 
     if (!globals.codeHasBeenCompiled) {
         return
     }
 
-    let blob = new Blob([programBytes], { type: "application/octet-stream" })
-    let link = document.createElement("a")
+    const programBytes = new Uint8Array(programBytesSharedBuffer.length)
+    programBytes.set(programBytesSharedBuffer)
+
+    const blob = new Blob([programBytes], { type: "application/octet-stream" })
+    const link = document.createElement("a")
     link.href = window.URL.createObjectURL(blob)
 
-    let filename = `program_${date.getHours().toString().padStart(2, "0")}${date.getMinutes().toString().padStart(2, "0")}${date.getSeconds().toString().padStart(2, "0")}.gp`
+    const filename = `program_${date.getHours().toString().padStart(2, "0")}${date.getMinutes().toString().padStart(2, "0")}${date.getSeconds().toString().padStart(2, "0")}.gp`
 
     link.download = filename;
     link.click();
@@ -146,7 +151,7 @@ export function UploadBinary(e) {
     uploadForm.multiple = false
 
     uploadForm.addEventListener("change", async (e) => {
-    
+
         let file = uploadForm.files[0]
 
         const fileBytes = await file.bytes()
@@ -180,5 +185,5 @@ export function UploadBinary(e) {
     })
 
     uploadForm.click()
-    
+
 }

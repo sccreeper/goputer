@@ -260,7 +260,7 @@ const goputer = {
 
     /**
      * 
-     * @returns {number}
+     * @returns {Promise<number>}
      */
     getProgramLength() {
         return getProgramLength()

@@ -212,8 +212,6 @@ export function handleMouseMove(e) {
  * @param {KeyboardEvent} e 
  */
 export async function handleKeyDown(e) {
-
-    console.log("help")
     
     if (globals.keyboardLocked) {
         e.preventDefault()
