@@ -106,9 +106,11 @@ document.getElementById("download-all-button").addEventListener("click", Downloa
 document.getElementById("upload-binary-button").addEventListener("click", UploadBinary)
 document.getElementById("save-video-button").addEventListener("click", SaveVideo)
 document.getElementById("record-video-button").addEventListener("click", ToggleRecording)
-document.getElementById("kbd-locked-message").addEventListener("click", SetKeyboardLocking)
+document.getElementById("kbd-locked-message").addEventListener("click", (_) => {
+    SetKeyboardLocking(!globals.keyboardLocked)
+})
 
-document.getElementById("stop-code-button").addEventListener("click", function (e) {  
+document.getElementById("stop-code-button").addEventListener("click", (_) => {  
 
     // Clear sound
 
