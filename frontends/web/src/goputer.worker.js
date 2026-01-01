@@ -114,10 +114,15 @@ const goputer = {
         cycleVM()
     },
 
-    async run() {
-        while (!isFinished()) {
-            this.cycleVm()
-            await new Promise(resolve => setTimeout(resolve, 0))
+    run() {
+        const startTime = performance.now();
+
+        while ((!isFinished()) && (performance.now() - startTime < 7)) {
+            cycleVM();
+        }
+
+        if (!isFinished()) {
+            setTimeout(() => this.run(), 0);
         }
     },
 
