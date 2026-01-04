@@ -15,15 +15,14 @@ import (
 // General purpose VM backend
 
 const (
-	MemSize          uint32 = VideoBufferSize + 65536 // 2 ^ 16
-	MaxRegister      uint16 = 56
+	MemSize          uint32 = VideoBufferSize + 65536 // 2 ^ 1
 	InstructionCount uint16 = 39
 	InterruptCount   uint16 = 25
 )
 
 type VM struct {
 	MemArray   [MemSize]byte
-	Registers  [MaxRegister + 1]uint32 //float32 or uint32
+	Registers  [c.MaxRegister + 1]uint32 //float32 or uint32
 	DataBuffer [128]byte
 	TextBuffer [128]byte
 
@@ -51,7 +50,7 @@ type VM struct {
 	HandlingInterrupt        bool
 
 	ExecutionPaused    bool
-	ExecutionPauseTime int64
+	ExecutionPauseTime time.Time
 
 	ExpansionModuleExists func(location uint32) bool
 	ExpansionInteraction  func(location uint32, data []byte) []byte
@@ -60,6 +59,8 @@ type VM struct {
 	hasStarted bool
 
 	Mutex sync.Mutex
+
+	previousTime time.Time
 }
 
 // Initialize VM and registers, load code into "memory" etc.
@@ -102,7 +103,7 @@ func NewVM(vmProgram []byte, expansionModuleExists func(location uint32) bool, e
 	machine.HandlingInterrupt = false
 
 	machine.ExecutionPaused = false
-	machine.ExecutionPauseTime = 0
+	machine.ExecutionPauseTime = time.Now()
 
 	machine.ExpansionModuleExists = expansionModuleExists
 	machine.ExpansionInteraction = expansionInteraction
@@ -134,12 +135,21 @@ func NewVM(vmProgram []byte, expansionModuleExists func(location uint32) bool, e
 }
 
 func (m *VM) Cycle() {
-	m.CallHooks(HookCycle)
+	defer func() {
+		if !m.Finished {
+			m.Registers[c.RTimestampCounter] += uint32(time.Since(m.previousTime).Milliseconds())
+			m.previousTime = time.Now()
+		}
+	}()
 
 	if !m.hasStarted {
 		m.hasStarted = true
+
 		m.CallHooks(HookStart)
+		m.previousTime = time.Now()
 	}
+
+	m.CallHooks(HookCycle)
 
 	// Stop if the program has terminated
 
@@ -150,7 +160,7 @@ func (m *VM) Cycle() {
 
 	// If we are in the middle of a halt, pause then continue
 
-	if m.ExecutionPaused && (time.Now().UnixMilli()-m.ExecutionPauseTime) >= int64(m.LeftArgVal) {
+	if m.ExecutionPaused && (time.Since(m.ExecutionPauseTime).Milliseconds() >= int64(m.LeftArgVal)) {
 		m.ExecutionPaused = false
 		m.Registers[c.RProgramCounter] += comp.InstructionLength
 		return
@@ -198,11 +208,11 @@ func (m *VM) Cycle() {
 		m.LongArgVal = immVal
 
 	} else {
-		if m.LeftArg < MaxRegister {
+		if m.LeftArg <= c.MaxRegister {
 			m.LeftArgVal = m.Registers[m.LeftArg]
 		}
 
-		if m.RightArg < MaxRegister {
+		if m.RightArg <= c.MaxRegister {
 			m.RightArgVal = m.Registers[m.RightArg]
 		}
 
@@ -380,7 +390,7 @@ func (m *VM) Cycle() {
 	case c.IHalt:
 
 		m.ExecutionPaused = true
-		m.ExecutionPauseTime = time.Now().UnixMilli()
+		m.ExecutionPauseTime = time.Now()
 		return
 
 	case c.IClear:

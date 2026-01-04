@@ -113,6 +113,8 @@ const registerInts = {
 	"sw": 55, //Sound wave type
 
 	"ctrl": 56, // Control register
+
+	"tsc": 57
 }
 
 const instructionInts = {

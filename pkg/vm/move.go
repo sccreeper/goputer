@@ -89,7 +89,7 @@ func (m *VM) move() {
 				}
 			}
 
-		} else if m.LeftArg < MaxRegister && m.RightArg < MaxRegister {
+		} else if m.LeftArg <= c.MaxRegister && m.RightArg <= c.MaxRegister {
 			m.Registers[m.RightArg] = m.Registers[m.LeftArg]
 		}
 	}

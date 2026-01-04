@@ -261,6 +261,10 @@ RegisterInts = {
 	"dp": 54,
 
 	"sw": 55, #Sound wave type
+     
+	"ctrl": 56,
+      
+	"tsc": 57,
 }
 
 RegisterStrings = {}

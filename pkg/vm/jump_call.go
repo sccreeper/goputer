@@ -18,7 +18,7 @@ func (m *VM) conditionalCall() bool {
 
 		if m.IsImmediate {
 			addressVal = m.LongArgVal
-		} else if uint16(m.LongArg) < MaxRegister {
+		} else if uint16(m.LongArg) <= c.MaxRegister {
 			addressVal = m.Registers[m.LongArg]
 		} else {
 			addressVal = m.LongArg
@@ -40,7 +40,7 @@ func (m *VM) jump() {
 
 	if m.IsImmediate {
 		addressVal = m.LongArgVal
-	} else if uint16(m.LongArg) < MaxRegister {
+	} else if uint16(m.LongArg) <= c.MaxRegister {
 		addressVal = m.Registers[m.LongArg]
 	} else {
 		addressVal = m.LongArg
@@ -56,7 +56,7 @@ func (m *VM) conditionalJump() bool {
 
 		if m.IsImmediate {
 			addressVal = m.LongArgVal
-		} else if uint16(m.LongArg) < MaxRegister {
+		} else if uint16(m.LongArg) <= c.MaxRegister {
 			addressVal = m.Registers[m.LongArg]
 		} else {
 			addressVal = m.LongArg

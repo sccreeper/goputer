@@ -14,7 +14,7 @@ func (m *VM) load() {
 
 	// This means we are unable to "directly address" the first 57 bytes of memory (register address space).
 	// Addressing static stack value
-	if m.LeftArg > MaxRegister && !m.IsImmediate {
+	if m.LeftArg >= c.MaxRegister && !m.IsImmediate {
 		dataLength := binary.LittleEndian.Uint32(m.MemArray[m.LongArg : m.LongArg+4])
 		m.Registers[c.RDataLength] = dataLength
 
@@ -37,7 +37,7 @@ func (m *VM) load() {
 func (m *VM) store() {
 
 	// Addressing static stack
-	if m.LeftArg > MaxRegister && !m.IsImmediate {
+	if m.LeftArg >= c.MaxRegister && !m.IsImmediate {
 		dataLength := binary.LittleEndian.Uint32(m.MemArray[m.LongArg : m.LongArg+4])
 		m.Registers[c.RDataLength] = dataLength
 

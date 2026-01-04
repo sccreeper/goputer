@@ -239,6 +239,7 @@ var RegisterInts = map[string]uint32{
 
 	"ctrl": 56, // Control register
 
+	"tsc": 57,
 }
 
 //Constants for use in runtime
@@ -422,7 +423,7 @@ var InstructionImmediates map[Instruction][][]bool = map[Instruction][][]bool{
 	IAdd:         {{false, true}},
 	IMultiply:    {{false, true}},
 	IDivide:      {{true, true}},
-	ISubtract:    {{false, true}},
+	ISubtract:    {{true, true}},
 	IGreaterThan: {{false, true}},
 	ILessThan:    {{false, true}},
 	IOr:          {{false, true}},
@@ -518,7 +519,11 @@ const (
 	RSoundWave Register = 55
 
 	RControl Register = 56
+
+	RTimestampCounter Register = 57
 )
+
+const MaxRegister uint16 = uint16(RTimestampCounter)
 
 const (
 	StringType DefType = 0

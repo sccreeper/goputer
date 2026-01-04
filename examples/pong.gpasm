@@ -28,6 +28,8 @@
 
 #def d0_store region:128
 
+#def frame_time 50
+
 // Inputs
 
 #label keyup
@@ -402,9 +404,18 @@ ret
 
 #label start
 
+mov tsc r10
+
 call @draw
 call @move_ball
 
-hlt $50
+sub tsc r10
+sub $d:frame_time a0
+mov a0 r11
+
+gt r11 $d:frame_time
+cndjmp @start
+
+hlt r11
 
 jmp @start
