@@ -1,4 +1,5 @@
 import { goputer } from "../goputer";
+import { setVersion } from "../shared/version";
 import { DisplayDisassembledCode } from "./display";
 import shared from "./shared";
 
@@ -9,18 +10,7 @@ var fileName = ""
 
 goputer.workerInit();
 
-fetch("/ver")
-.then((response) => response.text())
-.then((data) => {
-
-    let hash = data.split(/\r?\n/)[0];
-    let time = data.split(/\r?\n/)[1];
-
-    document.getElementById("version").textContent = `${hash.substring(0, 10)}`;
-    document.getElementById("version").setAttribute("href", `https://github.com/sccreeper/goputer/commit/${hash}`);
-    document.getElementById("build-date").textContent = time;
-
-})
+setVersion()
 
 const ButtonUpload = document.getElementById("button-upload")
 const ButtonDisassemble = document.getElementById("button-disassemble")

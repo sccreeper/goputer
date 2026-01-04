@@ -13,6 +13,7 @@ cp "$(go env GOROOT)/lib/wasm/wasm_exec.js" ./static/
 cp "$(go env GOROOT)/lib/wasm/wasm_exec.js" .
 git rev-parse HEAD > ./static/ver
 date >> ./static/ver
+git log -1 --pretty=%B >> ./static/ver
 
 cp ./run.sh ./build/
 cp ./pages_deploy.sh ./build/
