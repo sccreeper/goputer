@@ -5,3 +5,6 @@ package asm
 
 // Video area
 //go:generate go run video_area.go -out video_area_amd64.s -stubs video_area_amd64.go
+
+// Video area alpha
+//go:generate go run video_area_alpha.go -out video_area_alpha_amd64.s -stubs video_area_alpha_amd64.go

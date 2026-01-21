@@ -1,0 +1,37 @@
+// Draw 3 squares with corners on top of each other
+
+#def white 0xFFFFFFFF
+#def red 0xFF0000F0
+#def green 0x00FF00A0
+#def blue 0x0000FF40
+
+
+#label start
+
+lda @white
+mov d0 vc
+int vc
+
+lda @red
+mov d0 vc
+mov $53 vx1
+mov $53 vy1
+int va
+
+lda @green
+mov d0 vc
+mov $42 vx0
+mov $42 vy0
+mov $104 vx1
+mov $104 vy1
+int va
+
+lda @blue
+mov d0 vc
+mov $86 vx0
+mov $86 vy0
+mov $219 vx1
+mov $219 vy1
+int va
+
+int vf
