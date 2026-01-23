@@ -55,21 +55,21 @@ func main() {
 
 	Label("loop")
 
-	MOVNTDQ(xmm0, Mem{Base: ptr})
-	MOVNTDQ(xmm1, Mem{Base: ptr, Disp: 16})
-	MOVNTDQ(xmm2, Mem{Base: ptr, Disp: 32})
+	VMOVDQA(xmm0, Mem{Base: ptr})
+	VMOVDQA(xmm1, Mem{Base: ptr, Disp: 16})
+	VMOVDQA(xmm2, Mem{Base: ptr, Disp: 32})
 
-	MOVNTDQ(xmm0, Mem{Base: ptr, Disp: 48})
-	MOVNTDQ(xmm1, Mem{Base: ptr, Disp: 64})
-	MOVNTDQ(xmm2, Mem{Base: ptr, Disp: 80})
+	VMOVDQA(xmm0, Mem{Base: ptr, Disp: 48})
+	VMOVDQA(xmm1, Mem{Base: ptr, Disp: 64})
+	VMOVDQA(xmm2, Mem{Base: ptr, Disp: 80})
 
-	MOVNTDQ(xmm0, Mem{Base: ptr, Disp: 96})
-	MOVNTDQ(xmm1, Mem{Base: ptr, Disp: 112})
-	MOVNTDQ(xmm2, Mem{Base: ptr, Disp: 128})
+	VMOVDQA(xmm0, Mem{Base: ptr, Disp: 96})
+	VMOVDQA(xmm1, Mem{Base: ptr, Disp: 112})
+	VMOVDQA(xmm2, Mem{Base: ptr, Disp: 128})
 
-	MOVNTDQ(xmm0, Mem{Base: ptr, Disp: 144})
-	MOVNTDQ(xmm1, Mem{Base: ptr, Disp: 160})
-	MOVNTDQ(xmm2, Mem{Base: ptr, Disp: 176})
+	VMOVDQA(xmm0, Mem{Base: ptr, Disp: 144})
+	VMOVDQA(xmm1, Mem{Base: ptr, Disp: 160})
+	VMOVDQA(xmm2, Mem{Base: ptr, Disp: 176})
 
 	ADDQ(Imm(192), ptr)
 	CMPQ(ptr, max)
