@@ -9,20 +9,20 @@ mov d0 vc
 int vc
 int vf
 
-hlt $500
+hlt $1
 
 lda @green
 mov d0 vc
 int vc
 int vf
 
-hlt $500
+hlt $1
 
 lda @blue
 mov d0 vc
 int vc
 int vf
 
-hlt $500
+hlt $1
 
 jmp @start

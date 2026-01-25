@@ -35,3 +35,7 @@ mov $219 vy1
 int va
 
 int vf
+
+hlt $1
+
+jmp @start
