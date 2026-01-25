@@ -15,11 +15,13 @@ import (
 	"sccreeper/goputer/pkg/expansions"
 	"sccreeper/goputer/pkg/profiler"
 	"sccreeper/goputer/pkg/vm"
+	"strconv"
 	"time"
 
 	"github.com/faiface/beep/speaker"
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/urfave/cli/v2"
+	"golang.org/x/sys/cpu"
 )
 
 var Name string = "GP32"
@@ -52,6 +54,12 @@ func Run(ctx *cli.Context) error {
 	//Init
 
 	log.Println("GP32 frontend starting...")
+
+	if cpu.X86.HasAVX2 {
+		log.Printf("ArchVideoClear: %s", strconv.FormatBool(vm.HaveArchVideoClear))
+		log.Printf("ArchVideoAreaNoAlpha: %s", strconv.FormatBool(vm.HaveArchVideoArea))
+		log.Printf("ArchVideoAreaAlpha: %s", strconv.FormatBool(vm.HaveArchVideoAreaAlpha))
+	}
 
 	rl.InitWindow(640, 480+int32(rendering.TotalYOffset), fmt.Sprintf("gp32 - %s", programPath))
 	defer rl.CloseWindow()

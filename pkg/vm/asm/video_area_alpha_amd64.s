@@ -3,20 +3,19 @@
 #include "textflag.h"
 
 // func VideoAreaAlphaAsm(array *byte, red uint8, green uint8, blue uint8, alpha uint8, x uint32, y uint32, x1 uint32, y1 uint32)
-// Requires: AVX, AVX2, SSE2, SSE4.1
+// Requires: AVX, AVX2, SSE2
 TEXT ·VideoAreaAlphaAsm(SB), NOSPLIT, $0-28
 	// Load parameters
-	MOVQ  array+0(FP), AX
-	MOVB  red+8(FP), CL
-	MOVB  green+9(FP), DL
-	MOVB  blue+10(FP), BL
-	MOVB  alpha+11(FP), DI
-	MOVL  x+12(FP), SI
-	MOVL  y+16(FP), R9
-	MOVL  x1+20(FP), R10
-	MOVL  y1+24(FP), R11
-	XORL  R12, R12
-	VPXOR Y0, Y0, Y0
+	MOVQ array+0(FP), AX
+	MOVB red+8(FP), CL
+	MOVB green+9(FP), DL
+	MOVB blue+10(FP), BL
+	MOVB alpha+11(FP), DI
+	MOVL x+12(FP), SI
+	MOVL y+16(FP), R9
+	MOVL x1+20(FP), R10
+	MOVL y1+24(FP), R11
+	XORB R12, R12
 
 	// Offset pointer by x and y
 	MOVL  R9, R12
@@ -34,16 +33,17 @@ TEXT ·VideoAreaAlphaAsm(SB), NOSPLIT, $0-28
 
 	// Fill alpha register
 	MOVBLZX      DI, R12
-	MOVD         R12, X0
-	VPBROADCASTB X0, X0
-	VPMOVZXBW    X0, Y0
+	MOVD         R12, X3
+	VPBROADCASTB X3, X3
+	VPMOVZXBW    X3, Y0
+	VPXOR        X3, X3, X3
 	MOVB         DI, R8
 	NOTB         R8
 	MOVBWZX      R8, SI
 	MOVBLZX      R8, R12
-	MOVD         R12, X1
-	VPBROADCASTB X1, X1
-	VPMOVZXBW    X1, Y1
+	MOVD         R12, X3
+	VPBROADCASTB X3, X3
+	VPMOVZXBW    X3, Y1
 
 	// Construct colour
 	MOVB      BL, R8
@@ -51,9 +51,10 @@ TEXT ·VideoAreaAlphaAsm(SB), NOSPLIT, $0-28
 	MOVB      DL, R8
 	SHLL      $0x08, R8
 	MOVB      CL, R8
-	MOVD      R8, X2
-	VPSHUFB   shuffle_mask<>+0(SB), X2, X2
-	VPMOVZXBW X2, Y2
+	VPXOR     X3, X3, X3
+	MOVD      R8, X3
+	VPSHUFB   shuffle_mask<>+0(SB), X3, X3
+	VPMOVZXBW X3, Y2
 	VPMULLW   Y2, Y0, Y2
 	XORL      R8, R8
 	XORL      R9, R9
@@ -82,22 +83,21 @@ a_loop_x:
 
 	// Otherwise blit 5 pixels at a time
 	// Load data to be modified from memory
-	VMOVDQU (DI), X0
-	XORL    R12, R12
-	PEXTRB  $0x0f, X0, R12
+	VMOVDQU (DI), X3
+	MOVB    15(DI), R12
 
 	// Modify memory data
-	VPMOVZXBW    X0, Y0
+	VPMOVZXBW    X3, Y0
 	VPMULLW      Y0, Y1, Y0
 	VPADDW       Y0, Y2, Y0
 	VPSRLW       $0x08, Y0, Y0
 	VPACKUSWB    Y0, Y0, Y0
 	VPERMQ       $0xd8, Y0, Y0
-	VEXTRACTI128 $0x00, Y0, X0
+	VEXTRACTI128 $0x00, Y0, X3
 
 	// Move data back to memory
-	PINSRB  $0x0f, R12, X0
-	VMOVDQU X0, (DI)
+	VMOVDQU X3, (DI)
+	MOVB    R12, 15(DI)
 	ADDQ    $0x0f, DI
 	ADDL    $0x05, R8
 	CMPL    R8, R10

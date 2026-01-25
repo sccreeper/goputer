@@ -67,10 +67,10 @@ func (m *VM) drawArea() {
 	var colour = m.getVideoColour()
 	var areaStart = (uint32(posX) * VideoBytesPerPixel) + (uint32(posY) * VideoBufferWidth * VideoBytesPerPixel)
 
-	if haveArchVideoArea && colour[3] == 255 {
+	if HaveArchVideoArea && colour[3] == 255 {
 		archVideoAreaNoAlpha((*byte)(unsafe.Pointer(&m.MemArray[0])), colour[0], colour[1], colour[2], posX, posY, posX1, posY1)
 		return
-	} else if haveArchVideoAreaAlpha && colour[3] != 255 {
+	} else if HaveArchVideoAreaAlpha && colour[3] != 255 {
 		archVideoAreaAlpha((*byte)(unsafe.Pointer(&m.MemArray[0])), colour[0], colour[1], colour[2], colour[3], posX, posY, posX1, posY1)
 		return
 	} else if colour[3] != 255 {
@@ -324,7 +324,7 @@ func (m *VM) clearVideo() {
 
 	var colour [4]byte = m.getVideoColour()
 
-	if haveArchVideoClear {
+	if HaveArchVideoClear {
 		archVideoClear((*byte)(unsafe.Pointer(&m.MemArray[0])), colour[0], colour[1], colour[2])
 		return
 	}

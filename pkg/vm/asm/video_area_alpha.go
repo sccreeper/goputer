@@ -30,9 +30,7 @@ func main() {
 	inv_alpha := GP8()
 	alpha_16 := GP16()
 	inv_alpha_16 := GP16()
-	alpha_values := XMM()
 	widened_alpha_values := YMM()
-	inverted_alpha_values := XMM()
 	widened_inverted_alpha_values := YMM()
 
 	x := Load(Param("x"), GP32())
@@ -42,10 +40,7 @@ func main() {
 
 	colour := GP32()
 
-	shuffled_colour_bytes := XMM()
 	widened_shuffled_colour_bytes := YMM()
-
-	memory_data := XMM()
 	widened_memory_data := YMM()
 
 	counter_x := GP32()
@@ -54,14 +49,13 @@ func main() {
 	width := GP32()
 	rows := GP32()
 
-	last_byte := GP32()
-	XORL(last_byte, last_byte)
+	last_byte := GP8()
+	XORB(last_byte, last_byte)
 	tmp_16 := GP16()
 	tmp_32 := GP32()
 	tmp_offset := GP64()
 	tmp_operand := GP64()
-	tmp_ymm := YMM()
-	VPXOR(tmp_ymm, tmp_ymm, tmp_ymm)
+	tmp_xmm := XMM()
 
 	Comment("Offset pointer by x and y")
 	MOVL(y, tmp_offset.As32())
@@ -84,17 +78,19 @@ func main() {
 
 	Comment("Fill alpha register")
 	MOVBLZX(alpha, tmp_32)
-	MOVD(tmp_32, alpha_values)
-	VPBROADCASTB(alpha_values, alpha_values)
-	VPMOVZXBW(alpha_values, widened_alpha_values)
+	MOVD(tmp_32, tmp_xmm)
+	VPBROADCASTB(tmp_xmm, tmp_xmm)
+	VPMOVZXBW(tmp_xmm, widened_alpha_values)
+
+	VPXOR(tmp_xmm, tmp_xmm, tmp_xmm)
 
 	MOVB(alpha, inv_alpha)
 	NOTB(inv_alpha)
 	MOVBWZX(inv_alpha, inv_alpha_16)
 	MOVBLZX(inv_alpha, tmp_32)
-	MOVD(tmp_32, inverted_alpha_values)
-	VPBROADCASTB(inverted_alpha_values, inverted_alpha_values)
-	VPMOVZXBW(inverted_alpha_values, widened_inverted_alpha_values)
+	MOVD(tmp_32, tmp_xmm)
+	VPBROADCASTB(tmp_xmm, tmp_xmm)
+	VPMOVZXBW(tmp_xmm, widened_inverted_alpha_values)
 
 	Comment("Construct colour")
 
@@ -104,9 +100,10 @@ func main() {
 	SHLL(Imm(8), colour)
 	MOVB(red, colour.As8())
 
-	MOVD(colour, shuffled_colour_bytes)
-	VPSHUFB(colour_shuffle_mask, shuffled_colour_bytes, shuffled_colour_bytes)
-	VPMOVZXBW(shuffled_colour_bytes, widened_shuffled_colour_bytes)
+	VPXOR(tmp_xmm, tmp_xmm, tmp_xmm)
+	MOVD(colour, tmp_xmm)
+	VPSHUFB(colour_shuffle_mask, tmp_xmm, tmp_xmm)
+	VPMOVZXBW(tmp_xmm, widened_shuffled_colour_bytes)
 
 	VPMULLW(widened_shuffled_colour_bytes, widened_alpha_values, widened_shuffled_colour_bytes)
 
@@ -143,12 +140,11 @@ func main() {
 	Comment("Otherwise blit 5 pixels at a time")
 
 	Comment("Load data to be modified from memory")
-	VMOVDQU(Mem{Base: RDI}, memory_data)
-	XORL(last_byte, last_byte)
-	PEXTRB(Imm(15), memory_data, last_byte)
+	VMOVDQU(Mem{Base: RDI}, tmp_xmm)
+	MOVB(Mem{Base: RDI, Disp: 15}, last_byte)
 
 	Comment("Modify memory data")
-	VPMOVZXBW(memory_data, widened_memory_data)
+	VPMOVZXBW(tmp_xmm, widened_memory_data)
 	VPMULLW(widened_memory_data, widened_inverted_alpha_values, widened_memory_data)
 
 	VPADDW(widened_memory_data, widened_shuffled_colour_bytes, widened_memory_data)
@@ -157,12 +153,12 @@ func main() {
 
 	VPACKUSWB(widened_memory_data, widened_memory_data, widened_memory_data)
 	VPERMQ(Imm(0xd8), widened_memory_data, widened_memory_data)
-	VEXTRACTI128(Imm(0), widened_memory_data, memory_data)
+	VEXTRACTI128(Imm(0), widened_memory_data, tmp_xmm)
 
 	Comment("Move data back to memory")
 
-	PINSRB(Imm(15), last_byte, memory_data)
-	VMOVDQU(memory_data, Mem{Base: RDI})
+	VMOVDQU(tmp_xmm, Mem{Base: RDI})
+	MOVB(last_byte, Mem{Base: RDI, Disp: 15})
 
 	ADDQ(Imm(15), RDI)
 	ADDL(Imm(5), counter_x)

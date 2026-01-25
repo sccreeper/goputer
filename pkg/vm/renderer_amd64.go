@@ -10,9 +10,9 @@ import (
 	"golang.org/x/sys/cpu"
 )
 
-const haveArchVideoClear = true
-const haveArchVideoArea = true
-const haveArchVideoAreaAlpha = true
+const HaveArchVideoClear = true
+const HaveArchVideoArea = true
+const HaveArchVideoAreaAlpha = true
 
 func init() {
 	if !(cpu.X86.HasSSE2 && cpu.X86.HasAVX && cpu.X86.HasAVX2 && cpu.X86.HasSSE41) {

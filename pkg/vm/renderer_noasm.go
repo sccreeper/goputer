@@ -2,9 +2,9 @@
 
 package vm
 
-const haveArchVideoClear = false
-const haveArchVideoArea = false
-const haveArchVideoAreaAlpha = false
+const HaveArchVideoClear = false
+const HaveArchVideoArea = false
+const HaveArchVideoAreaAlpha = false
 
 func archVideoClear(array *byte, r uint8, g uint8, b uint8) {
 	panic("not implemented")
