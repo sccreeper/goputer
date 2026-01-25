@@ -10,6 +10,7 @@ import (
 	"sccreeper/goputer/pkg/constants"
 	"sccreeper/goputer/pkg/util"
 	"sccreeper/goputer/pkg/vm"
+	"slices"
 )
 
 const magicString string = "GPPR"
@@ -17,6 +18,9 @@ const magicString string = "GPPR"
 type ProfileEntry struct {
 	TotalCycleTime     uint64
 	TotalTimesExecuted uint64
+
+	Median   uint64
+	allTimes []uint64
 
 	Address     uint32
 	Instruction [5]byte
@@ -100,12 +104,15 @@ func (p *Profiler) Dump(w io.WriteSeeker) (int, error) {
 
 		dataToWrite := make([]byte, 5)
 
+		slices.Sort(v.allTimes)
+
 		copy(dataToWrite[:5], v.Instruction[:])
 
 		dataToWrite = binary.LittleEndian.AppendUint32(dataToWrite, v.Address)
 		dataToWrite = binary.LittleEndian.AppendUint64(dataToWrite, v.TotalCycleTime)
 		dataToWrite = binary.LittleEndian.AppendUint64(dataToWrite, v.TotalTimesExecuted)
 		dataToWrite = binary.LittleEndian.AppendUint64(dataToWrite, math.Float64bits(v.StandardDeviation))
+		dataToWrite = binary.LittleEndian.AppendUint64(dataToWrite, v.allTimes[len(v.allTimes)/2])
 
 		_, err = w.Seek(0, io.SeekEnd)
 		if err != nil {
@@ -161,7 +168,7 @@ func (p *Profiler) Load(r io.ReadSeeker) (int, error) {
 
 	for i := 0; i < int(numEntries); i++ {
 
-		var entryBytes [33]byte = [33]byte{}
+		var entryBytes [41]byte = [41]byte{}
 
 		n, err = r.Read(entryBytes[:])
 		if err == io.EOF {
@@ -182,6 +189,8 @@ func (p *Profiler) Load(r io.ReadSeeker) (int, error) {
 			TotalCycleTime:     binary.LittleEndian.Uint64(entryBytes[9:17]),
 			TotalTimesExecuted: binary.LittleEndian.Uint64(entryBytes[17:25]),
 			StandardDeviation:  math.Float64frombits(binary.LittleEndian.Uint64(entryBytes[25:33])),
+
+			Median: binary.LittleEndian.Uint64(entryBytes[33:41]),
 		}
 
 	}
@@ -218,12 +227,14 @@ func (p *Profiler) EndCycle() {
 		p.Data[key].TotalCycleTime += p.cycleLength
 		p.Data[key].TotalTimesExecuted++
 		p.Data[key].sumOfSquares += math.Pow(float64(p.cycleLength), 2)
+		p.Data[key].allTimes = append(p.Data[key].allTimes, p.cycleLength)
 
 	} else {
 
 		p.Data[key] = &ProfileEntry{
 			TotalCycleTime:     p.cycleLength,
 			TotalTimesExecuted: 1,
+			allTimes:           []uint64{p.cycleLength},
 
 			Address:     p.cycleAddress,
 			Instruction: [5]byte(p.vm.CurrentInstruction),

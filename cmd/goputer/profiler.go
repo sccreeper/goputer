@@ -25,6 +25,7 @@ const (
 	sortModeTimesExecuted
 	sortModeTotalExecutionTime
 	sortModeMeanExecutionTime
+	sortModeMedianExecutionTime
 )
 
 const menuTextString string = "[red]F1:[white] Sorting attribute [red]F2:[white] Sorting direction [red]F3:[white] Toggle conditional formatting [red]F4:[white] Toggle grouping"
@@ -129,10 +130,22 @@ func renderDefaultTableView() {
 			0, colOffset+5,
 			tview.NewTableCell("σ").SetBackgroundColor(tcell.ColorWhite).SetTextColor(tcell.ColorBlack).SetAlign(tview.AlignRight),
 		)
+
+		mainTable.SetCell(
+			0, colOffset+6,
+			tview.NewTableCell("Median execution time (ns)").SetBackgroundColor(tcell.ColorWhite).SetTextColor(tcell.ColorBlack).SetAlign(tview.AlignRight),
+		)
 	}
 
 	if sortMode == sortModeMeanExecutionTime {
 		mainTable.GetCell(0, colOffset+4).
+			SetBackgroundColor(tcell.ColorBlack).
+			SetTextColor(tcell.ColorWhite).
+			Text += fmt.Sprintf(" %s", sortArrow)
+	}
+
+	if sortMode == sortModeMedianExecutionTime {
+		mainTable.GetCell(0, colOffset+6).
 			SetBackgroundColor(tcell.ColorBlack).
 			SetTextColor(tcell.ColorWhite).
 			Text += fmt.Sprintf(" %s", sortArrow)
@@ -152,6 +165,7 @@ func setTableData() {
 		sliceToUse = profileEntriesSlice
 	}
 
+	// Total execution time
 	minTotalCycleTime := slices.MinFunc(sliceToUse, func(a profiler.ProfileEntry, b profiler.ProfileEntry) int {
 		return cmp.Compare(a.TotalCycleTime, b.TotalCycleTime)
 	}).TotalCycleTime
@@ -159,16 +173,27 @@ func setTableData() {
 		return cmp.Compare(a.TotalCycleTime, b.TotalCycleTime)
 	}).TotalCycleTime
 
+	// Mean execution time
 	temp := slices.MinFunc(sliceToUse, func(a profiler.ProfileEntry, b profiler.ProfileEntry) int {
 		return cmp.Compare(a.TotalCycleTime/a.TotalTimesExecuted, b.TotalCycleTime/b.TotalTimesExecuted)
 	})
-	minSingleCycleTime := temp.TotalCycleTime / temp.TotalTimesExecuted
+	minMeanCycleTime := temp.TotalCycleTime / temp.TotalTimesExecuted
 
 	temp = slices.MaxFunc(sliceToUse, func(a profiler.ProfileEntry, b profiler.ProfileEntry) int {
 		return cmp.Compare(a.TotalCycleTime/a.TotalTimesExecuted, b.TotalCycleTime/b.TotalTimesExecuted)
 	})
-	maxSingleCycleTime := temp.TotalCycleTime / temp.TotalTimesExecuted
+	maxMeanCycleTime := temp.TotalCycleTime / temp.TotalTimesExecuted
 
+	// Median execution time
+	minMedianCycleTime := slices.MinFunc(sliceToUse, func(a profiler.ProfileEntry, b profiler.ProfileEntry) int {
+		return cmp.Compare(a.Median, b.Median)
+	}).Median
+
+	maxMedianCycleTime := slices.MaxFunc(sliceToUse, func(a profiler.ProfileEntry, b profiler.ProfileEntry) int {
+		return cmp.Compare(a.Median, b.Median)
+	}).Median
+
+	// Times executed
 	minTimesExecuted := slices.MinFunc(sliceToUse, func(a profiler.ProfileEntry, b profiler.ProfileEntry) int {
 		return cmp.Compare(a.TotalTimesExecuted, b.TotalTimesExecuted)
 	}).TotalTimesExecuted
@@ -237,12 +262,20 @@ func setTableData() {
 					fmt.Sprintf("%f", v.StandardDeviation),
 				).SetAlign(tview.AlignRight),
 			)
+
+			mainTable.SetCell(
+				r+1, colOffset+6,
+				tview.NewTableCell(
+					fmt.Sprintf("%d", v.Median),
+				).SetAlign(tview.AlignRight),
+			)
 		}
 
 		if useConditionalFormatting {
 			mainTable.GetCell(r+1, colOffset+2).SetTextColor(formatColour(v.TotalTimesExecuted, minTimesExecuted, maxTimesExecuted))
 			mainTable.GetCell(r+1, colOffset+3).SetTextColor(formatColour(v.TotalCycleTime, minTotalCycleTime, maxTotalCycleTime))
-			mainTable.GetCell(r+1, colOffset+4).SetTextColor(formatColour(v.TotalCycleTime/v.TotalTimesExecuted, minSingleCycleTime, maxSingleCycleTime))
+			mainTable.GetCell(r+1, colOffset+4).SetTextColor(formatColour(v.TotalCycleTime/v.TotalTimesExecuted, minMeanCycleTime, maxMeanCycleTime))
+			mainTable.GetCell(r+1, colOffset+6).SetTextColor(formatColour(v.Median, minMedianCycleTime, maxMedianCycleTime))
 		}
 
 	}
@@ -253,7 +286,7 @@ func changeSortingOrder(changeSortMode bool) {
 	if changeSortMode {
 		sortMode++
 
-		if sortMode > sortModeMeanExecutionTime {
+		if sortMode > sortModeMedianExecutionTime {
 			if groupingEnabled {
 				sortMode = sortModeTimesExecuted
 			} else {
@@ -285,6 +318,10 @@ func changeSortingOrder(changeSortMode bool) {
 			slices.SortFunc(sliceToUse, func(a profiler.ProfileEntry, b profiler.ProfileEntry) int {
 				return cmp.Compare(a.TotalCycleTime, b.TotalCycleTime)
 			})
+		case sortModeMedianExecutionTime:
+			slices.SortFunc(sliceToUse, func(a profiler.ProfileEntry, b profiler.ProfileEntry) int {
+				return cmp.Compare(a.Median, b.Median)
+			})
 		}
 	}
 
@@ -314,7 +351,7 @@ func exportCsv(ctx *cli.Context) error {
 
 	w := csv.NewWriter(csvFile)
 
-	w.Write([]string{"address", "instruction", "timesExecuted", "totalExecutionTime", "meanExecutionTime", "standardDeviation"})
+	w.Write([]string{"address", "instruction", "timesExecuted", "totalExecutionTime", "meanExecutionTime", "standardDeviation", "medianExecutionTime"})
 
 	for _, v := range profileEntriesSlice {
 		itnString, _ := compiler.DecodeInstructionString(v.Instruction[:])
@@ -327,6 +364,7 @@ func exportCsv(ctx *cli.Context) error {
 				strconv.Itoa(int(v.TotalCycleTime)),
 				strconv.Itoa(int(v.TotalCycleTime) / int(v.TotalTimesExecuted)),
 				fmt.Sprintf("%f", v.StandardDeviation),
+				strconv.Itoa(int(v.Median)),
 			},
 		)
 	}
